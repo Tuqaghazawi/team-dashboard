@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patients</title>
+  <style>
+    :root { --teal: #028090; --ink: #13343b; --muted: #5b7b7a; --line: #e2ebea; --bg: #f4f8f7; }
+    * { box-sizing: border-box; }
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
+    header { background: var(--teal); color: #fff; padding: 18px 28px;
+             display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    header h1 { margin: 0; font-size: 22px; }
+    header p { margin: 4px 0 0; opacity: 0.9; font-size: 13px; }
+    .userbox { text-align: right; font-size: 13px; }
+    .userbox .who { display: block; margin-bottom: 6px; opacity: 0.95; }
+    .logout { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.5);
+              padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .logout:hover { background: rgba(255,255,255,0.30); }
+    .wrap { padding: 24px 28px; }
+    table { border-collapse: collapse; width: 100%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 14px; }
+    th { background: #eaf4f2; color: var(--teal); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+    tr:hover td { background: #f7fbfa; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; background: #eaf4f2; color: var(--teal); font-size: 12px; }
+    .muted { color: var(--muted); }
+    .empty { padding: 40px; text-align: center; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Patients</h1>
+      <p>{{ patients|length }} patient(s) you can see</p>
+    </div>
+    <div class="userbox">
+      <span class="who">
+        {{ request.user.get_full_name|default:request.user.username }}
+        {% if request.user.get_role_display %} · {{ request.user.get_role_display }}{% endif %}
+        {% if request.user.team %} · {{ request.user.team.consultant }}{% endif %}
+      </span>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="logout" type="submit">Log out</button>
+      </form>
+    </div>
+  </header>
+
+  <div class="wrap">
+    {% if patients %}
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>MRN</th>
+          <th>Age</th>
+          <th>Diagnosis</th>
+          <th>Specialty</th>
+          <th>Team</th>
+          <th>Stage</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for patient in patients %}
+        <tr>
+          <td>{{ patient.name }}</td>
+          <td class="muted">{{ patient.mrn }}</td>
+          <td>{{ patient.age }}</td>
+          <td>{{ patient.diagnosis }}</td>
+          <td>{{ patient.get_specialty_display }}</td>
+          <td>{{ patient.team.consultant }}</td>
+          <td><span class="badge">{{ patient.get_stage_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No patients to show for your account yet.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

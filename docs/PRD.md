@@ -61,8 +61,8 @@ auto-generated slides, and (later) an NCCN guidelines suggestion engine.
 | **Chairman of department** | All patients | View everything (read-only), view all reports |
 | **Team clinic nurse coordinator** | Only their team's patients | Assign that rotation's fellows to the team, add patients to the weekly MDC list, list patients for surgery |
 | **Fellow** | Only their assigned team's patients | Follow the workup flow, build weekly MDC slides + biweekly planning-round slides |
-| **Consultant** | All patients (follows their own team closely) | View the whole process and follow up |
-| **MDC coordinator** | Patients for their MDC (Breast / GI / Sarcoma / Thyroid) | Manage that MDC's discussion list and record decisions |
+| **Consultant** | Only their own team's patients | View and follow their team's patients |
+| **MDC coordinator** | Only patients **added to their MDC's list** by team coordinators (Breast / GI / Sarcoma / Thyroid) | Manage that MDC's discussion list and record decisions |
 
 **Rotation rule:** Fellows rotate every 3 months (e.g. Jul–Sep, Oct–Dec). At the start of
 each rotation, the team nurse coordinator assigns that rotation's fellows so they gain

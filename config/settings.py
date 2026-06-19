@@ -48,6 +48,10 @@ INSTALLED_APPS = [
 # the built-in default. This must be set before the first migration.
 AUTH_USER_MODEL = 'accounts.User'
 
+# Where login sends people, and where logout returns them.
+LOGIN_REDIRECT_URL = '/patients/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
