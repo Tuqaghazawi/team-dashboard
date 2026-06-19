@@ -132,12 +132,17 @@ This is the process the dashboard automates, step by step. Each step lists **who
   | **NACT** | Neoadjuvant chemotherapy first | **Month started**; patient appears on the dedicated **"NACT patients"** list |
   | **TNT (rectal)** | Total neoadjuvant therapy for rectal cancer | **Month started**; patient appears on the dedicated **"TNT" list** |
   | **Referred to medical team** | Managed medically (e.g. palliative/definitive systemic therapy) | Referral recorded |
-  | **Surveillance / other** | Watch-and-wait or other plan | Plan note |
+  | **Watch & wait (rectal)** | Non-operative management after complete clinical response to TNT | **W&W start date** + **next investigations date** |
+  | **Surveillance / other** | Routine follow-up or other plan | Plan note |
 
 - **"Stay on the list" rule:** Patients in **NACT** or **TNT** remain on the team's active
-  list until the **definitive decision** is made. The system **auto-flags when
-  re-discussion is due** (so they are not lost), and after re-discussion they are
-  **re-categorized** (commonly → Surgery).
+  list until the **definitive decision** is made. When neoadjuvant treatment finishes, they
+  move to a **Restaging** state (awaiting restaging imaging/results), which the team follows
+  **before the upcoming clinic**. The system **auto-flags when re-discussion is due** (so they
+  are not lost), and after re-discussion they are **re-categorized** (commonly → Surgery).
+- **Who moves these follow-up states:** the **team nurse coordinator** is responsible for moving
+  patients into **Restaging**, **Watch & wait**, or **Surveillance**, and for setting the
+  **next investigations date**. (Enforced once role-based screens are built; today done in admin.)
 
 ### Step 6 — Surgery scheduling + pre-operative workup
 - **Who:** Fellows (with the team nurse coordinator).
@@ -218,6 +223,7 @@ This coordinator sees **all patients across all teams**, registers them, and pro
 | Trigger | Who is notified | Channel |
 |---|---|---|
 | Patient registered & assigned to a team | Team nurse coordinator, consultant, current fellows | In-app + email |
+| **Start of each week (Monday)** — patients due this week for **restaging** or **watch & wait** results | Consultant, fellow, team nurse coordinator | In-app + email |
 | (Later phases) Workup result ready, MDC scheduled, decision recorded, surgery listed | The relevant role(s) | In-app + email |
 
 > **[RESOLVED]** v1 uses **in-app + email only**. No WhatsApp automation. (WhatsApp could

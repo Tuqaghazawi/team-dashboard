@@ -25,9 +25,11 @@ class Patient(models.Model):
         SURGERY = "SURGERY", "Planned for surgery"
         NACT = "NACT", "On NACT"
         TNT = "TNT", "On TNT (rectal)"
+        RESTAGING = "RESTAGING", "Restaging (awaiting results)"
         REFERRED = "REFERRED", "Referred to medical team"
         POSTOP = "POSTOP", "Post-op follow-up"
         SURVEILLANCE = "SURVEILLANCE", "Surveillance"
+        WATCH_WAIT = "WATCH_WAIT", "Watch & wait"
 
     # --- Registration details (entered by the prep-clinic coordinator) ---
     name = models.CharField(max_length=120)
@@ -46,6 +48,16 @@ class Patient(models.Model):
 
     # --- Where the patient is in the journey ---
     stage = models.CharField(max_length=20, choices=Stage.choices, default=Stage.REGISTERED)
+
+    # --- Follow-up tracking (Watch & wait and restaging) ---
+    watch_wait_start = models.DateField(
+        "Watch & wait start", null=True, blank=True,
+        help_text="Date watch-and-wait began (W&W patients only).",
+    )
+    next_review_date = models.DateField(
+        null=True, blank=True,
+        help_text="Expected date of next investigations / results check (restaging or W&W).",
+    )
 
     # --- Bookkeeping ---
     registered_at = models.DateTimeField(auto_now_add=True)
