@@ -31,6 +31,12 @@ class Patient(models.Model):
         SURVEILLANCE = "SURVEILLANCE", "Surveillance"
         WATCH_WAIT = "WATCH_WAIT", "Watch & wait"
 
+    # Stages that only apply to certain specialties (all others apply everywhere)
+    SPECIALTY_RESTRICTED_STAGES = {
+        Stage.TNT: {Specialty.COLORECTAL},
+        Stage.WATCH_WAIT: {Specialty.COLORECTAL},
+    }
+
     # --- Registration details (entered by the prep-clinic coordinator) ---
     name = models.CharField(max_length=120)
     mrn = models.CharField("MRN", max_length=20, unique=True, help_text="Medical Record Number — must be unique.")
@@ -109,3 +115,18 @@ class Patient(models.Model):
                 status = "upcoming"
             timeline.append({"label": label, "status": status})
         return timeline
+
+    @classmethod
+    def stages_for_specialties(cls, specialties):
+        """Stage choices relevant to a set of specialties.
+
+        Restricted stages (e.g. TNT, Watch & wait — rectal only) are dropped
+        unless one of the given specialties allows them.
+        """
+        specialties = set(specialties)
+        options = []
+        for value, label in cls.Stage.choices:
+            allowed = cls.SPECIALTY_RESTRICTED_STAGES.get(value)
+            if allowed is None or (allowed & specialties):
+                options.append((value, label))
+        return options

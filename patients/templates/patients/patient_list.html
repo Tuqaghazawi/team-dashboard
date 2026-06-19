@@ -29,6 +29,16 @@
     .muted { color: var(--muted); }
     .empty { padding: 40px; text-align: center; color: var(--muted); }
 
+    /* filter bar */
+    .filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; align-items: center; }
+    .filters input[type=text], .filters select { padding: 8px 10px; border: 1px solid #cfe0de; border-radius: 6px; font-size: 14px; background: #fff; }
+    .filters input[type=text] { min-width: 220px; }
+    .filters button { padding: 8px 16px; background: var(--teal); color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+    .filters button:hover { background: #026b78; }
+    .filters .check { font-size: 13px; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+    .filters .clear { font-size: 13px; color: var(--muted); text-decoration: none; }
+    .filters .clear:hover { text-decoration: underline; }
+
     /* expandable detail row */
     tr.detail > td { background: #f0f7f6; padding: 18px 24px; }
     .stage-now { margin: 12px 0 0; font-size: 13px; }
@@ -68,6 +78,27 @@
   </header>
 
   <div class="wrap">
+    <form class="filters" method="get">
+      <input type="text" name="q" value="{{ q }}" placeholder="Search name or MRN">
+      {% if show_team_filter %}
+      <select name="team">
+        <option value="">All teams</option>
+        {% for team in teams %}
+        <option value="{{ team.id }}" {% if team.id|stringformat:'s' == selected_team %}selected{% endif %}>{{ team.consultant }}</option>
+        {% endfor %}
+      </select>
+      {% endif %}
+      <select name="stage">
+        <option value="">All stages</option>
+        {% for value, label in stages %}
+        <option value="{{ value }}" {% if value == selected_stage %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <label class="check"><input type="checkbox" name="new" value="1" {% if new_only %}checked{% endif %}> New (last 30 days)</label>
+      <button type="submit">Filter</button>
+      <a class="clear" href="{% url 'patient_list' %}">Clear</a>
+    </form>
+
     {% if patients %}
     <table>
       <thead>
