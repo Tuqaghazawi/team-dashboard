@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ patient.name }} · Patient</title>
+  <style>
+    :root { --teal: #028090; --ink: #13343b; --muted: #5b7b7a; --line: #e2ebea; --bg: #f4f8f7; --gold: #e9a23b; }
+    * { box-sizing: border-box; }
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
+    header { background: var(--teal); color: #fff; padding: 18px 28px; }
+    header a.back { color: #cdeaea; text-decoration: none; font-size: 13px; }
+    header a.back:hover { text-decoration: underline; }
+    header h1 { margin: 6px 0 0; font-size: 22px; }
+    header p { margin: 4px 0 0; opacity: 0.92; font-size: 13px; }
+    .wrap { padding: 24px 28px; max-width: 980px; }
+    .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 22px 24px; margin-bottom: 22px; }
+    .card h2 { margin: 0 0 16px; font-size: 15px; color: var(--teal); text-transform: uppercase; letter-spacing: 0.5px; }
+    .facts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 32px; }
+    .facts .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+    .facts .v { font-size: 15px; margin-top: 2px; }
+
+    /* Timeline */
+    .timeline { display: flex; list-style: none; padding: 0; margin: 8px 0 4px; }
+    .timeline li { flex: 1; text-align: center; position: relative; }
+    .timeline li::before { content: ""; position: absolute; top: 17px; left: -50%; width: 100%; height: 3px; background: var(--line); z-index: 0; }
+    .timeline li:first-child::before { display: none; }
+    .timeline .done::before, .timeline .current::before { background: var(--teal); }
+    .dot { width: 36px; height: 36px; border-radius: 50%; background: #c9d6d5; color: #fff;
+           margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;
+           font-size: 14px; position: relative; z-index: 1; }
+    .done .dot { background: var(--teal); }
+    .current .dot { background: var(--gold); box-shadow: 0 0 0 5px rgba(233,162,59,0.22); }
+    .lbl { font-size: 12px; color: var(--muted); }
+    .current .lbl { color: var(--ink); font-weight: 700; }
+    .stage-now { margin-top: 14px; font-size: 14px; }
+    .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; background: #fbeccd; color: #9a6b16; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="{% url 'patient_list' %}">&larr; Back to patients</a>
+    <h1>{{ patient.name }}</h1>
+    <p>MRN {{ patient.mrn }} · Age {{ patient.age }} · {{ patient.get_specialty_display }}</p>
+  </header>
+
+  <div class="wrap">
+    <div class="card">
+      <h2>Journey</h2>
+      <ul class="timeline">
+        {% for step in patient.journey %}
+        <li class="{{ step.status }}">
+          <div class="dot">{% if step.status == 'done' %}&#10003;{% else %}{{ forloop.counter }}{% endif %}</div>
+          <div class="lbl">{{ step.label }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="stage-now">Current stage: <span class="badge">{{ patient.get_stage_display }}</span></p>
+    </div>
+
+    <div class="card">
+      <h2>Details</h2>
+      <div class="facts">
+        <div><div class="k">Diagnosis</div><div class="v">{{ patient.diagnosis }}</div></div>
+        <div><div class="k">Team</div><div class="v">{{ patient.team.consultant }}</div></div>
+        <div><div class="k">Date of birth</div><div class="v">{{ patient.date_of_birth }}</div></div>
+        <div><div class="k">Registered</div><div class="v">{{ patient.registered_at }}</div></div>
+        {% if patient.watch_wait_start %}
+        <div><div class="k">Watch &amp; wait start</div><div class="v">{{ patient.watch_wait_start }}</div></div>
+        {% endif %}
+        {% if patient.next_review_date %}
+        <div><div class="k">Next review</div><div class="v">{{ patient.next_review_date }}</div></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

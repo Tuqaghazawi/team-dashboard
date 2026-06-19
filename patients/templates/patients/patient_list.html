@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Patients</title>
   <style>
-    :root { --teal: #028090; --ink: #13343b; --muted: #5b7b7a; --line: #e2ebea; --bg: #f4f8f7; }
+    :root { --teal: #028090; --ink: #13343b; --muted: #5b7b7a; --line: #e2ebea; --bg: #f4f8f7; --gold: #e9a23b; }
     * { box-sizing: border-box; }
     body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
     header { background: var(--teal); color: #fff; padding: 18px 28px;
@@ -21,17 +21,38 @@
     table { border-collapse: collapse; width: 100%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
     th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 14px; }
     th { background: #eaf4f2; color: var(--teal); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-    tr:hover td { background: #f7fbfa; }
+    tr.prow { cursor: pointer; }
+    tr.prow:hover td { background: #f7fbfa; }
+    tr.prow .pname { font-weight: 600; color: var(--teal); }
+    tr.prow .caret { color: var(--muted); font-size: 11px; margin-right: 6px; }
     .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; background: #eaf4f2; color: var(--teal); font-size: 12px; }
     .muted { color: var(--muted); }
     .empty { padding: 40px; text-align: center; color: var(--muted); }
+
+    /* expandable detail row */
+    tr.detail > td { background: #f0f7f6; padding: 18px 24px; }
+    .stage-now { margin: 12px 0 0; font-size: 13px; }
+    .stage-now .badge { background: #fbeccd; color: #9a6b16; font-weight: 600; }
+
+    /* timeline */
+    .timeline { display: flex; list-style: none; padding: 0; margin: 0; }
+    .timeline li { flex: 1; text-align: center; position: relative; }
+    .timeline li::before { content: ""; position: absolute; top: 15px; left: -50%; width: 100%; height: 3px; background: #d7e3e1; z-index: 0; }
+    .timeline li:first-child::before { display: none; }
+    .timeline .done::before, .timeline .current::before { background: var(--teal); }
+    .dot { width: 32px; height: 32px; border-radius: 50%; background: #c9d6d5; color: #fff; margin: 0 auto 6px;
+           display: flex; align-items: center; justify-content: center; font-size: 13px; position: relative; z-index: 1; }
+    .done .dot { background: var(--teal); }
+    .current .dot { background: var(--gold); box-shadow: 0 0 0 4px rgba(233,162,59,0.22); }
+    .lbl { font-size: 11px; color: var(--muted); }
+    .current .lbl { color: var(--ink); font-weight: 700; }
   </style>
 </head>
 <body>
   <header>
     <div>
       <h1>Patients</h1>
-      <p>{{ patients|length }} patient(s) you can see</p>
+      <p>{{ patients|length }} patient(s) you can see · click a row to see the journey</p>
     </div>
     <div class="userbox">
       <span class="who">
@@ -62,14 +83,30 @@
       </thead>
       <tbody>
         {% for patient in patients %}
-        <tr>
-          <td>{{ patient.name }}</td>
+        <tr class="prow" data-target="p{{ patient.pk }}">
+          <td class="pname"><span class="caret">&#9656;</span>{{ patient.name }}</td>
           <td class="muted">{{ patient.mrn }}</td>
           <td>{{ patient.age }}</td>
           <td>{{ patient.diagnosis }}</td>
           <td>{{ patient.get_specialty_display }}</td>
           <td>{{ patient.team.consultant }}</td>
           <td><span class="badge">{{ patient.get_stage_display }}</span></td>
+        </tr>
+        <tr class="detail" id="p{{ patient.pk }}" style="display:none">
+          <td colspan="7">
+            <ul class="timeline">
+              {% for step in patient.journey %}
+              <li class="{{ step.status }}">
+                <div class="dot">{% if step.status == 'done' %}&#10003;{% else %}{{ forloop.counter }}{% endif %}</div>
+                <div class="lbl">{{ step.label }}</div>
+              </li>
+              {% endfor %}
+            </ul>
+            <p class="stage-now">Current stage: <span class="badge">{{ patient.get_stage_display }}</span>
+              {% if patient.next_review_date %} · Next review: {{ patient.next_review_date }}{% endif %}
+              {% if patient.watch_wait_start %} · W&amp;W since: {{ patient.watch_wait_start }}{% endif %}
+            </p>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -78,5 +115,17 @@
     <p class="empty">No patients to show for your account yet.</p>
     {% endif %}
   </div>
+
+  <script>
+    document.querySelectorAll("tr.prow").forEach(function (row) {
+      row.addEventListener("click", function () {
+        var detail = document.getElementById(row.dataset.target);
+        var open = detail.style.display === "table-row";
+        detail.style.display = open ? "none" : "table-row";
+        var caret = row.querySelector(".caret");
+        if (caret) caret.innerHTML = open ? "&#9656;" : "&#9662;";  // ▸ / ▾
+      });
+    });
+  </script>
 </body>
 </html>

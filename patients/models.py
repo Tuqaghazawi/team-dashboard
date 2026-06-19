@@ -75,3 +75,37 @@ class Patient(models.Model):
         return today.year - self.date_of_birth.year - (
             (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
         )
+
+    def journey(self):
+        """The patient's progress as an ordered list of timeline phases.
+
+        Each item is {"label": ..., "status": "done" | "current" | "upcoming"}.
+        Branch stages (NACT/TNT/Restaging/Referred) collapse into the "Treatment"
+        phase, and Surveillance/Watch & wait into "Follow-up".
+        """
+        phases = [
+            ("Registered", [self.Stage.REGISTERED]),
+            ("Consultant clinic", [self.Stage.CLINIC]),
+            ("Workup", [self.Stage.WORKUP]),
+            ("MDC", [self.Stage.MDC]),
+            ("Treatment", [self.Stage.NACT, self.Stage.TNT, self.Stage.RESTAGING, self.Stage.REFERRED]),
+            ("Surgery", [self.Stage.SURGERY]),
+            ("Post-op", [self.Stage.POSTOP]),
+            ("Follow-up", [self.Stage.SURVEILLANCE, self.Stage.WATCH_WAIT]),
+        ]
+        current_index = 0
+        for i, (label, stages) in enumerate(phases):
+            if self.stage in stages:
+                current_index = i
+                break
+
+        timeline = []
+        for i, (label, stages) in enumerate(phases):
+            if i < current_index:
+                status = "done"
+            elif i == current_index:
+                status = "current"
+            else:
+                status = "upcoming"
+            timeline.append({"label": label, "status": status})
+        return timeline
