@@ -1,0 +1,13 @@
+[
+  {"model": "teams.team", "pk": 1, "fields": {"consultant": "Dr. Mahmoud Al-Masri", "specialty": "General surgical oncology"}},
+  {"model": "teams.team", "pk": 2, "fields": {"consultant": "Dr. Faiez Daoud", "specialty": "General surgical oncology"}},
+  {"model": "teams.team", "pk": 3, "fields": {"consultant": "Dr. Mohd Basem Hamdan", "specialty": "Thyroid and breast"}},
+  {"model": "teams.team", "pk": 4, "fields": {"consultant": "Dr. Mohammed Al-Qaisi", "specialty": "Thyroid and breast"}},
+  {"model": "teams.team", "pk": 5, "fields": {"consultant": "Dr. Fade Alawneh", "specialty": "Thyroid and breast"}},
+  {"model": "teams.team", "pk": 6, "fields": {"consultant": "Dr. Ali Al-Ebous", "specialty": "Thyroid and breast"}},
+  {"model": "teams.team", "pk": 7, "fields": {"consultant": "Dr. Ali Dabous", "specialty": "HPB and general surgical oncology"}},
+  {"model": "teams.team", "pk": 8, "fields": {"consultant": "Dr. Bilal Baker", "specialty": "HPB and upper GI"}},
+  {"model": "teams.team", "pk": 9, "fields": {"consultant": "Dr. Motaz Makhamreh", "specialty": "HPB and upper GI"}},
+  {"model": "teams.team", "pk": 10, "fields": {"consultant": "Dr. Basem Jalabneh", "specialty": "Colorectal cancer"}},
+  {"model": "teams.team", "pk": 11, "fields": {"consultant": "Dr. Amro Mureb", "specialty": "Colorectal cancer"}}
+]

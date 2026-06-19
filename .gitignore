@@ -1,0 +1,29 @@
+# --- Secrets (NEVER commit these) ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- Virtual environment (rebuildable from requirements.txt) ---
+.venv/
+venv/
+
+# --- Django ---
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/media/
+
+# --- Editor / OS junk ---
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# --- Build scratch ---
+.docbuild/
