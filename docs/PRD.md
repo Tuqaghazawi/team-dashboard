@@ -62,7 +62,7 @@ auto-generated slides, and (later) an NCCN guidelines suggestion engine.
 | **Team clinic nurse coordinator** | Only their team's patients | Assign that rotation's fellows to the team, add patients to the weekly MDC list, list patients for surgery |
 | **Fellow** | Only their assigned team's patients | Follow the workup flow, build weekly MDC slides + biweekly planning-round slides |
 | **Consultant** | Only their own team's patients | View and follow their team's patients |
-| **MDC coordinator** | Only patients **added to their MDC's list** by team coordinators (Breast / GI / Sarcoma / Thyroid) | Manage that MDC's discussion list and record decisions |
+| **MDC coordinator** | Only patients **added to their MDC's list** by team coordinators (Breast / GI / Sarcoma / Thyroid) | Manage that MDC's discussion list, record decisions, and **export her MDC's cases to Excel (weekly & monthly, separately)** |
 
 **Rotation rule:** Fellows rotate every 3 months (e.g. Jul–Sep, Oct–Dec). At the start of
 each rotation, the team nurse coordinator assigns that rotation's fellows so they gain
@@ -253,6 +253,13 @@ The file has **two sheets**:
    `MRN · Age · DOB · Diagnosis · Specialty · Consultant · Team · Registration date ·
    Current stage · MDC category`.
 
+### MDC coordinator exports
+The **MDC coordinator** can export **her MDC's cases to Excel**, generated **separately** as:
+- **Weekly** — the cases listed for a given meeting/week.
+- **Monthly** — all cases listed/discussed on her board that month.
+
+(Built on each MDC listing's **meeting date**, so grouping by week or month is just a date filter.)
+
 > **[OPEN QUESTION]** Age bands above are a proposal — adjust if your institute reports
 > differently. Also: should the detail sheet include the **patient name**, or **MRN only**
 > (more privacy-friendly for management reports)?
@@ -424,6 +431,63 @@ patient; items auto-reflect as results arrive. (Later, the NCCN brain will *sugg
 - MRI of primary site · Core biopsy (ideally at sarcoma center) · CT chest (mets screen)
 
 > ✅ = confirmed by you · 🟡 = draft, awaiting your review.
+
+---
+
+## 16. Platform vision — Surgical Department Dashboard
+
+The system grows from a single patient-flow app into a **Surgical Department Dashboard**: one
+login with a **navigation menu** across several modules. What is built today (the patient
+journey) becomes **Module 1**. Build order: **finish and test Module 1 first**, then add the
+rest. Every module respects the existing role/access rules.
+
+### Module 1 — Team / Patient-flow dashboard  *(in progress — finish first)*
+The per-role patient journey already described in this PRD. Remaining work to "finish": MDC
+add-to-list + triage, MDC decision + post-MDC categories, workup checklist, registration page,
+notifications (email), surgery scheduling + pre-op consults, post-op loop, reports/Excel,
+slides, and the role-specific home/task views.
+
+### Foundation for stats & KPIs — dated events  *(enabler)*
+Statistics and KPIs need **when** things happened, not just the current stage. So we record
+**key milestone dates** per patient: registered ✅, consultant-clinic date, workup start, MDC
+date ✅ (listing meeting date), decision date, **surgery date**, post-op re-discussion date.
+Implemented pragmatically as key date fields and/or a small journey-event log. Without this,
+counts like "surgeries in June" and durations like "days to surgery" cannot be computed.
+
+### Module 2 — Statistics dashboard
+Departmental activity on a **monthly** and **yearly** basis:
+- **Number of new patients** (from registration date) — total and by specialty / team / diagnosis / age band.
+- **Number of surgeries** (from surgery date) — total and by team / specialty / procedure.
+- Trends over time (month-by-month, year-over-year).
+- Exportable to Excel (reuses the reports engine).
+
+### Module 3 — KPIs
+Performance indicators computed from the dated events, e.g.:
+- Median days: registration → consultant clinic → MDC → surgery.
+- % of patients discussed at MDC within a target interval.
+- Neoadjuvant → restaging interval; time to definitive decision.
+- Throughput per team / per specialty.
+Shown as KPI tiles with targets and trend arrows.
+
+### Module 4 — M&M (Morbidity & Mortality)
+A register for departmental M&M meetings (new data model):
+- Case (optionally linked to a patient), date, procedure.
+- Complication + severity (e.g. Clavien–Dindo grade), **morbidity vs mortality**.
+- Root cause / lessons learned; presented status; meeting date.
+- Export for M&M sessions; feeds relevant stats/KPIs (e.g. complication rate).
+
+### Module 5 — Events
+A department calendar: MDC meetings, M&M sessions, planning rounds, etc. — date/time, type,
+notes/attendees. Later can drive reminders.
+
+### Access (per module, high level)
+- **Module 1** — as already defined per role.
+- **Statistics / KPIs** — chairman, prep-clinic coordinator, consultants, team coordinators
+  (department-level views); scope by team where appropriate.
+- **M&M / Events** — department-wide (exact edit rights TBD when built).
+
+> More modules may be added later. This section is the running vision; each module gets its
+> own detailed spec when we reach it.
 
 ---
 

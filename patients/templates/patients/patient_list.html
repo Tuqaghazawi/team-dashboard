@@ -69,6 +69,7 @@
         {{ request.user.get_full_name|default:request.user.username }}
         {% if request.user.get_role_display %} · {{ request.user.get_role_display }}{% endif %}
         {% if request.user.team %} · {{ request.user.team.consultant }}{% endif %}
+        {% if request.user.mdc %} · {{ request.user.mdc.name }} MDC{% endif %}
       </span>
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
@@ -93,6 +94,12 @@
         {% for value, label in stages %}
         <option value="{{ value }}" {% if value == selected_stage %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
+      </select>
+      <select name="period">
+        <option value="">MDC: any time</option>
+        <option value="this_week" {% if selected_period == 'this_week' %}selected{% endif %}>MDC this week</option>
+        <option value="next_week" {% if selected_period == 'next_week' %}selected{% endif %}>MDC next week</option>
+        <option value="this_month" {% if selected_period == 'this_month' %}selected{% endif %}>MDC this month</option>
       </select>
       <label class="check"><input type="checkbox" name="new" value="1" {% if new_only %}checked{% endif %}> New (last 30 days)</label>
       <button type="submit">Filter</button>
@@ -137,6 +144,11 @@
               {% if patient.next_review_date %} · Next review: {{ patient.next_review_date }}{% endif %}
               {% if patient.watch_wait_start %} · W&amp;W since: {{ patient.watch_wait_start }}{% endif %}
             </p>
+            {% if patient.mdc_listings.all %}
+            <p class="stage-now">MDC:
+              {% for listing in patient.mdc_listings.all %}{{ listing.mdc.name }} ({{ listing.meeting_date }}{% if listing.presented %}, discussed{% else %}, pending{% endif %}){% if not forloop.last %}; {% endif %}{% endfor %}
+            </p>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}

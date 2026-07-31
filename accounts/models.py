@@ -34,6 +34,15 @@ class User(AbstractUser):
         help_text="The team this user belongs to (fellows, team coordinators, consultants).",
     )
 
+    mdc = models.ForeignKey(
+        "teams.MDC",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="coordinators",
+        help_text="For MDC coordinators: which MDC they run.",
+    )
+
     def __str__(self):
         name = self.get_full_name() or self.username
         return f"{name} ({self.get_role_display() or 'no role'})"

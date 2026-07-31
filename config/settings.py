@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'accounts',
     'teams',
     'patients',
+    'mdc',
 ]
 
 # Tell Django to use our custom User model (with the "role" field) instead of
