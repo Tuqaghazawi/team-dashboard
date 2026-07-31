@@ -35,11 +35,11 @@ def add_listing(request, patient_pk):
     else:
         form = MDCListingForm(patient=patient)
 
-    # Each MDC's next meeting date, so choosing a different MDC updates the date.
+    # Each MDC's suggested date, so choosing a different MDC updates the date.
     next_dates = {
-        str(m.pk): m.next_meeting_date().isoformat()
+        str(m.pk): m.suggested_listing_date().isoformat()
         for m in MDC.objects.all()
-        if m.next_meeting_date()
+        if m.suggested_listing_date()
     }
 
     context = {

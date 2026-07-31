@@ -26,7 +26,7 @@ class MDCListingForm(forms.ModelForm):
             suggested = suggested_mdc_for(patient.specialty)
             if suggested:
                 self.fields["mdc"].initial = suggested.pk
-                self.fields["meeting_date"].initial = suggested.next_meeting_date()
+                self.fields["meeting_date"].initial = suggested.suggested_listing_date()
 
     def clean(self):
         cleaned = super().clean()

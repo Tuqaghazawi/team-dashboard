@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -30,6 +31,22 @@ class MDCMeetingDateTests(TestCase):
     def test_mdc_without_a_fixed_day_has_no_next_meeting(self):
         ad_hoc = MDC.objects.create(name="Ad hoc", meeting_weekday=None)
         self.assertIsNone(ad_hoc.next_meeting_date())
+        self.assertIsNone(ad_hoc.suggested_listing_date())
+
+    def test_suggested_listing_date_skips_this_weeks_meeting(self):
+        breast = MDC.objects.create(name="Breast", meeting_weekday=2)  # Wednesday
+        # Listing on Monday 3 Aug must not land on Wednesday 5 Aug (2 days away);
+        # it should be the following week's Wednesday, 12 Aug.
+        with patch("teams.models.timezone.localdate", return_value=date(2026, 8, 3)):
+            self.assertEqual(breast.suggested_listing_date(), date(2026, 8, 12))
+
+    def test_suggested_listing_date_is_always_at_least_a_week_ahead(self):
+        sarcoma = MDC.objects.create(name="Sarcoma", meeting_weekday=6)  # Sunday
+        # Thursday 6 Aug -> not the Sunday 3 days away, but the one after.
+        with patch("teams.models.timezone.localdate", return_value=date(2026, 8, 6)):
+            suggested = sarcoma.suggested_listing_date()
+        self.assertEqual(suggested, date(2026, 8, 16))
+        self.assertGreaterEqual((suggested - date(2026, 8, 6)).days, 7)
 
 
 class TriageSuggestionTests(TestCase):
@@ -84,7 +101,7 @@ class AddListingViewTests(TestCase):
         form = self.client.get(self.url).context["form"]
         self.assertEqual(form.fields["mdc"].initial, self.breast_mdc.pk)
         self.assertEqual(
-            form.fields["meeting_date"].initial, self.breast_mdc.next_meeting_date()
+            form.fields["meeting_date"].initial, self.breast_mdc.suggested_listing_date()
         )
 
     def test_the_same_patient_cannot_be_listed_twice_for_one_meeting(self):

@@ -39,6 +39,17 @@ class MDC(models.Model):
         start = on_or_after or timezone.localdate()
         return start + timedelta(days=(self.meeting_weekday - start.weekday()) % 7)
 
+    def suggested_listing_date(self):
+        """The meeting to list a new patient for: next week's, not this week's.
+
+        Coordinators prepare a list a week ahead, so we skip the coming seven
+        days entirely. This always lands 7-13 days out, whichever day the
+        board meets.
+        """
+        if self.meeting_weekday is None:
+            return None
+        return self.next_meeting_date(on_or_after=timezone.localdate() + timedelta(days=7))
+
 
 class Team(models.Model):
     """A consultant-led surgical team that patients are assigned to."""
