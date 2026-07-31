@@ -56,6 +56,14 @@ class User(AbstractUser):
         }
 
     @property
+    def can_manage_mdc_list(self):
+        """Who may put a patient on an MDC discussion list (PRD step 2)."""
+        return self.is_superuser or self.role in {
+            self.Role.TEAM_COORDINATOR,
+            self.Role.CHAIRMAN,
+        }
+
+    @property
     def is_team_scoped(self):
         """These roles see only their own team's patients."""
         return self.role in {

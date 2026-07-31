@@ -35,6 +35,21 @@
     .current .lbl { color: var(--ink); font-weight: 700; }
     .stage-now { margin-top: 14px; font-size: 14px; }
     .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; background: #fbeccd; color: #9a6b16; font-weight: 600; }
+
+    /* MDC listings */
+    .flash { background: #e6f4ee; border: 1px solid #b9ddcd; color: #1c6444; border-radius: 8px;
+             padding: 11px 14px; font-size: 14px; margin-bottom: 20px; }
+    .card h2 .btn { float: right; text-transform: none; letter-spacing: 0; }
+    .btn { background: var(--teal); color: #fff; text-decoration: none; border-radius: 6px;
+           padding: 7px 15px; font-size: 13px; font-weight: 600; display: inline-block; }
+    .btn:hover { background: #026a77; }
+    .listings { list-style: none; padding: 0; margin: 0; }
+    .listings li { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .listings li:last-child { border-bottom: 0; }
+    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .pill.pending { background: #fbeccd; color: #9a6b16; }
+    .pill.done { background: #e6f4ee; color: #1c6444; }
+    .empty { color: var(--muted); font-size: 14px; margin: 0; }
   </style>
 </head>
 <body>
@@ -45,6 +60,10 @@
   </header>
 
   <div class="wrap">
+    {% for message in messages %}
+    <div class="flash">{{ message }}</div>
+    {% endfor %}
+
     <div class="card">
       <h2>Journey</h2>
       <ul class="timeline">
@@ -72,6 +91,32 @@
         <div><div class="k">Next review</div><div class="v">{{ patient.next_review_date }}</div></div>
         {% endif %}
       </div>
+    </div>
+
+    <div class="card">
+      <h2>
+        MDC listings
+        {% if request.user.can_manage_mdc_list %}
+        <a class="btn" href="{% url 'mdc_add_listing' patient.pk %}">+ Add to MDC list</a>
+        {% endif %}
+      </h2>
+      {% if listings %}
+      <ul class="listings">
+        {% for listing in listings %}
+        <li>
+          <strong>{{ listing.mdc.name }}</strong> · {{ listing.meeting_date }}
+          {% if listing.presented %}
+          <span class="pill done">Discussed</span>
+          {% else %}
+          <span class="pill pending">Pending</span>
+          {% endif %}
+          {% if listing.decision %}<div class="empty">{{ listing.decision }}</div>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">Not yet listed for any MDC.</p>
+      {% endif %}
     </div>
   </div>
 </body>

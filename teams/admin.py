@@ -5,7 +5,7 @@ from .models import MDC, Team
 
 @admin.register(MDC)
 class MDCAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_display = ("name", "meeting_weekday")
     search_fields = ("name",)
 
 

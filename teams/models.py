@@ -1,10 +1,28 @@
+from datetime import timedelta
+
 from django.db import models
+from django.utils import timezone
 
 
 class MDC(models.Model):
     """A multidisciplinary conference (tumor board) — e.g. Breast, GI, Sarcoma, Thyroid."""
 
+    class Weekday(models.IntegerChoices):
+        MONDAY = 0, "Monday"
+        TUESDAY = 1, "Tuesday"
+        WEDNESDAY = 2, "Wednesday"
+        THURSDAY = 3, "Thursday"
+        FRIDAY = 4, "Friday"
+        SATURDAY = 5, "Saturday"
+        SUNDAY = 6, "Sunday"
+
     name = models.CharField(max_length=50, unique=True)
+    meeting_weekday = models.IntegerField(
+        choices=Weekday.choices,
+        null=True,
+        blank=True,
+        help_text="The day of the week this MDC meets, used to suggest the next meeting date.",
+    )
 
     class Meta:
         verbose_name = "MDC"
@@ -13,6 +31,13 @@ class MDC(models.Model):
 
     def __str__(self):
         return self.name
+
+    def next_meeting_date(self, on_or_after=None):
+        """The date of this MDC's next meeting, or None if it has no fixed day."""
+        if self.meeting_weekday is None:
+            return None
+        start = on_or_after or timezone.localdate()
+        return start + timedelta(days=(self.meeting_weekday - start.weekday()) % 7)
 
 
 class Team(models.Model):

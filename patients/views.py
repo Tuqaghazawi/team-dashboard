@@ -11,8 +11,11 @@ from teams.models import Team
 from .models import Patient
 
 
-def _visible_patients(user):
-    """The set of patients a given user is allowed to see."""
+def visible_patients(user):
+    """The set of patients a given user is allowed to see.
+
+    Public because other apps (e.g. ``mdc``) must apply the same rule.
+    """
     if user.can_see_all_patients:
         return Patient.objects.select_related("team").all()
     if user.is_team_scoped and user.team_id:
@@ -46,7 +49,7 @@ def _mdc_period_range(period):
 
 @login_required
 def patient_list(request):
-    visible = _visible_patients(request.user)
+    visible = visible_patients(request.user)
     patients = visible
 
     # --- read filters from the URL ---
@@ -94,5 +97,9 @@ def patient_list(request):
 @login_required
 def patient_detail(request, pk):
     # get_object_or_404 on the *visible* set => users can't open another team's patient
-    patient = get_object_or_404(_visible_patients(request.user), pk=pk)
-    return render(request, "patients/patient_detail.html", {"patient": patient})
+    patient = get_object_or_404(visible_patients(request.user), pk=pk)
+    context = {
+        "patient": patient,
+        "listings": patient.mdc_listings.select_related("mdc"),
+    }
+    return render(request, "patients/patient_detail.html", context)

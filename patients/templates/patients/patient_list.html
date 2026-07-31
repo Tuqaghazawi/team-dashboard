@@ -43,6 +43,12 @@
     tr.detail > td { background: #f0f7f6; padding: 18px 24px; }
     .stage-now { margin: 12px 0 0; font-size: 13px; }
     .stage-now .badge { background: #fbeccd; color: #9a6b16; font-weight: 600; }
+    .row-actions { margin: 14px 0 0; display: flex; gap: 10px; align-items: center; }
+    .row-actions .btn { background: var(--teal); color: #fff; text-decoration: none; border-radius: 6px;
+                        padding: 6px 14px; font-size: 12px; font-weight: 600; }
+    .row-actions .btn:hover { background: #026a77; }
+    .row-actions .link { color: var(--teal); font-size: 12px; font-weight: 600; text-decoration: none; }
+    .row-actions .link:hover { text-decoration: underline; }
 
     /* timeline */
     .timeline { display: flex; list-style: none; padding: 0; margin: 0; }
@@ -149,6 +155,12 @@
               {% for listing in patient.mdc_listings.all %}{{ listing.mdc.name }} ({{ listing.meeting_date }}{% if listing.presented %}, discussed{% else %}, pending{% endif %}){% if not forloop.last %}; {% endif %}{% endfor %}
             </p>
             {% endif %}
+            <p class="row-actions">
+              <a class="link" href="{% url 'patient_detail' patient.pk %}">Open patient page &rarr;</a>
+              {% if request.user.can_manage_mdc_list %}
+              <a class="btn" href="{% url 'mdc_add_listing' patient.pk %}">+ Add to MDC list</a>
+              {% endif %}
+            </p>
           </td>
         </tr>
         {% endfor %}
