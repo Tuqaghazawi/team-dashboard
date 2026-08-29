@@ -1,0 +1,17 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 337-93    Ref: SYNTH-2842
+Date: 24-Jun-2026
+Age: 61   Sex: F
+
+SPECIMEN: Abdominoperineal resection (APR)
+
+MICROSCOPIC:
+  Adenocarcinoma, moderately differentiated.
+  Grade 1 of 3.
+  Max tumour dimension 27 mm.
+  LN: 0/20 involved (mesorectal).
+  Margins close (1 mm).
+  LVI present; PNI present.
+
+DIAGNOSIS: Adenocarcinoma, moderately differentiated, pT1 pN0.

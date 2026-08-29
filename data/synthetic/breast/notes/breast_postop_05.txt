@@ -1,0 +1,28 @@
+=== SURGICAL PATHOLOGY REPORT ===
+SYNTHETIC - not for clinical use
+
+CLINICAL HISTORY: A case of left breast carcinoma.
+
+TISSUE ORIGIN:
+A - left axilla axillary clearance lymph nodes.
+B - left breast.
+
+MACROSCOPIC DESCRIPTION:
+B - "MASTECTOMY". Procedure: Mastectomy. Side: left. Focality: unifocal. Nearest margin: deep, distance 0.5 cm.
+
+MICROSCOPIC DESCRIPTION:
+Histologic type: unifocal invasive carcinoma of no special type.
+Grade: 2.
+DCIS component: Present.
+Size of largest invasive component: 4.0 cm.
+Margins: nearest deep, 0.5 cm; overall free.
+Lymphovascular invasion: Not seen.
+Perineural invasion: Present.
+Axillary Clearance lymph nodes: Number examined (10), Number involved (2).
+Size of largest metastatic deposit: 2.1 mm.
+Extranodal invasion: Present.
+Treatment effect: Not applicable.
+
+DIAGNOSIS:
+B - LEFT BREAST; MASTECTOMY: unifocal invasive carcinoma of no special type, grade 2, 4.0 cm.
+Pathologic stage: pT2N1.

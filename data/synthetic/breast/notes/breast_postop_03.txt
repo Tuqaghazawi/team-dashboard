@@ -1,0 +1,28 @@
+=== SURGICAL PATHOLOGY REPORT ===
+SYNTHETIC - not for clinical use
+
+CLINICAL HISTORY: A case of right breast carcinoma.
+
+TISSUE ORIGIN:
+A - right axilla sentinel lymph nodes.
+B - right breast.
+
+MACROSCOPIC DESCRIPTION:
+B - "MASTECTOMY". Procedure: Mastectomy. Side: right. Focality: unifocal. Nearest margin: lateral, distance 0.7 cm.
+
+MICROSCOPIC DESCRIPTION:
+Histologic type: unifocal invasive ductal carcinoma.
+Grade: 3.
+DCIS component: Not identified.
+Size of largest invasive component: 0.4 cm.
+Margins: nearest lateral, 0.7 cm; overall free.
+Lymphovascular invasion: Present.
+Perineural invasion: Not seen.
+Sentinel lymph nodes: Number examined (3), Number involved (0).
+Size of largest metastatic deposit: Not applicable.
+Extranodal invasion: Not applicable.
+Treatment effect: Not applicable.
+
+DIAGNOSIS:
+B - RIGHT BREAST; MASTECTOMY: unifocal invasive ductal carcinoma, grade 3, 0.4 cm.
+Pathologic stage: pT1N0(sn).

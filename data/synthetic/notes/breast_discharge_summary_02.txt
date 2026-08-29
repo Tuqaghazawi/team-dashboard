@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 474-42    Ref: SYNTH-6210
+Date: 13-Aug-2026
+Age: 45   Sex: F
+
+ADMISSION: elective, for Right breast wide local excision with SLNB.
+
+COURSE:
+  Pt s/p Right breast wide local excision with SLNB. Uneventful recovery, no complications.
+  Histology confirmed Invasive lobular carcinoma (ILC).
+  Final stage pT2 pN2 cM0 (stage III, AJCC 8th).
+
+PLAN: MDC discussion; adjuvant therapy per board decision.

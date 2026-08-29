@@ -1,0 +1,20 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 927-63    Ref: SYNTH-9876
+Date: 12-Jan-2026
+Age: 50   Sex: F
+
+SPECIMEN: Left modified radical mastectomy
+
+MICROSCOPIC:
+  Invasive lobular carcinoma (ILC).
+  Grade 1 of 3.
+  Max tumour dimension 9 mm.
+  LN: 2/22 involved (axillary).
+  Margins negative.
+  LVI not identified; PNI present.
+
+IHC:
+  ER 95% positive; PR 85% positive; HER2 IHC 3+ (positive).
+
+DIAGNOSIS: Invasive lobular carcinoma (ILC), pT3 pN1.

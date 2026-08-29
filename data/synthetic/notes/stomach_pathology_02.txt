@@ -1,0 +1,17 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 263-45    Ref: SYNTH-8118
+Date: 02-Apr-2026
+Age: 36   Sex: M
+
+SPECIMEN: Total gastrectomy with D2 lymphadenectomy
+
+MICROSCOPIC:
+  Poorly cohesive carcinoma with signet ring cells.
+  Grade 3 of 3.
+  Max tumour dimension 27 mm.
+  LN: 0/22 involved (perigastric).
+  Margins negative.
+  LVI present; PNI present.
+
+DIAGNOSIS: Poorly cohesive carcinoma with signet ring cells, pT1 pN0.

@@ -1,0 +1,16 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 892-81    Ref: SYNTH-3685
+Date: 17-Mar-2026
+Age: 50   Sex: M
+
+SPECIMEN: Extended left hemicolectomy
+
+MICROSCOPIC:
+  Adenocarcinoma, moderately differentiated.
+  Grade 2 of 3.
+  LN: 0/15 involved (pericolic).
+  Margins negative.
+  LVI present; PNI not identified.
+
+DIAGNOSIS: Adenocarcinoma, moderately differentiated, pT3 pN0.

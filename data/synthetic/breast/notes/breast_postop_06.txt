@@ -1,0 +1,28 @@
+=== SURGICAL PATHOLOGY REPORT ===
+SYNTHETIC - not for clinical use
+
+CLINICAL HISTORY: A case of right breast carcinoma, S/P neoadjuvant chemotherapy.
+
+TISSUE ORIGIN:
+A - right axilla axillary clearance lymph nodes.
+B - right breast.
+
+MACROSCOPIC DESCRIPTION:
+B - "WIDE LOCAL EXCISION". Procedure: Wide local excision. Side: right. Focality: unifocal. Nearest margin: superior, distance 0.6 cm.
+
+MICROSCOPIC DESCRIPTION:
+Histologic type: Residual bifocal invasive ductal carcinoma.
+Grade: 2.
+DCIS component: Not identified.
+Size of largest invasive component: 1.5 cm.
+Margins: nearest superior, 0.6 cm; overall free.
+Lymphovascular invasion: Present.
+Perineural invasion: Not seen.
+Axillary Clearance lymph nodes: Number examined (8), Number involved (0).
+Size of largest metastatic deposit: Not applicable.
+Extranodal invasion: Not applicable.
+Treatment effect: In the Breast: absent. In the Lymph Nodes: present.
+
+DIAGNOSIS:
+B - RIGHT BREAST; WIDE LOCAL EXCISION: Residual bifocal invasive ductal carcinoma, grade 2, 1.5 cm.
+Pathologic stage: ypT1(m)N0.

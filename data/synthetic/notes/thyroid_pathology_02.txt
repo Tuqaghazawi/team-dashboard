@@ -1,0 +1,16 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 454-13    Ref: SYNTH-6964
+Date: 24-Jun-2026
+Age: 56   Sex: F
+
+SPECIMEN: Total thyroidectomy with central neck dissection
+
+MICROSCOPIC:
+  Papillary thyroid carcinoma, follicular variant.
+  Max tumour dimension 14 mm.
+  LN: 2/19 involved (central compartment).
+  Margins close (1 mm).
+  LVI not identified; PNI present.
+
+DIAGNOSIS: Papillary thyroid carcinoma, follicular variant, pT1 pN1.

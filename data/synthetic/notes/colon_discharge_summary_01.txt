@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 829-91    Ref: SYNTH-2180
+Date: 30-Jul-2026
+Age: 66   Sex: F
+
+ADMISSION: elective, for Extended left hemicolectomy.
+
+COURSE:
+  Pt s/p Extended left hemicolectomy. Uneventful recovery, no complications.
+  Histology confirmed Adenocarcinoma, moderately differentiated.
+  Final stage pT3 pN2 cM1 (stage IV, AJCC 8th).
+
+PLAN: MDC discussion; adjuvant therapy per board decision.

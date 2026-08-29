@@ -1,0 +1,28 @@
+=== SURGICAL PATHOLOGY REPORT ===
+SYNTHETIC - not for clinical use
+
+CLINICAL HISTORY: A case of left breast carcinoma, S/P neoadjuvant chemotherapy.
+
+TISSUE ORIGIN:
+A - left axilla axillary clearance lymph nodes.
+B - left breast.
+
+MACROSCOPIC DESCRIPTION:
+B - "WIDE LOCAL EXCISION". Procedure: Wide local excision. Side: left. Focality: unifocal. Nearest margin: deep, distance 1.9 cm.
+
+MICROSCOPIC DESCRIPTION:
+Histologic type: Residual multifocal invasive lobular carcinoma.
+Grade: 2.
+DCIS component: Not identified.
+Size of largest invasive component: 4.2 cm.
+Margins: nearest deep, 1.9 cm; overall free.
+Lymphovascular invasion: Not seen.
+Perineural invasion: Not seen.
+Axillary Clearance lymph nodes: Number examined (20), Number involved (9).
+Size of largest metastatic deposit: 0.9 mm.
+Extranodal invasion: Present.
+Treatment effect: In the Breast: complete. In the Lymph Nodes: present.
+
+DIAGNOSIS:
+B - LEFT BREAST; WIDE LOCAL EXCISION: Residual multifocal invasive lobular carcinoma, grade 2, 4.2 cm.
+Pathologic stage: ypT2(m)N2.

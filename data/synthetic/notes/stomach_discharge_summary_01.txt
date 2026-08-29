@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 464-11    Ref: SYNTH-9902
+Date: 21-Apr-2026
+Age: 35   Sex: F
+
+ADMISSION: elective, for Subtotal gastrectomy with D2 lymphadenectomy.
+
+COURSE:
+  Pt s/p Subtotal gastrectomy with D2 lymphadenectomy. Uneventful recovery, no complications.
+  Histology confirmed Poorly cohesive carcinoma with signet ring cells.
+  Final stage pT1 pN1 cM1 (stage IV, AJCC 8th).
+
+PLAN: MDC discussion; adjuvant therapy per board decision.

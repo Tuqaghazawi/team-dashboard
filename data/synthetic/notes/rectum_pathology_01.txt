@@ -1,0 +1,16 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 408-36    Ref: SYNTH-6384
+Date: 19-Mar-2026
+Age: 73   Sex: M
+
+SPECIMEN: Low anterior resection with TME
+
+MICROSCOPIC:
+  Adenocarcinoma, moderately differentiated.
+  Grade 1 of 3.
+  LN: 1/24 involved (mesorectal).
+  Margins positive at deep margin.
+  LVI not identified; PNI present.
+
+DIAGNOSIS: Adenocarcinoma, moderately differentiated, pT2 pN1.

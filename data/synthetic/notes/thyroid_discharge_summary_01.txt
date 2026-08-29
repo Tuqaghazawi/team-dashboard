@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 136-94    Ref: SYNTH-8861
+Date: 13-Aug-2026
+Age: 42   Sex: F
+
+ADMISSION: elective, for Total thyroidectomy.
+
+COURSE:
+  Pt s/p Total thyroidectomy. Uneventful recovery, no complications.
+  Histology confirmed Papillary thyroid carcinoma, classical variant.
+  Final stage pT1 pN1 cM1 (stage IV, AJCC 8th).
+
+PLAN: MDC discussion; adjuvant therapy per board decision.

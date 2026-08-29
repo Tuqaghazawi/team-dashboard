@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 688-49    Ref: SYNTH-6597
+Date: 18-Jul-2026
+Age: 66   Sex: M
+
+ADMISSION: elective, for Low anterior resection with TME.
+
+COURSE:
+  Pt s/p Low anterior resection with TME. Uneventful recovery, no complications.
+  Histology confirmed Adenocarcinoma, well differentiated.
+  Final stage pT4a pN2 cM1.
+
+PLAN: MDC discussion; adjuvant therapy per board decision.

@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 334-99    Ref: SYNTH-1674
+Date: 24-Apr-2026
+Age: 61   Sex: M
+
+ADMISSION: elective, for Ivor-Lewis oesophagectomy.
+
+COURSE:
+  Pt s/p Ivor-Lewis oesophagectomy. Uneventful recovery, no complications.
+  Histology confirmed Squamous cell carcinoma.
+  Final stage pT2 pN0 cM0.
+
+PLAN: MDC discussion; adjuvant therapy per board decision.

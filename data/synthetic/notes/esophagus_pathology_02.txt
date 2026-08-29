@@ -1,0 +1,17 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 750-79    Ref: SYNTH-1011
+Date: 03-Aug-2026
+Age: 53   Sex: M
+
+SPECIMEN: McKeown oesophagectomy
+
+MICROSCOPIC:
+  Squamous cell carcinoma.
+  Grade 2 of 3.
+  Max tumour dimension 9 mm.
+  LN: 5/13 involved (paraoesophageal).
+  Margins positive at deep margin.
+  LVI not identified; PNI not identified.
+
+DIAGNOSIS: Squamous cell carcinoma, pT1 pN2.

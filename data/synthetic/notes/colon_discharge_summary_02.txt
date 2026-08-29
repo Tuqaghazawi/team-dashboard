@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 367-95    Ref: SYNTH-9777
+Date: 24-Mar-2026
+Age: 74   Sex: M
+
+ADMISSION: elective, for Right hemicolectomy.
+
+COURSE:
+  Pt s/p Right hemicolectomy. Uneventful recovery, no complications.
+  Histology confirmed Mucinous adenocarcinoma.
+  Final stage pT2 pN1 cM0 (stage III, AJCC 8th).
+
+PLAN: MDC discussion; adjuvant therapy per board decision.

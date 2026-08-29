@@ -1,0 +1,30 @@
+=== SURGICAL PATHOLOGY REPORT ===
+SYNTHETIC - not for clinical use
+
+CLINICAL HISTORY: A case of left breast carcinoma, S/P neoadjuvant chemotherapy.
+
+TISSUE ORIGIN:
+A - Left axilla sentinel lymph nodes.
+B - Left breast.
+
+MACROSCOPIC DESCRIPTION:
+A - "LEFT SENTINEL LYMPH NODE BIOPSY": three fragments of fatty tissue, aggregate 5.5x4.0x1.0 cm. Largest lymph node 2.5x2.0x0.5 cm. Frozen section: four lymph nodes, free of tumor (0/4), no therapy effect seen.
+B - "LEFT MASTECTOMY". Procedure: Mastectomy. Side: Left. Specimen 30x18x6 cm. Lesion (tumor bed) 4x4x3 cm. Location: Mid upper. Appearance: Fibrotic, ill-defined. Focality: Unifocal. Nearest margin: deep, distance 2 cm.
+
+MICROSCOPIC DESCRIPTION:
+Histologic type: Residual bifocal invasive breast carcinoma of no special type.
+Grade: 3.
+DCIS component: Not identified.
+Size of largest invasive component: 1.2 cm.
+Margins: Distance of invasive from closest margin: 2 cm, deep. All other margins free.
+Lymphovascular invasion: Not seen.
+Perineural invasion: Present.
+Axillary lymph nodes (Sentinel): Number examined (4), Number involved (0).
+Size of largest metastatic deposit: Not applicable.
+Extranodal invasion: Not applicable.
+Treatment effect: In the Breast: Focal. In the Lymph Nodes: Absent.
+
+DIAGNOSIS:
+A - LEFT AXILLA SENTINEL LYMPH NODES; EXCISION: Four lymph nodes, free of tumor (0/4). No therapy effect seen.
+B - LEFT BREAST; MASTECTOMY: Residual bifocal invasive breast carcinoma, grade 3, 1.2 cm.
+Pathologic stage: ypT1c(m)N0(sn).

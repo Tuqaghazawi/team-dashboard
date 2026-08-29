@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 860-82    Ref: SYNTH-8510
+Date: 30-Jun-2026
+Age: 57   Sex: F
+
+ADMISSION: elective, for Right simple mastectomy with axillary clearance.
+
+COURSE:
+  Pt s/p Right simple mastectomy with axillary clearance. Uneventful recovery, no complications.
+  Histology confirmed Invasive ductal carcinoma (IDC), NST.
+  Final stage pT3 pN0 cM0 (stage II, AJCC 8th).
+
+PLAN: MDC discussion; adjuvant therapy per board decision.

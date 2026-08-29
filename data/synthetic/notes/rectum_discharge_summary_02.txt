@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 780-59    Ref: SYNTH-6255
+Date: 16-Jul-2026
+Age: 52   Sex: F
+
+ADMISSION: elective, for Abdominoperineal resection (APR).
+
+COURSE:
+  Pt s/p Abdominoperineal resection (APR). Uneventful recovery, no complications.
+  Histology confirmed Adenocarcinoma, well differentiated.
+  Final stage pT4a pN0 cM1 (stage IV, AJCC 8th).
+
+PLAN: MDC discussion; adjuvant therapy per board decision.

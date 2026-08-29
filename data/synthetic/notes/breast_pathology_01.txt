@@ -1,0 +1,20 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 100-74    Ref: SYNTH-7660
+Date: 21-Jun-2026
+Age: 55   Sex: F
+
+SPECIMEN: Right simple mastectomy with axillary clearance
+
+MICROSCOPIC:
+  Invasive lobular carcinoma (ILC).
+  Grade 3 of 3.
+  Max tumour dimension 27 mm.
+  LN: 4/24 involved (axillary).
+  Margins negative.
+  LVI present; PNI present.
+
+IHC:
+  ER negative (<1%); PR negative (<1%); HER2 IHC 0 (negative).
+
+DIAGNOSIS: Invasive lobular carcinoma (ILC), pT2 pN2.

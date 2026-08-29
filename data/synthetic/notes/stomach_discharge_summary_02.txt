@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 127-30    Ref: SYNTH-5607
+Date: 06-May-2026
+Age: 78   Sex: M
+
+ADMISSION: elective, for Total gastrectomy with D2 lymphadenectomy.
+
+COURSE:
+  Pt s/p Total gastrectomy with D2 lymphadenectomy. Uneventful recovery, no complications.
+  Histology confirmed Adenocarcinoma, intestinal type.
+  Final stage pT2 pN0 cM0.
+
+PLAN: MDC discussion; adjuvant therapy per board decision.

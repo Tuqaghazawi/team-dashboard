@@ -1,0 +1,13 @@
+SYNTHETIC - not for clinical use
+=== RADIOLOGY REPORT - PET-CT ===
+Accession: 518-24    Ref: SYNTH-7742
+Date: 19-Apr-2026
+Age: 68   Sex: M
+
+FINDINGS:
+  FDG-avid thickening at the gastro-oesophageal junction, 44 mm,
+  Siewert type II. Epicentre straddles the GEJ; cannot reliably be
+  assigned to distal oesophagus vs proximal stomach.
+  Avid paraoesophageal and perigastric nodes.
+
+IMPRESSION: GEJ tumour, cT3 cN1 cM0. Site of origin indeterminate.

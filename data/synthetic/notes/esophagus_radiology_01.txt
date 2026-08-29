@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== RADIOLOGY REPORT - PET-CT ===
+Accession: 530-55    Ref: SYNTH-3139
+Date: 22-Jun-2026
+Age: 55   Sex: M
+
+CLINICAL: Staging.
+
+FINDINGS:
+  Circumferential distal oesophageal thickening measuring 41 mm.
+  Enlarged paraoesophageal nodes, c/w nodal disease.
+  No distant metastatic disease.
+
+IMPRESSION: cT2 cN2 cM0.

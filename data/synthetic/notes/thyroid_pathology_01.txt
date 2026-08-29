@@ -1,0 +1,17 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 483-90    Ref: SYNTH-6975
+Date: 16-Jan-2026
+Age: 39   Sex: F
+
+SPECIMEN: Total thyroidectomy
+
+MICROSCOPIC:
+  Papillary thyroid carcinoma, classical variant.
+  Grade 1 of 3.
+  Max tumour dimension 35 mm.
+  LN: 6/20 involved (central compartment).
+  Margins positive at deep margin.
+  LVI not identified; PNI present.
+
+DIAGNOSIS: Papillary thyroid carcinoma, classical variant, pT4a pN2.

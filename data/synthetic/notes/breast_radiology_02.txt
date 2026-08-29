@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== RADIOLOGY REPORT - BILATERAL DIAGNOSTIC MAMMOGRAM AND BREAST US ===
+Accession: 365-94    Ref: SYNTH-4247
+Date: 29-Jan-2026
+Age: 59   Sex: F
+
+CLINICAL: Staging.
+
+FINDINGS:
+  Spiculated mass in the upper outer quadrant measuring 9 mm.
+  Enlarged axillary nodes, c/w nodal disease.
+  No distant metastatic disease.
+
+IMPRESSION: cT1 cN2 cM0.

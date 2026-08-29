@@ -1,0 +1,28 @@
+=== SURGICAL PATHOLOGY REPORT ===
+SYNTHETIC - not for clinical use
+
+CLINICAL HISTORY: A case of left breast carcinoma, S/P neoadjuvant chemotherapy.
+
+TISSUE ORIGIN:
+A - left axilla sentinel lymph nodes.
+B - left breast.
+
+MACROSCOPIC DESCRIPTION:
+B - "MASTECTOMY". Procedure: Mastectomy. Side: left. Focality: unifocal. Nearest margin: deep, distance 2.4 cm.
+
+MICROSCOPIC DESCRIPTION:
+Histologic type: Residual unifocal invasive mammary carcinoma.
+Grade: 2.
+DCIS component: Not identified.
+Size of largest invasive component: 3.9 cm.
+Margins: nearest deep, 2.4 cm; overall involved.
+Lymphovascular invasion: Not seen.
+Perineural invasion: Present.
+Sentinel lymph nodes: Number examined (5), Number involved (0).
+Size of largest metastatic deposit: Not applicable.
+Extranodal invasion: Not applicable.
+Treatment effect: In the Breast: complete. In the Lymph Nodes: present.
+
+DIAGNOSIS:
+B - LEFT BREAST; MASTECTOMY: Residual unifocal invasive mammary carcinoma, grade 2, 3.9 cm.
+Pathologic stage: ypT2N0(sn).

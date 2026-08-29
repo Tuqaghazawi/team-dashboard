@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== RADIOLOGY REPORT - MRI PELVIS, RECTAL PROTOCOL ===
+Accession: 533-18    Ref: SYNTH-6954
+Date: 08-Feb-2026
+Age: 61   Sex: F
+
+CLINICAL: Staging.
+
+FINDINGS:
+  Circumferential mid-rectal tumour measuring 55 mm.
+  No enlarged mesorectal nodes. NAD elsewhere.
+  No distant metastatic disease.
+
+IMPRESSION: cT3 cN0 cM0.

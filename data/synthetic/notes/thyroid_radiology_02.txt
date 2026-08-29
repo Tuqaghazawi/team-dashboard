@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== RADIOLOGY REPORT - NECK ULTRASOUND ===
+Accession: 636-37    Ref: SYNTH-8878
+Date: 10-Jun-2026
+Age: 78   Sex: F
+
+CLINICAL: Staging.
+
+FINDINGS:
+  Hypoechoic nodule with microcalcifications measuring 35 mm.
+  Enlarged central compartment nodes, c/w nodal disease.
+  No distant metastatic disease.
+
+IMPRESSION: cT1 cN1 cM0.

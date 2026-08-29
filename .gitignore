@@ -27,3 +27,10 @@ desktop.ini
 
 # --- Build scratch ---
 .docbuild/
+
+# --- AI layer ---
+# Licensed guideline PDFs (e.g. NCCN) must never be committed.
+data/guidelines/*.pdf
+# Local vector stores are rebuildable from source documents.
+**/chroma_db/
+*.ipynb_checkpoints

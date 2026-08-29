@@ -1,0 +1,16 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 573-19    Ref: SYNTH-7858
+Date: 05-Aug-2026
+Age: 79   Sex: M
+
+SPECIMEN: Extended left hemicolectomy
+
+MICROSCOPIC:
+  Adenocarcinoma, poorly differentiated.
+  Max tumour dimension 9 mm.
+  LN: 0/8 involved (pericolic).
+  Margins negative.
+  LVI not identified; PNI present.
+
+DIAGNOSIS: Adenocarcinoma, poorly differentiated, pT2 pN0.

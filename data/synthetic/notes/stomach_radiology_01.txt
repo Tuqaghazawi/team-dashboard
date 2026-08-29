@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== RADIOLOGY REPORT - CT CHEST/ABDOMEN/PELVIS WITH IV CONTRAST ===
+Accession: 592-45    Ref: SYNTH-9482
+Date: 19-Aug-2026
+Age: 70   Sex: M
+
+CLINICAL: Staging.
+
+FINDINGS:
+  Thickened gastric antral wall measuring 35 mm.
+  Enlarged perigastric nodes, c/w nodal disease.
+  No distant metastatic disease.
+
+IMPRESSION: cT3 cN2 cM0.

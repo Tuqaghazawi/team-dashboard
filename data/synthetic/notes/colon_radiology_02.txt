@@ -1,0 +1,14 @@
+SYNTHETIC - not for clinical use
+=== RADIOLOGY REPORT - CT CHEST/ABDOMEN/PELVIS WITH IV CONTRAST ===
+Accession: 586-30    Ref: SYNTH-8973
+Date: 05-Jun-2026
+Age: 74   Sex: F
+
+CLINICAL: Staging.
+
+FINDINGS:
+  Annular constricting lesion measuring 41 mm.
+  No enlarged pericolic nodes. NAD elsewhere.
+  No distant metastatic disease.
+
+IMPRESSION: cT1 cN0 cM0.

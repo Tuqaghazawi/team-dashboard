@@ -1,0 +1,13 @@
+SYNTHETIC - not for clinical use
+=== SURGICAL PATHOLOGY REPORT ===
+Accession: 412-77    Ref: SYNTH-5310
+Date: 04-Feb-2026
+Age: 63   Sex: F
+
+SPECIMEN: Left axillary lymph node, excision
+
+MICROSCOPIC:
+  Metastatic adenocarcinoma in LN. CK7+, CK20-, TTF-1-, GATA3 equivocal.
+  Breast and lung primaries both considered; imaging NAD.
+
+DIAGNOSIS: Metastatic adenocarcinoma, primary site not established (CUP).

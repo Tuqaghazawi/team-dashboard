@@ -1,0 +1,12 @@
+SYNTHETIC - not for clinical use
+=== DISCHARGE SUMMARY ===
+Accession: 226-08    Ref: SYNTH-2984
+Date: 30-Jun-2026
+Age: 57   Sex: F
+
+COURSE:
+  Admitted with ascites. Diagnostic laparoscopy: widespread peritoneal
+  carcinomatosis. Bx: high-grade adenocarcinoma.
+  IHC pattern non-specific; GI vs gynae primary unresolved at discharge.
+
+PLAN: MDC discussion. Further workup for primary.
