@@ -1,0 +1,133 @@
+{"id": "breast_pathology_01", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "breast_pathology_01", "field": "pathology.grade", "verdict": "incorrect", "reason": "The extracted value is missing, which is a clinical mismatch."}
+{"id": "breast_pathology_01", "field": "pathology.margins", "verdict": "incorrect", "reason": "The extracted value is missing, which is a clinical mismatch."}
+{"id": "breast_pathology_01", "field": "pathology.lymphovascular_invasion", "verdict": "incorrect", "reason": "The extracted value is missing, which is a clinical mismatch."}
+{"id": "breast_pathology_01", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "breast_pathology_01", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "breast_pathology_02", "field": "histology", "verdict": "correct", "reason": "Extracted value matches the gold value exactly."}
+{"id": "breast_pathology_02", "field": "pathology.grade", "verdict": "incorrect", "reason": "Extracted value is null whereas the gold value is '1'."}
+{"id": "breast_pathology_02", "field": "pathology.margins", "verdict": "incorrect", "reason": "Extracted value is null whereas the gold value is 'negative'."}
+{"id": "breast_pathology_02", "field": "pathology.lymphovascular_invasion", "verdict": "incorrect", "reason": "Extracted value is null whereas the gold value is 'False'."}
+{"id": "breast_pathology_02", "field": "tnm.t", "verdict": "correct", "reason": "Extracted value matches the gold value exactly."}
+{"id": "breast_pathology_02", "field": "tnm.n", "verdict": "correct", "reason": "Extracted value matches the gold value exactly."}
+{"id": "breast_radiology_01", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value 'cT3' matches the gold value."}
+{"id": "breast_radiology_01", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value 'cN1' matches the gold value."}
+{"id": "breast_radiology_02", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "breast_radiology_02", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "breast_discharge_summary_01", "field": "histology", "verdict": "correct", "reason": "Extracted value matches GOLD value exactly."}
+{"id": "breast_discharge_summary_01", "field": "tnm.t", "verdict": "correct", "reason": "Extracted value matches GOLD value exactly."}
+{"id": "breast_discharge_summary_01", "field": "tnm.n", "verdict": "correct", "reason": "Extracted value matches GOLD value exactly."}
+{"id": "breast_discharge_summary_02", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the gold value with the same meaning, 'ILC' is just an abbreviation."}
+{"id": "breast_discharge_summary_02", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value is identical to the gold value."}
+{"id": "breast_discharge_summary_02", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value is identical to the gold value."}
+{"id": "colon_pathology_01", "field": "histology", "verdict": "incorrect", "reason": "The extracted value is missing the 'poorly differentiated' descriptor."}
+{"id": "colon_pathology_01", "field": "pathology.margins", "verdict": "correct", "reason": "Both values indicate 'negative', which is equivalent."}
+{"id": "colon_pathology_01", "field": "pathology.lymphovascular_invasion", "verdict": "correct", "reason": "Both values indicate 'False', which is equivalent."}
+{"id": "colon_pathology_01", "field": "tnm.t", "verdict": "correct", "reason": "Both values are 'pT2', which are equivalent."}
+{"id": "colon_pathology_01", "field": "tnm.n", "verdict": "correct", "reason": "Both values are 'pN0', which are equivalent."}
+{"id": "colon_pathology_02", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "colon_pathology_02", "field": "pathology.grade", "verdict": "correct", "reason": "Grade 2 of 3 is equivalent to grade 2."}
+{"id": "colon_pathology_02", "field": "pathology.margins", "verdict": "correct", "reason": "Both values indicate no involvement."}
+{"id": "colon_pathology_02", "field": "pathology.lymphovascular_invasion", "verdict": "correct", "reason": "Both values indicate the same presence or absence of invasion."}
+{"id": "colon_pathology_02", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "colon_pathology_02", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "colon_radiology_01", "field": "tnm.t", "verdict": "correct", "reason": "Both values are identical."}
+{"id": "colon_radiology_01", "field": "tnm.n", "verdict": "correct", "reason": "Both values are identical."}
+{"id": "colon_radiology_02", "field": "tnm.t", "verdict": "correct", "reason": "Extracted value matches GOLD value exactly."}
+{"id": "colon_radiology_02", "field": "tnm.n", "verdict": "correct", "reason": "Extracted value matches GOLD value exactly."}
+{"id": "colon_discharge_summary_01", "field": "histology", "verdict": "incorrect", "reason": "The extracted value is incomplete; it does not specify 'moderately differentiated'."}
+{"id": "colon_discharge_summary_01", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "colon_discharge_summary_01", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "colon_discharge_summary_02", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "colon_discharge_summary_02", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "colon_discharge_summary_02", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "rectum_pathology_01", "field": "histology", "verdict": "incorrect", "reason": "Extracted value lacks specificity as it does not indicate the differentiation level."}
+{"id": "rectum_pathology_01", "field": "pathology.grade", "verdict": "incorrect", "reason": "Extracted value has a different format that is not equivalent to the numeric grade."}
+{"id": "rectum_pathology_01", "field": "pathology.margins", "verdict": "correct", "reason": "Extracted value matches GOLD perfectly."}
+{"id": "rectum_pathology_01", "field": "pathology.lymphovascular_invasion", "verdict": "correct", "reason": "Extracted value matches GOLD perfectly."}
+{"id": "rectum_pathology_01", "field": "tnm.t", "verdict": "correct", "reason": "Extracted value matches GOLD perfectly."}
+{"id": "rectum_pathology_01", "field": "tnm.n", "verdict": "correct", "reason": "Extracted value matches GOLD perfectly."}
+{"id": "rectum_pathology_02", "field": "histology", "verdict": "incorrect", "reason": "Extracted value is missing specificity about differentiation."}
+{"id": "rectum_pathology_02", "field": "pathology.grade", "verdict": "incorrect", "reason": "Extracted value is not equivalent; it indicates a range, not just grade."}
+{"id": "rectum_pathology_02", "field": "pathology.margins", "verdict": "correct", "reason": "Both values match perfectly."}
+{"id": "rectum_pathology_02", "field": "pathology.lymphovascular_invasion", "verdict": "correct", "reason": "Both values match perfectly."}
+{"id": "rectum_pathology_02", "field": "tnm.t", "verdict": "correct", "reason": "Both values match perfectly."}
+{"id": "rectum_pathology_02", "field": "tnm.n", "verdict": "correct", "reason": "Both values match perfectly."}
+{"id": "rectum_radiology_01", "field": "tnm.t", "verdict": "correct", "reason": "Extracted value matches the GOLD value exactly."}
+{"id": "rectum_radiology_01", "field": "tnm.n", "verdict": "correct", "reason": "Extracted value matches the GOLD value exactly."}
+{"id": "rectum_radiology_02", "field": "tnm.t", "verdict": "correct", "reason": "Extracted value matches the GOLD value exactly."}
+{"id": "rectum_radiology_02", "field": "tnm.n", "verdict": "correct", "reason": "Extracted value matches the GOLD value exactly."}
+{"id": "rectum_discharge_summary_01", "field": "histology", "verdict": "incorrect", "reason": "The extracted value is incomplete; it doesn't specify 'well differentiated'."}
+{"id": "rectum_discharge_summary_01", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "rectum_discharge_summary_01", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "rectum_discharge_summary_02", "field": "histology", "verdict": "incorrect", "reason": "Extracted value is incomplete; it doesn't specify 'well differentiated'."}
+{"id": "rectum_discharge_summary_02", "field": "tnm.t", "verdict": "correct", "reason": "Extracted value matches GOLD exactly."}
+{"id": "rectum_discharge_summary_02", "field": "tnm.n", "verdict": "correct", "reason": "Extracted value matches GOLD exactly."}
+{"id": "thyroid_pathology_01", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "thyroid_pathology_01", "field": "pathology.grade", "verdict": "correct", "reason": "'Grade 1 of 3' is equivalent to '1'."}
+{"id": "thyroid_pathology_01", "field": "pathology.margins", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "thyroid_pathology_01", "field": "pathology.lymphovascular_invasion", "verdict": "correct", "reason": "Both values indicate the same status (False)."}
+{"id": "thyroid_pathology_01", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "thyroid_pathology_01", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "thyroid_pathology_02", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "thyroid_pathology_02", "field": "pathology.margins", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "thyroid_pathology_02", "field": "pathology.lymphovascular_invasion", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "thyroid_pathology_02", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "thyroid_pathology_02", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "thyroid_radiology_01", "field": "tnm.t", "verdict": "correct", "reason": "Both the GOLD and EXTRACTED values are identical."}
+{"id": "thyroid_radiology_01", "field": "tnm.n", "verdict": "correct", "reason": "Both the GOLD and EXTRACTED values are identical."}
+{"id": "thyroid_radiology_02", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "thyroid_radiology_02", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "thyroid_discharge_summary_01", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "thyroid_discharge_summary_01", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "thyroid_discharge_summary_01", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "thyroid_discharge_summary_02", "field": "histology", "verdict": "correct", "reason": "Exact match."}
+{"id": "thyroid_discharge_summary_02", "field": "tnm.t", "verdict": "correct", "reason": "Exact match."}
+{"id": "thyroid_discharge_summary_02", "field": "tnm.n", "verdict": "correct", "reason": "Exact match."}
+{"id": "stomach_pathology_01", "field": "histology", "verdict": "correct", "reason": "Exact match between GOLD and EXTRACTED values."}
+{"id": "stomach_pathology_01", "field": "pathology.margins", "verdict": "correct", "reason": "Exact match between GOLD and EXTRACTED values."}
+{"id": "stomach_pathology_01", "field": "pathology.lymphovascular_invasion", "verdict": "correct", "reason": "Exact match, both indicate 'False'."}
+{"id": "stomach_pathology_01", "field": "tnm.t", "verdict": "correct", "reason": "Exact match between GOLD and EXTRACTED values."}
+{"id": "stomach_pathology_01", "field": "tnm.n", "verdict": "correct", "reason": "Exact match between GOLD and EXTRACTED values."}
+{"id": "stomach_pathology_02", "field": "histology", "verdict": "correct", "reason": "Exact match."}
+{"id": "stomach_pathology_02", "field": "pathology.grade", "verdict": "correct", "reason": "Equivalent grading format; 'Grade 3 of 3' means grade 3."}
+{"id": "stomach_pathology_02", "field": "pathology.margins", "verdict": "correct", "reason": "Exact match on assessment of margins."}
+{"id": "stomach_pathology_02", "field": "pathology.lymphovascular_invasion", "verdict": "correct", "reason": "Exact match."}
+{"id": "stomach_pathology_02", "field": "tnm.t", "verdict": "correct", "reason": "Exact match."}
+{"id": "stomach_pathology_02", "field": "tnm.n", "verdict": "correct", "reason": "Exact match."}
+{"id": "stomach_radiology_01", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "stomach_radiology_01", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "stomach_radiology_02", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "stomach_radiology_02", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "stomach_discharge_summary_01", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "stomach_discharge_summary_01", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "stomach_discharge_summary_01", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the GOLD value exactly."}
+{"id": "stomach_discharge_summary_02", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "stomach_discharge_summary_02", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "stomach_discharge_summary_02", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "esophagus_pathology_01", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "esophagus_pathology_01", "field": "pathology.grade", "verdict": "correct", "reason": "The extracted value 'Grade 3 of 3' is equivalent to '3'."}
+{"id": "esophagus_pathology_01", "field": "pathology.margins", "verdict": "correct", "reason": "Both values indicate the same status: 'negative'."}
+{"id": "esophagus_pathology_01", "field": "pathology.lymphovascular_invasion", "verdict": "correct", "reason": "Both values indicate 'True', confirming the presence of invasion."}
+{"id": "esophagus_pathology_01", "field": "tnm.t", "verdict": "correct", "reason": "Both values represent the same classification: 'pT2'."}
+{"id": "esophagus_pathology_01", "field": "tnm.n", "verdict": "correct", "reason": "Both values signify the same category: 'pN1'."}
+{"id": "esophagus_pathology_02", "field": "histology", "verdict": "correct", "reason": "Exact match."}
+{"id": "esophagus_pathology_02", "field": "pathology.grade", "verdict": "correct", "reason": "Clinically equivalent; 'Grade 2 of 3' is the same as '2'."}
+{"id": "esophagus_pathology_02", "field": "pathology.margins", "verdict": "correct", "reason": "Exact match."}
+{"id": "esophagus_pathology_02", "field": "pathology.lymphovascular_invasion", "verdict": "correct", "reason": "Exact match."}
+{"id": "esophagus_pathology_02", "field": "tnm.t", "verdict": "correct", "reason": "Exact match."}
+{"id": "esophagus_pathology_02", "field": "tnm.n", "verdict": "correct", "reason": "Exact match."}
+{"id": "esophagus_radiology_01", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "esophagus_radiology_01", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "esophagus_radiology_02", "field": "tnm.t", "verdict": "correct", "reason": "Extracted value matches the GOLD value exactly."}
+{"id": "esophagus_radiology_02", "field": "tnm.n", "verdict": "correct", "reason": "Extracted value matches the GOLD value exactly."}
+{"id": "esophagus_discharge_summary_01", "field": "histology", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "esophagus_discharge_summary_01", "field": "tnm.t", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "esophagus_discharge_summary_01", "field": "tnm.n", "verdict": "correct", "reason": "The extracted value matches the gold value exactly."}
+{"id": "esophagus_discharge_summary_02", "field": "histology", "verdict": "correct", "reason": "Exact match between GOLD and EXTRACTED values."}
+{"id": "esophagus_discharge_summary_02", "field": "tnm.t", "verdict": "correct", "reason": "Exact match between GOLD and EXTRACTED values."}
+{"id": "esophagus_discharge_summary_02", "field": "tnm.n", "verdict": "correct", "reason": "Exact match between GOLD and EXTRACTED values."}
+{"id": "other_ambiguous_01", "field": "histology", "verdict": "incorrect", "reason": "The extracted value 'adenocarcinoma' is not equivalent to 'Metastatic adenocarcinoma', missing the 'Metastatic' descriptor."}
+{"id": "other_ambiguous_02", "field": "tnm.t", "verdict": "correct", "reason": "Both GOLD and EXTRACTED values are identical."}
+{"id": "other_ambiguous_02", "field": "tnm.n", "verdict": "correct", "reason": "Both GOLD and EXTRACTED values are identical."}
+{"id": "other_ambiguous_03", "field": "histology", "verdict": "correct", "reason": "Synonyms and formatting differences are acceptable; both values convey the same clinical meaning."}
