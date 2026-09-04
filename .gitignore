@@ -34,3 +34,8 @@ data/guidelines/*.pdf
 # Local vector stores are rebuildable from source documents.
 **/chroma_db/
 *.ipynb_checkpoints
+__pycache__/
+chroma_db/
+ai/rag/guideline_chunks.jsonl
+ai/rag/*.pdf
+ai/rag/data/

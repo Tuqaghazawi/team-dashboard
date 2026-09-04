@@ -1,0 +1,22 @@
+[
+  {
+    "input": "When is total thyroidectomy recommended for differentiated thyroid cancer?",
+    "expected_output": "Total thyroidectomy is recommended in most cases of differentiated thyroid cancer at KHCC, particularly to facilitate postoperative radioactive iodine (RAI) treatment, and in the presence of extrathyroidal extension or metastases. Patients referred after total thyroidectomy do not require central dissection unless there is gross central disease."
+  },
+  {
+    "input": "What negative margin does KHCC recommend for DCIS after breast-conserving surgery?",
+    "expected_output": "For DCIS, negative pathological margins are debated, but KHCC recommends at least a 2.0 mm negative margin for most women following breast-conserving surgery."
+  },
+  {
+    "input": "What baseline blood tests should all colon cancer patients have?",
+    "expected_output": "All colon cancer patients should have baseline complete blood count, liver function tests, and kidney function tests, a hepatitis profile (HBsAg, HBsAb, HBcoreAb, HCV), and tumor markers. K-ras, N-ras, BRAF mutation testing and MSI are done for metastatic disease."
+  },
+  {
+    "input": "Who evaluates rectal cancer patients before treatment and what do they decide?",
+    "expected_output": "Rectal cancer patients are always seen by the surgical oncologist at KHCC before starting any treatment. The surgeon examines the patient and decides the local stage, the feasibility of tumor resectability and potential for anal preservation, and whether neoadjuvant treatment is indicated."
+  },
+  {
+    "input": "When is histological proof of malignancy mandatory in pancreatic cancer?",
+    "expected_output": "In pancreatic cancer, histological proof of malignancy is only mandatory in unresectable cases or when a neoadjuvant strategy is planned."
+  }
+]
