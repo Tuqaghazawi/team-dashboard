@@ -1,0 +1,156 @@
+dir data{
+  "1": {
+    "interactions": [
+      {
+        "drug_a": "Warfarin",
+        "drug_b": "Ibuprofen",
+        "severity": "major",
+        "mechanism": "additive bleeding risk"
+      }
+    ],
+    "chemo": null,
+    "periop_meds": [
+      {
+        "drug": "Warfarin",
+        "action": "HOLD"
+      },
+      {
+        "drug": "Ibuprofen",
+        "action": "DISCONTINUE"
+      }
+    ]
+  },
+  "2": {
+    "interactions": [],
+    "chemo": {
+      "regimen": "FOLFOX",
+      "cycle_number": 3,
+      "last_admin_date": "2026-08-24"
+    },
+    "periop_meds": []
+  },
+  "3": {
+    "interactions": [
+      {
+        "drug_a": "Simvastatin",
+        "drug_b": "Clarithromycin",
+        "severity": "major",
+        "mechanism": "CYP3A4 inhibition, myopathy/rhabdomyolysis"
+      }
+    ],
+    "chemo": null,
+    "periop_meds": []
+  },
+  "4": {
+    "interactions": [],
+    "chemo": null,
+    "periop_meds": [
+      {
+        "drug": "Bevacizumab",
+        "action": "DISCONTINUE"
+      }
+    ]
+  },
+  "5": {
+    "interactions": [
+      {
+        "drug_a": "Lisinopril",
+        "drug_b": "Spironolactone",
+        "severity": "moderate",
+        "mechanism": "additive hyperkalemia"
+      }
+    ],
+    "chemo": null,
+    "periop_meds": []
+  },
+  "6": {
+    "interactions": [
+      {
+        "drug_a": "Methotrexate",
+        "drug_b": "Trimethoprim-sulfamethoxazole",
+        "severity": "contraindicated",
+        "mechanism": "additive antifolate toxicity, pancytopenia"
+      }
+    ],
+    "chemo": null,
+    "periop_meds": []
+  },
+  "7": {
+    "interactions": [
+      {
+        "drug_a": "Sertraline",
+        "drug_b": "Tramadol",
+        "severity": "moderate",
+        "mechanism": "serotonin syndrome"
+      }
+    ],
+    "chemo": null,
+    "periop_meds": []
+  },
+  "8": {
+    "interactions": [
+      {
+        "drug_a": "Digoxin",
+        "drug_b": "Furosemide",
+        "severity": "moderate",
+        "mechanism": "hypokalemia potentiates digoxin toxicity"
+      }
+    ],
+    "chemo": null,
+    "periop_meds": []
+  },
+  "9": {
+    "interactions": [],
+    "chemo": {
+      "regimen": "AC",
+      "cycle_number": 2,
+      "last_admin_date": "2026-08-28"
+    },
+    "periop_meds": []
+  },
+  "10": {
+    "interactions": [
+      {
+        "drug_a": "Warfarin",
+        "drug_b": "Amiodarone",
+        "severity": "major",
+        "mechanism": "potentiates warfarin, elevated INR/bleeding"
+      }
+    ],
+    "chemo": null,
+    "periop_meds": [
+      {
+        "drug": "Warfarin",
+        "action": "HOLD"
+      }
+    ]
+  },
+  "11": {
+    "interactions": [],
+    "chemo": null,
+    "periop_meds": [
+      {
+        "drug": "Metformin",
+        "action": "HOLD"
+      }
+    ]
+  },
+  "12": {
+    "interactions": [],
+    "chemo": {
+      "regimen": "unspecified",
+      "cycle_number": 4,
+      "last_admin_date": "2026-08-15"
+    },
+    "periop_meds": [
+      {
+        "drug": "Apixaban",
+        "action": "DISCONTINUE"
+      },
+      {
+        "drug": "Enoxaparin",
+        "action": "DISCONTINUE"
+      }
+    ]
+  }
+}

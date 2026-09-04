@@ -1,0 +1,179 @@
+order_id,mrn,patient_age,patient_sex,ward,drug_name,drug_class,form,strength,dose,route,frequency,high_alert,order_status,start_date,prescriber
+1001,MRN4001,48,F,General Surgery,Heparin,Anticoagulant,infusion,25000 U/500mL,per protocol,IV,at bedtime,1,active,2026-08-20,Dr. Khoury
+1002,MRN4001,48,F,General Surgery,Vancomycin,Glycopeptide antibiotic,infusion,1 g/250mL,per protocol,IV,twice daily,1,active,2026-08-26,Dr. Barakat
+1003,MRN4002,32,F,Surgical Oncology,Clarithromycin,Macrolide antibiotic,tablet,500 mg,1 tab,PO,at bedtime,0,active,2026-08-20,Dr. Nasser
+1004,MRN4002,32,F,Surgical Oncology,Enoxaparin,Anticoagulant (LMWH),injection,40 mg/0.4mL,1 tab,SC,at bedtime,1,discontinued,2026-08-24,Dr. Barakat
+1005,MRN4002,32,F,Surgical Oncology,Furosemide,Loop diuretic,tablet,40 mg,2 tabs,PO,at bedtime,0,active,2026-08-24,Dr. Khoury
+1006,MRN4002,32,F,Surgical Oncology,Insulin glargine,Antidiabetic,injection,100 U/mL,per protocol,SC,as needed,1,active,2026-08-21,Dr. Khoury
+1007,MRN4002,32,F,Surgical Oncology,Oxycodone,Opioid analgesic,tablet,5 mg,2 tabs,PO,three times daily,1,active,2026-08-21,Dr. Khoury
+1008,MRN4002,32,F,Surgical Oncology,Sertraline,SSRI antidepressant,tablet,50 mg,1 tab,PO,at bedtime,0,active,2026-08-28,Dr. Barakat
+1009,MRN4003,77,M,General Surgery,Ibuprofen,NSAID,tablet,400 mg,1 tab,PO,at bedtime,0,active,2026-08-27,Dr. Odeh
+1010,MRN4003,77,M,General Surgery,Simvastatin,Statin,tablet,40 mg,as charted,PO,three times daily,0,active,2026-08-21,Dr. Haddad
+1011,MRN4003,77,M,General Surgery,Digoxin,Cardiac glycoside,tablet,0.25 mg,as charted,PO,twice daily,1,active,2026-08-22,Dr. Barakat
+1012,MRN4003,77,M,General Surgery,Oxycodone,Opioid analgesic,tablet,5 mg,as charted,PO,once daily,1,on hold,2026-08-21,Dr. Khoury
+1013,MRN4003,77,M,General Surgery,Metformin,Antidiabetic,tablet,500 mg,1,PO,three times daily,0,active,2026-08-27,Dr. Khoury
+1014,MRN4003,77,M,General Surgery,Ondansetron,Antiemetic,tablet,8 mg,as charted,PO,once daily,0,discontinued,2026-08-24,Dr. Barakat
+1015,MRN4003,77,M,General Surgery,Lisinopril,ACE inhibitor,tablet,10 mg,1 tab,PO,once daily,0,active,2026-08-24,Dr. Khoury
+1016,MRN4003,77,M,General Surgery,Spironolactone,Potassium-sparing diuretic,tablet,25 mg,as charted,PO,three times daily,0,active,2026-08-25,Dr. Haddad
+1017,MRN4004,57,M,Medical Oncology,Insulin glargine,Antidiabetic,injection,100 U/mL,per protocol,SC,every 12 hours,1,active,2026-08-26,Dr. Barakat
+1018,MRN4004,57,M,Medical Oncology,Naproxen,NSAID,tablet,500 mg,1 tab,PO,twice daily,0,active,2026-08-28,Dr. Odeh
+1019,MRN4004,57,M,Medical Oncology,Enoxaparin,Anticoagulant (LMWH),injection,40 mg/0.4mL,2 tabs,SC,as needed,1,active,2026-08-28,Dr. Odeh
+1020,MRN4004,57,M,Medical Oncology,Morphine,Opioid analgesic,injection,10 mg/mL,as charted,IV,three times daily,1,active,2026-08-26,Dr. Nasser
+1021,MRN4004,57,M,Medical Oncology,Digoxin,Cardiac glycoside,tablet,0.25 mg,2 tabs,PO,once daily,1,active,2026-08-23,Dr. Nasser
+1022,MRN4004,57,M,Medical Oncology,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,once daily,1,active,2026-08-22,Dr. Odeh
+1023,MRN4005,46,F,Medical Oncology,Spironolactone,Potassium-sparing diuretic,tablet,25 mg,2 tabs,PO,every 12 hours,0,discontinued,2026-08-20,Dr. Barakat
+1024,MRN4005,46,F,Medical Oncology,Simvastatin,Statin,tablet,40 mg,as charted,PO,every 6 hours,0,active,2026-08-21,Dr. Barakat
+1025,MRN4005,46,F,Medical Oncology,Trimethoprim-sulfamethoxazole,Antibiotic,tablet,800/160 mg,as charted,PO,once daily,0,active,2026-08-23,Dr. Barakat
+1026,MRN4005,46,F,Medical Oncology,Furosemide,Loop diuretic,tablet,40 mg,2 tabs,PO,once daily,0,active,2026-08-20,Dr. Haddad
+1027,MRN4005,46,F,Medical Oncology,Amiodarone,Antiarrhythmic,tablet,200 mg,1 tab,PO,at bedtime,0,active,2026-08-21,Dr. Odeh
+1028,MRN4006,67,F,Surgical Oncology,Trimethoprim-sulfamethoxazole,Antibiotic,tablet,800/160 mg,1,PO,at bedtime,0,active,2026-08-21,Dr. Haddad
+1029,MRN4006,67,F,Surgical Oncology,Atorvastatin,Statin,tablet,20 mg,as charted,PO,every 6 hours,0,active,2026-08-24,Dr. Haddad
+1030,MRN4006,67,F,Surgical Oncology,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,twice daily,1,active,2026-08-25,Dr. Odeh
+1031,MRN4006,67,F,Surgical Oncology,Methotrexate,Antimetabolite,tablet,2.5 mg,as charted,PO,as needed,1,active,2026-08-28,Dr. Haddad
+1032,MRN4007,41,M,Medical Oncology,Warfarin,Anticoagulant,tablet,5 mg,1,PO,at bedtime,1,active,2026-08-22,Dr. Odeh
+1033,MRN4007,41,M,Medical Oncology,Paracetamol,Analgesic,tablet,500 mg,2 tabs,PO,at bedtime,0,active,2026-08-28,Dr. Odeh
+1034,MRN4007,41,M,Medical Oncology,Lisinopril,ACE inhibitor,tablet,10 mg,2 tabs,PO,at bedtime,0,active,2026-08-23,Dr. Nasser
+1035,MRN4007,41,M,Medical Oncology,Digoxin,Cardiac glycoside,tablet,0.25 mg,as charted,PO,every 12 hours,1,active,2026-08-23,Dr. Khoury
+1036,MRN4007,41,M,Medical Oncology,Sertraline,SSRI antidepressant,tablet,50 mg,as charted,PO,three times daily,0,active,2026-08-20,Dr. Odeh
+1037,MRN4007,41,M,Medical Oncology,Heparin,Anticoagulant,infusion,25000 U/500mL,per protocol,IV,every 6 hours,1,active,2026-08-25,Dr. Barakat
+1038,MRN4008,79,M,ICU,Oxycodone,Opioid analgesic,tablet,5 mg,2 tabs,PO,every 6 hours,1,active,2026-08-23,Dr. Barakat
+1039,MRN4008,79,M,ICU,Insulin glargine,Antidiabetic,injection,100 U/mL,per protocol,SC,at bedtime,1,on hold,2026-08-20,Dr. Barakat
+1040,MRN4009,69,M,Surgical Oncology,Atorvastatin,Statin,tablet,20 mg,as charted,PO,twice daily,0,active,2026-08-25,Dr. Haddad
+1041,MRN4009,69,M,Surgical Oncology,Ceftriaxone,Cephalosporin antibiotic,injection,1 g,per protocol,IV,as needed,0,on hold,2026-08-26,Dr. Barakat
+1042,MRN4009,69,M,Surgical Oncology,Lisinopril,ACE inhibitor,tablet,10 mg,as charted,PO,every 12 hours,0,on hold,2026-08-22,Dr. Nasser
+1043,MRN4009,69,M,Surgical Oncology,Spironolactone,Potassium-sparing diuretic,tablet,25 mg,2 tabs,PO,once daily,0,active,2026-08-27,Dr. Nasser
+1044,MRN4010,67,M,ICU,Spironolactone,Potassium-sparing diuretic,tablet,25 mg,1 tab,PO,as needed,0,on hold,2026-08-21,Dr. Khoury
+1045,MRN4010,67,M,ICU,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,every 12 hours,1,discontinued,2026-08-26,Dr. Nasser
+1046,MRN4010,67,M,ICU,Warfarin,Anticoagulant,tablet,5 mg,2 tabs,PO,once daily,1,active,2026-08-24,Dr. Khoury
+1047,MRN4011,43,M,ICU,Clarithromycin,Macrolide antibiotic,tablet,500 mg,as charted,PO,every 12 hours,0,active,2026-08-28,Dr. Barakat
+1048,MRN4011,43,M,ICU,Vancomycin,Glycopeptide antibiotic,infusion,1 g/250mL,per protocol,IV,as needed,1,discontinued,2026-08-28,Dr. Nasser
+1049,MRN4011,43,M,ICU,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,at bedtime,1,active,2026-08-28,Dr. Haddad
+1050,MRN4011,43,M,ICU,Enoxaparin,Anticoagulant (LMWH),injection,40 mg/0.4mL,as charted,SC,as needed,1,active,2026-08-20,Dr. Nasser
+1051,MRN4011,43,M,ICU,Omeprazole,Proton pump inhibitor,capsule,20 mg,2 tabs,PO,twice daily,0,active,2026-08-21,Dr. Khoury
+1052,MRN4011,43,M,ICU,Simvastatin,Statin,tablet,40 mg,1 tab,PO,three times daily,0,active,2026-08-28,Dr. Khoury
+1053,MRN4012,58,F,BMT,Oxycodone,Opioid analgesic,tablet,5 mg,1 tab,PO,as needed,1,active,2026-08-27,Dr. Khoury
+1054,MRN4012,58,F,BMT,Morphine,Opioid analgesic,injection,10 mg/mL,1 tab,IV,as needed,1,discontinued,2026-08-21,Dr. Barakat
+1055,MRN4012,58,F,BMT,Methotrexate,Antimetabolite,tablet,2.5 mg,1,PO,at bedtime,1,on hold,2026-08-28,Dr. Nasser
+1056,MRN4012,58,F,BMT,Trimethoprim-sulfamethoxazole,Antibiotic,tablet,800/160 mg,1,PO,every 6 hours,0,active,2026-08-27,Dr. Khoury
+1057,MRN4013,43,M,BMT,Vancomycin,Glycopeptide antibiotic,infusion,1 g/250mL,per protocol,IV,every 6 hours,1,active,2026-08-27,Dr. Odeh
+1058,MRN4013,43,M,BMT,Ibuprofen,NSAID,tablet,400 mg,1 tab,PO,every 12 hours,0,active,2026-08-21,Dr. Nasser
+1059,MRN4013,43,M,BMT,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,every 12 hours,1,active,2026-08-21,Dr. Nasser
+1060,MRN4014,73,M,Medical Oncology,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,once daily,1,active,2026-08-27,Dr. Nasser
+1061,MRN4014,73,M,Medical Oncology,Ibuprofen,NSAID,tablet,400 mg,2 tabs,PO,twice daily,0,active,2026-08-28,Dr. Barakat
+1062,MRN4014,73,M,Medical Oncology,Oxycodone,Opioid analgesic,tablet,5 mg,1,PO,every 6 hours,1,active,2026-08-25,Dr. Haddad
+1063,MRN4014,73,M,Medical Oncology,Omeprazole,Proton pump inhibitor,capsule,20 mg,1,PO,once daily,0,active,2026-08-27,Dr. Barakat
+1064,MRN4015,73,F,General Surgery,Lisinopril,ACE inhibitor,tablet,10 mg,2 tabs,PO,once daily,0,active,2026-08-24,Dr. Haddad
+1065,MRN4015,73,F,General Surgery,Trimethoprim-sulfamethoxazole,Antibiotic,tablet,800/160 mg,2 tabs,PO,three times daily,0,active,2026-08-26,Dr. Odeh
+1066,MRN4015,73,F,General Surgery,Digoxin,Cardiac glycoside,tablet,0.25 mg,as charted,PO,twice daily,1,active,2026-08-28,Dr. Khoury
+1067,MRN4015,73,F,General Surgery,Heparin,Anticoagulant,infusion,25000 U/500mL,per protocol,IV,every 6 hours,1,active,2026-08-21,Dr. Odeh
+1068,MRN4015,73,F,General Surgery,Warfarin,Anticoagulant,tablet,5 mg,1 tab,PO,as needed,1,active,2026-08-26,Dr. Haddad
+1069,MRN4015,73,F,General Surgery,Amiodarone,Antiarrhythmic,tablet,200 mg,1,PO,once daily,0,active,2026-08-24,Dr. Haddad
+1070,MRN4016,66,F,Surgical Oncology,Potassium chloride,Electrolyte,infusion,40 mEq/100mL,per protocol,IV,three times daily,1,on hold,2026-08-26,Dr. Odeh
+1071,MRN4016,66,F,Surgical Oncology,Insulin glargine,Antidiabetic,injection,100 U/mL,per protocol,SC,at bedtime,1,active,2026-08-28,Dr. Nasser
+1072,MRN4016,66,F,Surgical Oncology,Ibuprofen,NSAID,tablet,400 mg,1 tab,PO,twice daily,0,active,2026-08-22,Dr. Nasser
+1073,MRN4016,66,F,Surgical Oncology,Warfarin,Anticoagulant,tablet,5 mg,1,PO,every 12 hours,1,active,2026-08-23,Dr. Odeh
+1074,MRN4017,56,F,ICU,Ceftriaxone,Cephalosporin antibiotic,injection,1 g,per protocol,IV,once daily,0,active,2026-08-28,Dr. Khoury
+1075,MRN4017,56,F,ICU,Warfarin,Anticoagulant,tablet,5 mg,2 tabs,PO,at bedtime,1,active,2026-08-27,Dr. Haddad
+1076,MRN4017,56,F,ICU,Methotrexate,Antimetabolite,tablet,2.5 mg,as charted,PO,every 12 hours,1,active,2026-08-26,Dr. Khoury
+1077,MRN4017,56,F,ICU,Enoxaparin,Anticoagulant (LMWH),injection,40 mg/0.4mL,1,SC,every 12 hours,1,active,2026-08-23,Dr. Odeh
+1078,MRN4018,40,F,General Surgery,Enoxaparin,Anticoagulant (LMWH),injection,40 mg/0.4mL,1,SC,every 6 hours,1,active,2026-08-21,Dr. Barakat
+1079,MRN4018,40,F,General Surgery,Vancomycin,Glycopeptide antibiotic,infusion,1 g/250mL,per protocol,IV,as needed,1,active,2026-08-24,Dr. Khoury
+1080,MRN4018,40,F,General Surgery,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,twice daily,1,active,2026-08-20,Dr. Barakat
+1081,MRN4018,40,F,General Surgery,Warfarin,Anticoagulant,tablet,5 mg,2 tabs,PO,twice daily,1,active,2026-08-20,Dr. Odeh
+1082,MRN4018,40,F,General Surgery,Amiodarone,Antiarrhythmic,tablet,200 mg,1,PO,three times daily,0,on hold,2026-08-28,Dr. Odeh
+1083,MRN4019,43,F,ICU,Simvastatin,Statin,tablet,40 mg,1,PO,every 6 hours,0,active,2026-08-24,Dr. Khoury
+1084,MRN4019,43,F,ICU,Metformin,Antidiabetic,tablet,500 mg,2 tabs,PO,twice daily,0,active,2026-08-20,Dr. Haddad
+1085,MRN4019,43,F,ICU,Warfarin,Anticoagulant,tablet,5 mg,1,PO,as needed,1,active,2026-08-26,Dr. Khoury
+1086,MRN4020,30,M,Surgical Oncology,Digoxin,Cardiac glycoside,tablet,0.25 mg,2 tabs,PO,every 12 hours,1,discontinued,2026-08-26,Dr. Odeh
+1087,MRN4020,30,M,Surgical Oncology,Sertraline,SSRI antidepressant,tablet,50 mg,as charted,PO,twice daily,0,active,2026-08-22,Dr. Haddad
+1088,MRN4020,30,M,Surgical Oncology,Oxycodone,Opioid analgesic,tablet,5 mg,as charted,PO,every 12 hours,1,active,2026-08-28,Dr. Nasser
+1089,MRN4020,30,M,Surgical Oncology,Heparin,Anticoagulant,infusion,25000 U/500mL,per protocol,IV,at bedtime,1,active,2026-08-20,Dr. Khoury
+1090,MRN4021,79,F,Surgical Oncology,Enoxaparin,Anticoagulant (LMWH),injection,40 mg/0.4mL,1 tab,SC,every 6 hours,1,discontinued,2026-08-28,Dr. Haddad
+1091,MRN4021,79,F,Surgical Oncology,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,every 12 hours,1,active,2026-08-28,Dr. Nasser
+1092,MRN4021,79,F,Surgical Oncology,Sertraline,SSRI antidepressant,tablet,50 mg,as charted,PO,three times daily,0,active,2026-08-21,Dr. Khoury
+1093,MRN4021,79,F,Surgical Oncology,Tramadol,Opioid analgesic,tablet,50 mg,1 tab,PO,every 12 hours,1,active,2026-08-27,Dr. Odeh
+1094,MRN4022,79,F,ICU,Omeprazole,Proton pump inhibitor,capsule,20 mg,2 tabs,PO,every 12 hours,0,active,2026-08-27,Dr. Barakat
+1095,MRN4022,79,F,ICU,Paracetamol,Analgesic,tablet,500 mg,as charted,PO,once daily,0,active,2026-08-24,Dr. Haddad
+1096,MRN4022,79,F,ICU,Morphine,Opioid analgesic,injection,10 mg/mL,2 tabs,IV,once daily,1,active,2026-08-25,Dr. Odeh
+1097,MRN4023,69,M,BMT,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,every 12 hours,1,active,2026-08-23,Dr. Barakat
+1098,MRN4023,69,M,BMT,Warfarin,Anticoagulant,tablet,5 mg,1,PO,every 12 hours,1,active,2026-08-27,Dr. Barakat
+1099,MRN4023,69,M,BMT,Naproxen,NSAID,tablet,500 mg,as charted,PO,as needed,0,active,2026-08-28,Dr. Nasser
+1100,MRN4023,69,M,BMT,Enoxaparin,Anticoagulant (LMWH),injection,40 mg/0.4mL,1,SC,once daily,1,discontinued,2026-08-20,Dr. Odeh
+1101,MRN4023,69,M,BMT,Ceftriaxone,Cephalosporin antibiotic,injection,1 g,per protocol,IV,every 6 hours,0,active,2026-08-28,Dr. Barakat
+1102,MRN4023,69,M,BMT,Methotrexate,Antimetabolite,tablet,2.5 mg,1,PO,every 6 hours,1,active,2026-08-23,Dr. Haddad
+1103,MRN4024,65,F,Medical Oncology,Methotrexate,Antimetabolite,tablet,2.5 mg,1 tab,PO,every 12 hours,1,active,2026-08-27,Dr. Barakat
+1104,MRN4024,65,F,Medical Oncology,Simvastatin,Statin,tablet,40 mg,as charted,PO,once daily,0,active,2026-08-27,Dr. Barakat
+1105,MRN4024,65,F,Medical Oncology,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,every 6 hours,1,active,2026-08-22,Dr. Barakat
+1106,MRN4024,65,F,Medical Oncology,Trimethoprim-sulfamethoxazole,Antibiotic,tablet,800/160 mg,1,PO,every 6 hours,0,active,2026-08-25,Dr. Haddad
+1107,MRN4024,65,F,Medical Oncology,Sertraline,SSRI antidepressant,tablet,50 mg,1,PO,as needed,0,active,2026-08-26,Dr. Haddad
+1108,MRN4024,65,F,Medical Oncology,Lisinopril,ACE inhibitor,tablet,10 mg,2 tabs,PO,every 12 hours,0,active,2026-08-24,Dr. Odeh
+1109,MRN4025,51,F,General Surgery,Potassium chloride,Electrolyte,infusion,40 mEq/100mL,per protocol,IV,as needed,1,active,2026-08-20,Dr. Odeh
+1110,MRN4025,51,F,General Surgery,Furosemide,Loop diuretic,tablet,40 mg,1 tab,PO,once daily,0,discontinued,2026-08-24,Dr. Nasser
+1111,MRN4025,51,F,General Surgery,Heparin,Anticoagulant,infusion,25000 U/500mL,per protocol,IV,twice daily,1,on hold,2026-08-26,Dr. Khoury
+1112,MRN4025,51,F,General Surgery,Simvastatin,Statin,tablet,40 mg,1,PO,twice daily,0,active,2026-08-26,Dr. Haddad
+1113,MRN4025,51,F,General Surgery,Clarithromycin,Macrolide antibiotic,tablet,500 mg,as charted,PO,at bedtime,0,active,2026-08-21,Dr. Haddad
+1114,MRN4026,74,M,General Surgery,Paracetamol,Analgesic,tablet,500 mg,2 tabs,PO,twice daily,0,active,2026-08-25,Dr. Odeh
+1115,MRN4026,74,M,General Surgery,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,three times daily,1,active,2026-08-24,Dr. Barakat
+1116,MRN4026,74,M,General Surgery,Sertraline,SSRI antidepressant,tablet,50 mg,2 tabs,PO,three times daily,0,active,2026-08-26,Dr. Haddad
+1117,MRN4026,74,M,General Surgery,Digoxin,Cardiac glycoside,tablet,0.25 mg,2 tabs,PO,every 12 hours,1,active,2026-08-23,Dr. Khoury
+1118,MRN4026,74,M,General Surgery,Naproxen,NSAID,tablet,500 mg,as charted,PO,at bedtime,0,active,2026-08-25,Dr. Barakat
+1119,MRN4026,74,M,General Surgery,Enoxaparin,Anticoagulant (LMWH),injection,40 mg/0.4mL,as charted,SC,twice daily,1,active,2026-08-23,Dr. Haddad
+1120,MRN4027,39,M,BMT,Amiodarone,Antiarrhythmic,tablet,200 mg,1,PO,as needed,0,active,2026-08-20,Dr. Barakat
+1121,MRN4027,39,M,BMT,Oxycodone,Opioid analgesic,tablet,5 mg,as charted,PO,every 6 hours,1,active,2026-08-23,Dr. Barakat
+1122,MRN4027,39,M,BMT,Sertraline,SSRI antidepressant,tablet,50 mg,1,PO,three times daily,0,active,2026-08-27,Dr. Odeh
+1123,MRN4027,39,M,BMT,Tramadol,Opioid analgesic,tablet,50 mg,1,PO,twice daily,1,active,2026-08-28,Dr. Nasser
+1124,MRN4028,33,M,Medical Oncology,Atorvastatin,Statin,tablet,20 mg,1 tab,PO,twice daily,0,active,2026-08-27,Dr. Khoury
+1125,MRN4028,33,M,Medical Oncology,Sertraline,SSRI antidepressant,tablet,50 mg,as charted,PO,once daily,0,active,2026-08-28,Dr. Barakat
+1126,MRN4028,33,M,Medical Oncology,Ibuprofen,NSAID,tablet,400 mg,as charted,PO,twice daily,0,active,2026-08-23,Dr. Nasser
+1127,MRN4028,33,M,Medical Oncology,Clarithromycin,Macrolide antibiotic,tablet,500 mg,2 tabs,PO,at bedtime,0,on hold,2026-08-21,Dr. Barakat
+1128,MRN4028,33,M,Medical Oncology,Digoxin,Cardiac glycoside,tablet,0.25 mg,1 tab,PO,at bedtime,1,active,2026-08-20,Dr. Nasser
+1129,MRN4029,42,F,ICU,Sertraline,SSRI antidepressant,tablet,50 mg,as charted,PO,every 12 hours,0,active,2026-08-21,Dr. Haddad
+1130,MRN4029,42,F,ICU,Methotrexate,Antimetabolite,tablet,2.5 mg,1,PO,at bedtime,1,discontinued,2026-08-23,Dr. Barakat
+1131,MRN4029,42,F,ICU,Lisinopril,ACE inhibitor,tablet,10 mg,1,PO,twice daily,0,active,2026-08-20,Dr. Haddad
+1132,MRN4030,62,M,General Surgery,Amiodarone,Antiarrhythmic,tablet,200 mg,2 tabs,PO,at bedtime,0,active,2026-08-26,Dr. Odeh
+1133,MRN4030,62,M,General Surgery,Sertraline,SSRI antidepressant,tablet,50 mg,1 tab,PO,once daily,0,active,2026-08-26,Dr. Haddad
+1134,MRN4030,62,M,General Surgery,Vancomycin,Glycopeptide antibiotic,infusion,1 g/250mL,per protocol,IV,three times daily,1,active,2026-08-26,Dr. Odeh
+1135,MRN4030,62,M,General Surgery,Oxycodone,Opioid analgesic,tablet,5 mg,2 tabs,PO,every 6 hours,1,active,2026-08-25,Dr. Barakat
+1136,MRN4030,62,M,General Surgery,Warfarin,Anticoagulant,tablet,5 mg,1,PO,every 12 hours,1,active,2026-08-20,Dr. Odeh
+1137,MRN4030,62,M,General Surgery,Naproxen,NSAID,tablet,500 mg,1 tab,PO,twice daily,0,active,2026-08-23,Dr. Odeh
+1138,MRN4031,77,F,Medical Oncology,Oxycodone,Opioid analgesic,tablet,5 mg,as charted,PO,at bedtime,1,active,2026-08-23,Dr. Barakat
+1139,MRN4031,77,F,Medical Oncology,Methotrexate,Antimetabolite,tablet,2.5 mg,as charted,PO,every 12 hours,1,active,2026-08-22,Dr. Barakat
+1140,MRN4031,77,F,Medical Oncology,Paracetamol,Analgesic,tablet,500 mg,1 tab,PO,twice daily,0,active,2026-08-22,Dr. Barakat
+1141,MRN4031,77,F,Medical Oncology,Digoxin,Cardiac glycoside,tablet,0.25 mg,1 tab,PO,every 12 hours,1,active,2026-08-26,Dr. Barakat
+1142,MRN4031,77,F,Medical Oncology,Insulin glargine,Antidiabetic,injection,100 U/mL,per protocol,SC,every 12 hours,1,discontinued,2026-08-21,Dr. Haddad
+1143,MRN4032,38,M,Medical Oncology,Sertraline,SSRI antidepressant,tablet,50 mg,as charted,PO,once daily,0,active,2026-08-26,Dr. Odeh
+1144,MRN4032,38,M,Medical Oncology,Lisinopril,ACE inhibitor,tablet,10 mg,1,PO,every 6 hours,0,active,2026-08-20,Dr. Haddad
+1145,MRN4032,38,M,Medical Oncology,Omeprazole,Proton pump inhibitor,capsule,20 mg,1,PO,once daily,0,active,2026-08-21,Dr. Khoury
+1146,MRN4033,76,F,General Surgery,Paracetamol,Analgesic,tablet,500 mg,1 tab,PO,once daily,0,active,2026-08-23,Dr. Odeh
+1147,MRN4033,76,F,General Surgery,Vancomycin,Glycopeptide antibiotic,infusion,1 g/250mL,per protocol,IV,at bedtime,1,discontinued,2026-08-23,Dr. Odeh
+1148,MRN4033,76,F,General Surgery,Digoxin,Cardiac glycoside,tablet,0.25 mg,1,PO,every 12 hours,1,discontinued,2026-08-20,Dr. Barakat
+1149,MRN4033,76,F,General Surgery,Ceftriaxone,Cephalosporin antibiotic,injection,1 g,per protocol,IV,twice daily,0,active,2026-08-26,Dr. Haddad
+1150,MRN4033,76,F,General Surgery,Furosemide,Loop diuretic,tablet,40 mg,as charted,PO,once daily,0,active,2026-08-20,Dr. Odeh
+1151,MRN4034,40,F,BMT,Simvastatin,Statin,tablet,40 mg,1 tab,PO,three times daily,0,active,2026-08-25,Dr. Odeh
+1152,MRN4034,40,F,BMT,Methotrexate,Antimetabolite,tablet,2.5 mg,1,PO,once daily,1,active,2026-08-21,Dr. Haddad
+1153,MRN4034,40,F,BMT,Amiodarone,Antiarrhythmic,tablet,200 mg,2 tabs,PO,once daily,0,active,2026-08-27,Dr. Barakat
+1154,MRN4034,40,F,BMT,Trimethoprim-sulfamethoxazole,Antibiotic,tablet,800/160 mg,1,PO,every 6 hours,0,active,2026-08-22,Dr. Barakat
+1155,MRN4035,39,F,ICU,Trimethoprim-sulfamethoxazole,Antibiotic,tablet,800/160 mg,1,PO,every 6 hours,0,active,2026-08-21,Dr. Khoury
+1156,MRN4035,39,F,ICU,Oxycodone,Opioid analgesic,tablet,5 mg,2 tabs,PO,every 6 hours,1,active,2026-08-23,Dr. Barakat
+1157,MRN4035,39,F,ICU,Amiodarone,Antiarrhythmic,tablet,200 mg,1 tab,PO,every 12 hours,0,active,2026-08-28,Dr. Khoury
+1158,MRN4036,48,F,General Surgery,Heparin,Anticoagulant,infusion,25000 U/500mL,per protocol,IV,twice daily,1,active,2026-08-27,Dr. Barakat
+1159,MRN4036,48,F,General Surgery,Methotrexate,Antimetabolite,tablet,2.5 mg,2 tabs,PO,twice daily,1,active,2026-08-27,Dr. Khoury
+1160,MRN4036,48,F,General Surgery,Warfarin,Anticoagulant,tablet,5 mg,2 tabs,PO,every 12 hours,1,active,2026-08-21,Dr. Odeh
+1161,MRN4036,48,F,General Surgery,Amiodarone,Antiarrhythmic,tablet,200 mg,1,PO,three times daily,0,active,2026-08-25,Dr. Odeh
+1162,MRN4037,75,M,Medical Oncology,Oxycodone,Opioid analgesic,tablet,5 mg,2 tabs,PO,three times daily,1,active,2026-08-24,Dr. Nasser
+1163,MRN4037,75,M,Medical Oncology,Metformin,Antidiabetic,tablet,500 mg,2 tabs,PO,every 12 hours,0,active,2026-08-27,Dr. Haddad
+1164,MRN4037,75,M,Medical Oncology,Insulin aspart,Antidiabetic,injection,100 U/mL,per protocol,SC,once daily,1,active,2026-08-23,Dr. Barakat
+1165,MRN4037,75,M,Medical Oncology,Digoxin,Cardiac glycoside,tablet,0.25 mg,1,PO,once daily,1,discontinued,2026-08-23,Dr. Haddad
+1166,MRN4037,75,M,Medical Oncology,Furosemide,Loop diuretic,tablet,40 mg,1 tab,PO,twice daily,0,active,2026-08-23,Dr. Haddad
+1167,MRN4038,51,F,General Surgery,Methotrexate,Antimetabolite,tablet,2.5 mg,1,PO,twice daily,1,active,2026-08-25,Dr. Nasser
+1168,MRN4038,51,F,General Surgery,Paracetamol,Analgesic,tablet,500 mg,1 tab,PO,twice daily,0,on hold,2026-08-20,Dr. Khoury
+1169,MRN4038,51,F,General Surgery,Vancomycin,Glycopeptide antibiotic,infusion,1 g/250mL,per protocol,IV,every 12 hours,1,active,2026-08-23,Dr. Haddad
+1170,MRN4038,51,F,General Surgery,Tramadol,Opioid analgesic,tablet,50 mg,1,PO,every 6 hours,1,active,2026-08-22,Dr. Khoury
+1171,MRN4038,51,F,General Surgery,Warfarin,Anticoagulant,tablet,5 mg,1,PO,once daily,1,active,2026-08-27,Dr. Khoury
+1172,MRN4038,51,F,General Surgery,Insulin glargine,Antidiabetic,injection,100 U/mL,per protocol,SC,every 6 hours,1,active,2026-08-21,Dr. Barakat
+1173,MRN4039,70,F,BMT,Sertraline,SSRI antidepressant,tablet,50 mg,1,PO,every 6 hours,0,on hold,2026-08-24,Dr. Barakat
+1174,MRN4039,70,F,BMT,Metformin,Antidiabetic,tablet,500 mg,1 tab,PO,three times daily,0,active,2026-08-25,Dr. Barakat
+1175,MRN4039,70,F,BMT,Digoxin,Cardiac glycoside,tablet,0.25 mg,as charted,PO,once daily,1,discontinued,2026-08-25,Dr. Nasser
+1176,MRN4039,70,F,BMT,Furosemide,Loop diuretic,tablet,40 mg,as charted,PO,every 12 hours,0,active,2026-08-20,Dr. Barakat
+1177,MRN4040,38,M,Surgical Oncology,Atorvastatin,Statin,tablet,20 mg,1,PO,every 6 hours,0,active,2026-08-22,Dr. Haddad
+1178,MRN4040,38,M,Surgical Oncology,Furosemide,Loop diuretic,tablet,40 mg,1 tab,PO,at bedtime,0,active,2026-08-26,Dr. Haddad
