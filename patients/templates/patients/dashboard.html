@@ -58,6 +58,46 @@
 </div>
 {% endif %}
 
+{% if by_team %}
+<div class="card">
+  <h2>
+    Awaiting MDC discussion, by team
+    <span class="right muted" style="font-size:12px">{{ by_team|length }} team(s)</span>
+  </h2>
+  <p class="empty" style="margin-bottom:16px">
+    Patients you have registered who have not yet been discussed at MDC. They
+    leave this list once their MDC has taken place.
+  </p>
+  {% for row in by_team %}
+    <div style="margin-bottom:18px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:2px">
+        {{ row.team.consultant }}
+        <span class="pill grey">{{ row.patients|length }}</span>
+      </div>
+      <div class="muted" style="font-size:12.5px;margin-bottom:8px">{{ row.team.specialty }}</div>
+      <table class="grid">
+        <tr><th>Patient</th><th>MRN</th><th>Diagnosis</th><th>Stage</th><th>Listed for MDC</th></tr>
+        {% for patient in row.patients %}
+        <tr>
+          <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+          <td>{{ patient.mrn }}</td>
+          <td>{{ patient.diagnosis }}</td>
+          <td><span class="pill grey">{{ patient.get_stage_display }}</span></td>
+          <td>
+            {% for listing in patient.mdc_listings.all %}
+              <span class="pill info">{{ listing.mdc.name }} &middot; {{ listing.meeting_date }}</span>
+            {% empty %}
+              <span class="pill pending">Not listed yet</span>
+            {% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
 <div class="card">
   <h2>
     For MDC next week

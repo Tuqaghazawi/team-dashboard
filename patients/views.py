@@ -53,14 +53,15 @@ def visible_patients(user):
     Public because other apps (e.g. ``mdc``) must apply the same rule.
 
     The prep clinic is the exception: her job is the handover queue, so her list
-    holds only patients no coordinator has picked up yet. Once a patient is on
-    an MDC list the team owns them and they leave her page. Her *reports* still
-    count everybody — see :func:`reportable_patients`.
+    holds patients the MDC has not yet discussed. Being *listed* is not enough —
+    a patient sitting on next week's list is still hers to chase. They leave her
+    page once the MDC has actually discussed them and the team owns the plan.
+    Her *reports* still count everybody — see :func:`reportable_patients`.
     """
     if user.role == user.Role.PREP_COORDINATOR and not user.is_superuser:
         return (
             Patient.objects.select_related("team")
-            .filter(mdc_listings__isnull=True)
+            .exclude(mdc_listings__presented=True)
             .distinct()
         )
     if user.can_see_all_patients:
@@ -191,6 +192,10 @@ def dashboard(request):
         "surgery": categories.awaiting_surgery(visible).prefetch_related("surgery_bookings")[:8],
         "postop_flagged": categories.post_op_needing_mdc(visible)[:8],
     }
+    # The prep clinic assigns patients to teams, so she sees hers grouped by team
+    # rather than as one flat list.
+    if request.user.role == request.user.Role.PREP_COORDINATOR:
+        context["by_team"] = categories.grouped_by_team(visible)
     return render(request, "patients/dashboard.html", context)
 
 

@@ -132,12 +132,11 @@ Jul–Sep, Oct–Dec). The nurse coordinator assigns fellows at the start of eac
 block. An assignment is what grants dashboard access, and **access ends
 automatically when the rotation ends** — verified by test.
 
-**Prep-clinic scoping (built, and worth understanding).** The prep coordinator's
-working list holds only patients no coordinator has picked up yet; a patient
-leaves her list once they are on an MDC list. Her *reports* deliberately use a
-wider query so weekly and monthly returns still count every patient she
-registered. See Open Questions — a patient who is never MDC-listed stays on her
-queue indefinitely.
+**Prep-clinic scoping (built).** Her working list holds patients the MDC has not
+yet discussed, grouped by the team she assigned them to. Being *listed* is not
+enough to drop off — a patient sitting on next week's list is still hers to
+chase. Her *reports* deliberately use a wider query, so weekly and monthly
+returns still count every patient she registered.
 
 ### The teams (all built and seeded)
 
@@ -196,7 +195,8 @@ deliberately unmapped, because those cases vary and the coordinator chooses.
 | FR-1.1 | Prep coordinator registers a patient with name, MRN, date of birth, diagnosis, specialty and consultant's team. MRN is unique. | Built |
 | FR-1.2 | On registration, the team's coordinator, consultant and currently rotating fellows receive an in-app notification and an email. | Built |
 | FR-1.3 | A team coordinator may register a patient directly, restricted to their own team. | Built |
-| FR-1.4 | A patient leaves the prep coordinator's working list once placed on an MDC list. | Built |
+| FR-1.4 | A patient leaves the prep coordinator's working list once the MDC has **discussed** them — being listed is not enough, since a patient on next week's list is still hers to chase. | Built |
+| FR-1.5 | Her list is grouped **by team**, so she sees how her registrations are distributed rather than one flat list. | Built |
 
 ### 7.2 Workup
 
@@ -296,12 +296,18 @@ scripts. No module was rewritten.
   > six cycles into TNT, and an oesophagectomy to a patient who had already had a
   > total gastrectomy. Both now answer correctly.
 
-- **Coverage honesty.** The index holds **Breast, Colon, Rectal, Thyroid, Gastric
-  and Pancreatic** only. A vector search always returns its nearest neighbours,
-  so a disease that is not indexed still retrieves passages — from a different
-  cancer. A patient whose specialty is not covered gets an explicit warning
-  naming what *is* indexed. **Sarcoma, hepatobiliary other than pancreatic, and
-  oesophageal have no guideline at all.**
+- **Coverage honesty.** A vector search always returns its nearest neighbours, so
+  a disease that is not indexed still retrieves passages — from a different
+  cancer. Coverage is therefore checked explicitly, and worked out from the
+  patient's **diagnosis** rather than their specialty: "Upper GI" spans gastric
+  and oesophageal cancer, and the gastric guideline does not answer for the
+  oesophagus. The check reads the index itself, so
+  `manage.py add_guideline` widens coverage with no code change.
+
+  The KHCC set covers **Breast, Colon, Rectal, Thyroid, Gastric and Pancreatic**.
+  **Sarcoma, hepatobiliary other than pancreatic, and oesophageal have no KHCC
+  guideline** — NCCN is the agreed source for those, and the PDFs are still to be
+  supplied and indexed.
 - **On refusal.** When the model replies "Not found in the provided guidelines",
   no citations are shown and no slide note is written — listing the passages a
   search happened to return would make a refusal look researched.
@@ -479,7 +485,7 @@ absent from the guideline table.
 | A clinician mistakes an AI suggestion for a recorded decision | Suggestions rendered in a visually distinct block; approving an agent draft does not write a decision | Built |
 | "No medication record" read as "no medications to hold" | The two are separated in the API and on the page | Built |
 | A polling job emails the team repeatedly | Each alert sent once; asserted by test | Built |
-| Guidelines missing for sarcoma, HPB and oesophageal | Warning names what is indexed; the PDFs still need indexing | **Open** |
+| Guidelines missing for sarcoma, HPB and oesophageal | Coverage checked per diagnosis and read from the index; warning names what is indexed. NCCN agreed as the source; PDFs still to be supplied | **Open** |
 | API key leaked in a public repo | `.env` git-ignored, `.env.example` has placeholders only | Built |
 | Scope outgrows the course | Modules 2–5 held in §16 until Module 1 was finished | Held |
 
@@ -487,12 +493,13 @@ absent from the guideline table.
 
 ## 14. Open questions
 
-- [ ] **Prep-clinic queue.** A patient who is never MDC-listed stays on her queue
-      indefinitely — visible in the demo data, where post-op and surveillance
-      patients sit there. Should patients past the clinic stage also drop off?
-- [ ] **Guideline coverage.** Sarcoma, hepatobiliary (other than pancreatic) and
-      oesophageal have no indexed guideline. Which PDFs, and are they licensed to
-      index?
+- [ ] **Prep-clinic queue.** Resolved: patients drop off once the MDC has
+      discussed them, and her list is grouped by team. Still open — a patient
+      who never reaches an MDC at all stays on her queue indefinitely.
+- [ ] **Guideline coverage.** NCCN agreed as the source for hepatobiliary and
+      oesophageal. The ingestion path is built (`manage.py add_guideline`); the
+      PDFs still need to be supplied and indexed. Sarcoma is also uncovered —
+      NCCN too?
 - [ ] **Agent tools.** Should `guideline_lookup` and `drug_interaction_check` call
       `ai/rag` and `ai/pharmacy` for real, or is the direct route enough?
 - [ ] **Confirmed extractions** are stored but not copied into the patient's

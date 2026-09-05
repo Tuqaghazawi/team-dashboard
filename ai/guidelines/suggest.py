@@ -33,20 +33,65 @@ CHAT_MODEL = "gpt-4o-mini"
 # is not decorated with citations that make it look researched.
 REFUSAL = "Not found in the provided guidelines"
 
-# What the ChromaDB index actually contains.
-INDEXED_GUIDELINES = {"Breast", "Colon", "Rectal", "Thyroid", "Gastric", "Pancreatic"}
+# Coverage is read from the index itself rather than hardcoded, so adding a
+# guideline (see `manage.py add_guideline`) immediately widens what the app
+# claims to cover. This list is only the fallback for when ChromaDB cannot be
+# reached at all.
+FALLBACK_GUIDELINES = {"Breast", "Colon", "Rectal", "Thyroid", "Gastric", "Pancreatic"}
 
-# Which of those a patient's specialty should be answered from. A specialty
-# absent here has no guideline in the index at all.
-SPECIALTY_GUIDELINES = {
-    "BREAST": {"Breast"},
-    "COLORECTAL": {"Colon", "Rectal"},
-    "THYROID": {"Thyroid"},
-    "UPPER_GI": {"Gastric"},
-    "HPB": {"Pancreatic"},   # pancreatic only — liver and biliary are not indexed
-    "SARCOMA": set(),
-    "GENERAL": set(),
+# The topic a patient needs answered, worked out from their diagnosis first and
+# their specialty second. Diagnosis is the better signal: "Upper GI" covers both
+# gastric and oesophageal cancer, and a guideline for one does not answer the
+# other.
+DIAGNOSIS_TOPICS = [
+    (("oesophag", "esophag"), "esophageal"),
+    (("gastric", "stomach"), "gastric"),
+    (("rectal", "rectum"), "rectal"),
+    (("colon", "colonic", "sigmoid", "caecal", "cecal"), "colon"),
+    (("pancrea",), "pancreatic"),
+    (("cholangio", "biliary", "gallbladder", "bile duct"), "biliary"),
+    (("hepatocellular", "hcc", "liver"), "liver"),
+    (("thyroid",), "thyroid"),
+    (("breast",), "breast"),
+    (("sarcoma", "gist"), "sarcoma"),
+]
+
+# Fallback when the diagnosis text says nothing recognisable.
+SPECIALTY_TOPICS = {
+    "BREAST": ["breast"],
+    "COLORECTAL": ["colon", "rectal"],
+    "THYROID": ["thyroid"],
+    "UPPER_GI": ["gastric", "esophageal"],
+    "HPB": ["pancreatic", "biliary", "liver"],
+    "SARCOMA": ["sarcoma"],
+    "GENERAL": [],
 }
+
+_indexed_cache = None
+
+
+def indexed_guidelines(refresh=False):
+    """The guideline labels actually present in the ChromaDB index."""
+    global _indexed_cache
+    if _indexed_cache is not None and not refresh:
+        return _indexed_cache
+    try:
+        rag = _rag()
+        collection = rag.chroma.get_collection("guidelines")
+        rows = collection.get(include=["metadatas"])
+        _indexed_cache = sorted({m["cancer"] for m in rows["metadatas"] if m.get("cancer")})
+    except Exception:
+        _indexed_cache = sorted(FALLBACK_GUIDELINES)
+    return _indexed_cache
+
+
+def topics_for(patient):
+    """The guideline topic(s) this patient actually needs."""
+    text = (patient.diagnosis or "").lower()
+    for needles, topic in DIAGNOSIS_TOPICS:
+        if any(needle in text for needle in needles):
+            return [topic]
+    return SPECIALTY_TOPICS.get(patient.specialty, [])
 
 WORKUP_SYSTEM = (
     "You are a clinical guideline assistant for a surgical oncology MDC at KHCC.\n"
@@ -200,15 +245,23 @@ def _purpose():
 def coverage_for(patient):
     """Whether a guideline for this patient's disease is in the index.
 
-    Returns {"covered", "expected", "indexed"}. A vector search always returns
-    its nearest neighbours, so an uncovered disease still gets passages back —
-    from a different cancer entirely. The caller must say so.
+    Returns {"covered", "topics", "matched", "indexed"}. A vector search always
+    returns its nearest neighbours, so an uncovered disease still gets passages
+    back — from a different cancer entirely. The caller must say so.
     """
-    expected = SPECIALTY_GUIDELINES.get(patient.specialty, set())
+    topics = topics_for(patient)
+    indexed = indexed_guidelines()
+    matched = sorted(
+        {
+            label for label in indexed
+            if any(topic in label.lower() for topic in topics)
+        }
+    )
     return {
-        "covered": bool(expected),
-        "expected": sorted(expected),
-        "indexed": sorted(INDEXED_GUIDELINES),
+        "covered": bool(matched),
+        "topics": topics,
+        "matched": matched,
+        "indexed": indexed,
     }
 
 

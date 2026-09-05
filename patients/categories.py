@@ -159,3 +159,22 @@ def decided_for_surgery_unscheduled(visible):
         patient for patient in candidates
         if not any(not booking.performed for booking in patient.surgery_bookings.all())
     ]
+
+
+def grouped_by_team(visible):
+    """Patients split by the team they were assigned to.
+
+    The prep-clinic view: she assigns patients to teams, so she needs to see how
+    they are distributed rather than one flat list. Teams with nobody waiting are
+    left out.
+    """
+    from collections import defaultdict
+
+    buckets = defaultdict(list)
+    for patient in visible.select_related("team").order_by("name"):
+        buckets[patient.team].append(patient)
+
+    return sorted(
+        ({"team": team, "patients": rows} for team, rows in buckets.items()),
+        key=lambda row: row["team"].consultant,
+    )

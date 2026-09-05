@@ -116,29 +116,73 @@ class DecisionAskedTests(TestCase):
 class CoverageTests(TestCase):
     """A vector search always returns something, even for an unindexed disease."""
 
-    def setUp(self):
-        self.team = Team.objects.create(consultant="Dr. Test", specialty="General surgical oncology")
+    KHCC = ["Breast", "Colon", "Gastric", "Pancreatic", "Rectal", "Thyroid"]
 
-    def _patient(self, specialty, mrn):
+    def setUp(self):
+        self.team = Team.objects.create(
+            consultant="Dr. Test", specialty="General surgical oncology"
+        )
+        # Pin what the index contains, so these tests do not depend on ChromaDB.
+        suggest._indexed_cache = list(self.KHCC)
+        self.addCleanup(setattr, suggest, "_indexed_cache", None)
+
+    def _patient(self, specialty, mrn, diagnosis="Something"):
         return Patient.objects.create(
             name="Test", mrn=mrn, date_of_birth=date(1970, 1, 1),
-            diagnosis="Something", specialty=specialty, team=self.team,
+            diagnosis=diagnosis, specialty=specialty, team=self.team,
         )
 
-    def test_a_covered_specialty_is_reported_as_covered(self):
-        coverage = suggest.coverage_for(self._patient("COLORECTAL", "960020"))
+    def test_the_topic_comes_from_the_diagnosis_not_the_specialty(self):
+        # "Upper GI" covers gastric and oesophageal; only the diagnosis says which.
+        patient = self._patient("UPPER_GI", "960020", "Distal oesophageal cancer")
+        self.assertEqual(suggest.topics_for(patient), ["esophageal"])
+
+    def test_a_rectal_diagnosis_matches_the_rectal_guideline(self):
+        coverage = suggest.coverage_for(
+            self._patient("COLORECTAL", "960021", "Low rectal cancer")
+        )
         self.assertTrue(coverage["covered"])
-        self.assertEqual(coverage["expected"], ["Colon", "Rectal"])
+        self.assertEqual(coverage["matched"], ["Rectal"])
+
+    def test_a_colon_diagnosis_matches_the_colon_guideline(self):
+        coverage = suggest.coverage_for(
+            self._patient("COLORECTAL", "960022", "Sigmoid colon cancer")
+        )
+        self.assertEqual(coverage["matched"], ["Colon"])
+
+    def test_oesophageal_is_uncovered_even_though_gastric_is_indexed(self):
+        # The bug this guards: treating "Upper GI" as covered because gastric is.
+        coverage = suggest.coverage_for(
+            self._patient("UPPER_GI", "960023", "Distal oesophageal cancer")
+        )
+        self.assertFalse(coverage["covered"])
+        self.assertEqual(coverage["matched"], [])
 
     def test_sarcoma_is_reported_as_uncovered(self):
-        # There is no sarcoma guideline in the index, so retrieval would return
-        # the nearest chunks from an unrelated cancer.
-        coverage = suggest.coverage_for(self._patient("SARCOMA", "960021"))
+        coverage = suggest.coverage_for(
+            self._patient("SARCOMA", "960024", "Soft tissue sarcoma, thigh")
+        )
         self.assertFalse(coverage["covered"])
-        self.assertEqual(coverage["expected"], [])
+
+    def test_biliary_is_uncovered_even_though_pancreatic_is_indexed(self):
+        coverage = suggest.coverage_for(
+            self._patient("HPB", "960025", "Hilar cholangiocarcinoma")
+        )
+        self.assertFalse(coverage["covered"])
+
+    def test_adding_a_guideline_makes_the_matching_patient_covered(self):
+        """Coverage reads the index, so add_guideline widens it with no code change."""
+        patient = self._patient("UPPER_GI", "960026", "Distal oesophageal cancer")
+        self.assertFalse(suggest.coverage_for(patient)["covered"])
+
+        suggest._indexed_cache = self.KHCC + ["Esophageal (NCCN)"]
+        coverage = suggest.coverage_for(patient)
+        self.assertTrue(coverage["covered"])
+        self.assertEqual(coverage["matched"], ["Esophageal (NCCN)"])
 
     def test_the_indexed_guidelines_are_listed_for_the_warning(self):
-        coverage = suggest.coverage_for(self._patient("SARCOMA", "960022"))
+        coverage = suggest.coverage_for(
+            self._patient("SARCOMA", "960027", "Sarcoma of thigh")
+        )
         self.assertIn("Breast", coverage["indexed"])
-        self.assertIn("Pancreatic", coverage["indexed"])
         self.assertNotIn("Sarcoma", coverage["indexed"])

@@ -8,7 +8,8 @@ from django.utils import timezone
 from accounts.models import User
 from mdc.models import MDCListing
 from notifications.models import Notification
-from patients import flow
+from patients import categories, flow
+from patients.views import visible_patients as visible_patients_for
 from patients.models import (
     Investigation,
     Medication,
@@ -572,10 +573,17 @@ class PrepClinicHandoverTests(TestCase):
         self.prep = User.objects.create_user(
             "p1", password="x", role=User.Role.PREP_COORDINATOR
         )
-        self.handed_over = make_patient(self.team, mrn="950001", name="Handed Over")
+        self.discussed = make_patient(self.team, mrn="950001", name="Discussed")
         self.waiting = make_patient(self.team, mrn="950002", name="Still Waiting")
+        self.listed = make_patient(self.team, mrn="950003", name="Listed Not Yet Discussed")
+        # Discussed at MDC — the team owns the plan now.
         MDCListing.objects.create(
-            patient=self.handed_over, mdc=self.mdc,
+            patient=self.discussed, mdc=self.mdc,
+            meeting_date=timezone.localdate() - timedelta(days=7), presented=True,
+        )
+        # On next week's list, but not discussed — still hers to chase.
+        MDCListing.objects.create(
+            patient=self.listed, mdc=self.mdc,
             meeting_date=timezone.localdate() + timedelta(days=7),
         )
 
@@ -584,13 +592,29 @@ class PrepClinicHandoverTests(TestCase):
 
         return set(visible_patients(self.prep))
 
-    def test_a_listed_patient_leaves_her_list(self):
-        self.assertEqual(self._visible(), {self.waiting})
+    def test_a_patient_leaves_only_once_the_mdc_has_discussed_them(self):
+        self.assertEqual(self._visible(), {self.waiting, self.listed})
 
-    def test_she_cannot_open_a_patient_she_has_handed_over(self):
+    def test_being_listed_is_not_enough_to_drop_off(self):
+        self.assertIn(self.listed, self._visible())
+
+    def test_she_sees_her_patients_grouped_by_team(self):
+        other = Team.objects.create(consultant="Dr. Other", specialty="Thyroid and breast")
+        make_patient(other, mrn="950004", name="Other Team", specialty="BREAST")
+
+        groups = categories.grouped_by_team(visible_patients_for(self.prep))
+        by_consultant = {g["team"].consultant: len(g["patients"]) for g in groups}
+        self.assertEqual(by_consultant, {"Dr. Test": 2, "Dr. Other": 1})
+
+    def test_the_grouping_leaves_out_teams_with_nobody_waiting(self):
+        Team.objects.create(consultant="Dr. Empty", specialty="Colorectal cancer")
+        groups = categories.grouped_by_team(visible_patients_for(self.prep))
+        self.assertNotIn("Dr. Empty", [g["team"].consultant for g in groups])
+
+    def test_she_cannot_open_a_patient_the_mdc_has_discussed(self):
         self.client.force_login(self.prep)
         self.assertEqual(
-            self.client.get(f"/patients/{self.handed_over.pk}/").status_code, 404
+            self.client.get(f"/patients/{self.discussed.pk}/").status_code, 404
         )
         self.assertEqual(
             self.client.get(f"/patients/{self.waiting.pk}/").status_code, 200
@@ -600,20 +624,20 @@ class PrepClinicHandoverTests(TestCase):
         from patients.views import reportable_patients
 
         # The working list shrinks; the monthly return must not.
-        self.assertEqual(len(self._visible()), 1)
-        self.assertEqual(reportable_patients(self.prep).count(), 2)
+        self.assertEqual(len(self._visible()), 2)
+        self.assertEqual(reportable_patients(self.prep).count(), 3)
 
     def test_the_report_page_counts_handed_over_patients(self):
         self.client.force_login(self.prep)
         response = self.client.get(reverse("reports_home"))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["periods"][1]["data"]["total"], 2)
+        self.assertEqual(response.context["periods"][1]["data"]["total"], 3)
 
     def test_the_chairman_still_sees_everybody(self):
         from patients.views import visible_patients
 
         chair = User.objects.create_user("ch", password="x", role=User.Role.CHAIRMAN)
-        self.assertEqual(visible_patients(chair).count(), 2)
+        self.assertEqual(visible_patients(chair).count(), 3)
 
 
 class CoordinatorRegistrationTests(TestCase):

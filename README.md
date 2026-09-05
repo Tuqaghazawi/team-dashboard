@@ -116,7 +116,18 @@ does.
   consultant, age band and diagnosis.
 
 **The guideline brain** — suggests the workup a presentation needs, and the
-treatment the guideline supports, with citations. It reuses the Session 6 RAG
+treatment the guideline supports, with citations. Coverage is worked out from
+the patient's **diagnosis**, not their specialty — "Upper GI" covers gastric and
+oesophageal cancer, and a guideline for one does not answer the other — and it
+is read from the index itself, so adding a guideline widens it with no code
+change:
+
+```bash
+python manage.py add_guideline --pdf data/guidelines/nccn_esophageal.pdf     --label "Esophageal (NCCN)"
+```
+
+Keep licensed PDFs (NCCN) in `data/guidelines/`, which is git-ignored, and never
+commit them. Only the extracted chunks enter the index, and that is git-ignored too. It reuses the Session 6 RAG
 index over the KHCC guidelines. Suggestions are rendered distinctly from recorded
 clinical fact, never change the patient record, and their evidence is written
 into the slide's *notes* field so it supports the discussion instead of

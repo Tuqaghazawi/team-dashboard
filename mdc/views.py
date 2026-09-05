@@ -156,9 +156,11 @@ def request_suggestion(request, patient_pk, kind):
         coverage = result.get("coverage", {})
         note = ""
         if not coverage.get("covered", True):
+            topics = ", ".join(coverage.get("topics") or []) or patient.get_specialty_display()
             note = (
-                f"No KHCC guideline for {patient.get_specialty_display()} is indexed. "
-                f"The index covers: {', '.join(coverage.get('indexed', []))}."
+                f"No guideline covering {topics} is indexed, so this answer cannot "
+                f"be grounded in one. Indexed: "
+                f"{', '.join(coverage.get('indexed', []))}."
             )
 
         GuidelineSuggestion.objects.create(
