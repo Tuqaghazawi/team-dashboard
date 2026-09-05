@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from accounts.models import User
 from mdc.models import MDCListing, suggested_mdc_for
+from patients.categories import week_range
 from patients.models import Investigation, Patient, SurgeryBooking, TreatmentCourse
 from patients.workup import create_baseline_workup, create_restaging_workup
 from teams.models import MDC, FellowAssignment, Team
@@ -93,8 +94,19 @@ CASES = [
 class Command(BaseCommand):
     help = "Create synthetic teams, MDCs, users and patients across every pathway stage."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--reset",
+            action="store_true",
+            help="Delete the demo patients first and rebuild them from scratch.",
+        )
+
     def handle(self, *args, **options):
         random.seed(7)
+        if options["reset"]:
+            mrns = [case[1] for case in CASES]
+            deleted, _ = Patient.objects.filter(mrn__in=mrns).delete()
+            self.stdout.write(f"Reset: removed {deleted} demo rows")
         self.teams = self._teams()
         self.mdcs = self._mdcs()
         self._users()
@@ -282,9 +294,14 @@ class Command(BaseCommand):
                 item.save(update_fields=["status", "ordered_on"])
 
     def _list_for_mdc(self, patient, weeks_ahead=1, presented=False):
+        """List the patient on that MDC's meeting inside the target week.
+
+        The meeting has to land in the week the demo is aiming at, so the
+        dashboard's "next week" bucket actually shows somebody.
+        """
         mdc = suggested_mdc_for(patient.specialty) or self.mdcs["Sarcoma"]
-        base = timezone.localdate() + timedelta(weeks=weeks_ahead)
-        meeting = mdc.next_meeting_date(on_or_after=base) or base
+        start, _end = week_range(weeks_ahead)
+        meeting = mdc.next_meeting_date(on_or_after=start) or start
         listing, _ = MDCListing.objects.get_or_create(
             patient=patient, mdc=mdc, meeting_date=meeting,
             defaults={"presented": presented},

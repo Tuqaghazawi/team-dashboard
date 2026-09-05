@@ -135,8 +135,16 @@ class Patient(models.Model):
     # Workup progress — the checklist the whole team watches
     # ------------------------------------------------------------------
     def workup_progress(self):
-        """(ready_count, total_count) across this patient's required investigations."""
-        required = [i for i in self.investigations.all() if i.required]
+        """(ready_count, total_count) across the required *baseline* investigations.
+
+        Restaging is deliberately excluded: it belongs to a treatment course and
+        is tracked there, so re-opening restaging must not make a patient whose
+        baseline workup is complete look incomplete again.
+        """
+        required = [
+            i for i in self.investigations.all()
+            if i.required and i.purpose == Investigation.Purpose.BASELINE
+        ]
         ready = [i for i in required if i.status == Investigation.Status.READY]
         return len(ready), len(required)
 
@@ -154,7 +162,9 @@ class Patient(models.Model):
     def outstanding_investigations(self):
         return [
             i for i in self.investigations.all()
-            if i.required and i.status != Investigation.Status.READY
+            if i.required
+            and i.purpose == Investigation.Purpose.BASELINE
+            and i.status != Investigation.Status.READY
         ]
 
     @property

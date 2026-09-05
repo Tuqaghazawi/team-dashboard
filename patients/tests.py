@@ -333,3 +333,30 @@ class RotationTests(TestCase):
             FellowAssignment.current_quarter(date(2026, 1, 1)),
             (date(2026, 1, 1), date(2026, 3, 31)),
         )
+
+
+class RestagingDoesNotAffectBaselineReadinessTests(TestCase):
+    """Opening restaging must not make a completed baseline workup look unfinished."""
+
+    def setUp(self):
+        self.team = Team.objects.create(consultant="Dr. Test", specialty="Colorectal cancer")
+        self.patient = make_patient(self.team, mrn="900050")
+        create_baseline_workup(self.patient)
+        for item in self.patient.investigations.all():
+            item.mark_ready("Reported.")
+
+    def test_baseline_stays_complete_after_restaging_is_opened(self):
+        patient = Patient.objects.get(pk=self.patient.pk)
+        ready, total = patient.workup_progress()
+        self.assertEqual(ready, total)
+        self.assertTrue(patient.workup_ready)
+
+        from patients.workup import create_restaging_workup
+
+        create_restaging_workup(self.patient)
+
+        patient = Patient.objects.get(pk=self.patient.pk)
+        ready_after, total_after = patient.workup_progress()
+        self.assertEqual((ready_after, total_after), (ready, total))
+        self.assertTrue(patient.workup_ready)
+        self.assertEqual(patient.outstanding_investigations, [])
