@@ -1,0 +1,17 @@
+# Everything in requirements.txt, plus what is needed to build and evaluate the
+# guideline index locally.
+#
+# Kept separate from requirements.txt on purpose. ChromaDB pulls a large native
+# stack, and the deployed instance has no guideline index to search — building
+# one needs licensed PDFs that cannot go in a public repository. Installing it
+# there would cost build time and runtime memory for a feature that cannot work.
+#
+# Use this locally:
+#     pip install -r requirements-ai.txt
+-r requirements.txt
+
+# Vector store behind the guideline brain (ai/rag, ai/guidelines).
+chromadb==1.5.9
+
+# RAG evaluation harness used by ai/rag/evaluate_rag.py (Session 6).
+deepeval==4.2.1

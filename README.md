@@ -30,7 +30,7 @@ is public.
 ```bash
 python -m venv .venv
 .venv/Scripts/activate          # Windows;  source .venv/bin/activate on macOS/Linux
-pip install -r requirements.txt
+pip install -r requirements-ai.txt   # or requirements.txt without the guideline index
 cp .env.example .env            # then fill in OPENAI_API_KEY if you want the guideline brain
 python manage.py migrate
 python manage.py seed_demo      # synthetic teams, users and patients at every stage
@@ -315,6 +315,21 @@ Evaluation on 39 synthetic cases found contradiction recall of 62% — the
 extractor can silently drop critical findings. That is why every extracted or
 suggested value in this app is shown for a clinician to confirm, and why nothing
 AI-generated is saved to a patient record on its own.
+
+### Two requirements files
+
+`requirements.txt` is what the application needs to run, and what Render
+installs. `requirements-ai.txt` adds it plus **ChromaDB** — the vector store
+behind the guideline brain — and **DeepEval**, the Session 6 RAG evaluation
+harness.
+
+They are split because ChromaDB pulls a large native stack and the deployed
+instance has no guideline index to search: building one needs licensed PDFs that
+cannot go in a public repository. Installing it there would cost build time and
+runtime memory for a feature that cannot work regardless.
+
+**Locally, install `requirements-ai.txt`** — otherwise the guideline brain
+reports itself unavailable.
 
 ## The PRD
 

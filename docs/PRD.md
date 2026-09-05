@@ -875,7 +875,17 @@ Three details the blueprint gets right for reasons worth recording:
 - `OPENAI_API_KEY` is deliberately **not** in the blueprint; it is set in the
   Render dashboard.
 
-**Status: configured and verified, not yet provisioned.** There is no live URL.
+**Status: deployed.**
+https://khcc-surgical-oncology-dashboard.onrender.com — HTTPS enforced with a
+301 from HTTP, secure CSRF cookie, `nosniff`, `X-Frame-Options: DENY`, static
+files served by WhiteNoise, PostgreSQL connected and migrated. Verified by
+walking the pathway on the live instance as the prep coordinator, a consultant
+and a fellow, and by downloading a generated deck and both workbooks from it.
+
+Two consequences of the free tier that matter for anyone following the link: the
+service sleeps after about fifteen minutes idle, so a cold first request takes
+roughly a minute, and a free Render PostgreSQL database is removed after thirty
+days.
 
 ### 16.2 Secrets
 

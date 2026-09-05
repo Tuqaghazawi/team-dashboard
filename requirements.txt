@@ -13,7 +13,13 @@ python-dotenv==1.2.3
 python-pptx==1.0.2
 openpyxl==3.1.5
 
-# Agent workflow persistence (a paused MDC case must survive a restart)
+# Multi-agent MDC workflow (Session 5). Needed at runtime: the dashboard imports
+# it to draft a recommendation and hold it at the physician sign-off gate.
+langchain==1.4.0
+langchain-core==1.6.1
+langchain-openai==1.6.0
+langgraph==1.2.11
+# Persistence, so a paused MDC case survives a restart.
 langgraph-checkpoint-sqlite==3.1.1
 
 # Guideline ingestion (add_guideline)
