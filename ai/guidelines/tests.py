@@ -411,10 +411,19 @@ class LabelAliasTests(TestCase):
         self.assertTrue(suggest.label_covers("Hepatobiliary (NCCN)", "liver"))
         self.assertTrue(suggest.label_covers("Hepatobiliary (NCCN)", "biliary"))
 
-    def test_esophagogastric_answers_for_oesophageal_and_gastric(self):
+    def test_the_esophagogastric_guideline_answers_for_oesophageal(self):
         label = "Esophageal and Esophagogastric Junction (NCCN)"
         self.assertTrue(suggest.label_covers(label, "esophageal"))
-        self.assertTrue(suggest.label_covers(label, "gastric"))
+
+    def test_it_does_not_answer_for_gastric(self):
+        """NCCN's oesophageal guideline covers the junction, not the stomach.
+
+        Two ways this could go wrong and both are guarded here: the alias must
+        not map esophagogastric to gastric, and the plain word match must not
+        find "gastric" inside "EsophagoGASTRIC".
+        """
+        label = "Esophageal and Esophagogastric Junction (NCCN)"
+        self.assertFalse(suggest.label_covers(label, "gastric"))
 
     def test_a_label_naming_the_disease_still_works(self):
         self.assertTrue(suggest.label_covers("Rectal", "rectal"))

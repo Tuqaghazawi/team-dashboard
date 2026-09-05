@@ -22,6 +22,7 @@ Everything here is a *suggestion*. It is rendered as a suggestion, it never
 writes to the patient record, and a clinician decides.
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -56,9 +57,15 @@ FALLBACK_GUIDELINES = {"Breast", "Colon", "Rectal", "Thyroid", "Gastric", "Pancr
 TOPIC_ALIASES = {
     "hepatobiliary": {"liver", "biliary"},
     "hepatocellular": {"liver"},
+    "hcc": {"liver"},
+    "ampullary": {"pancreatic"},
+    "periampullary": {"pancreatic"},
     "cholangiocarcinoma": {"biliary"},
     "gallbladder": {"biliary"},
-    "esophagogastric": {"esophageal", "gastric"},
+    # Deliberately not {"esophageal", "gastric"}. NCCN's oesophageal guideline
+    # covers the gastro-oesophageal junction, not the stomach — mapping it to
+    # gastric would let a distal gastric cancer be answered out of it.
+    "esophagogastric": {"esophageal"},
     "oesophageal": {"esophageal"},
     "colorectal": {"colon", "rectal"},
     "upper gastrointestinal": {"gastric", "esophageal"},
@@ -67,12 +74,18 @@ TOPIC_ALIASES = {
 
 
 def label_covers(label, topic):
-    """Whether a guideline label answers for a disease topic."""
+    """Whether a guideline label answers for a disease topic.
+
+    Matched on word boundaries. A plain substring test reads "gastric" inside
+    "EsophagoGASTRIC Junction", which would hand a distal gastric cancer to the
+    oesophageal guideline.
+    """
     text = label.lower()
-    if topic in text:
+    if re.search(rf"\b{re.escape(topic)}\b", text):
         return True
     return any(
-        alias in text and topic in topics for alias, topics in TOPIC_ALIASES.items()
+        re.search(rf"\b{re.escape(alias)}", text) and topic in topics
+        for alias, topics in TOPIC_ALIASES.items()
     )
 
 

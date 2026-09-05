@@ -58,6 +58,15 @@ PROPOSING = re.compile(
     re.I,
 )
 
+# Immediately before the phrase, these mark it as something already done rather
+# than something being proposed. Up to two words may sit in between, so
+# "following modified radical mastectomy" is read as history.
+HISTORICAL = re.compile(
+    r"\b(following|after|post|s/p|status post|her|his|their|the|previous|prior|"
+    r"completed|underwent|had|since|despite)\b(\s+\S+){0,2}\s*$",
+    re.I,
+)
+
 
 @dataclass
 class CaseResult:
@@ -96,19 +105,27 @@ class CaseResult:
 
 
 def check_history(answer, forbidden):
-    """Forbidden phrases that appear in a *proposing* sentence, not a historical one.
+    """Forbidden phrases that appear as a *proposal*, not as history.
 
-    Matched on word boundaries. Without them "mastectomy" matches inside
-    "postmastectomy radiation therapy", which is the correct recommendation
-    after a mastectomy — the checker's own first false positive.
+    Two false positives shaped this, both from the same family — the phrase
+    appearing in a sentence that also proposes something legitimate:
+
+    * word boundaries, because "mastectomy" matches inside "postmastectomy
+      radiation therapy", which is the correct recommendation after a mastectomy;
+    * the words immediately before the phrase, because "consider adjuvant therapy
+      **following** modified radical mastectomy" proposes adjuvant therapy and
+      merely mentions the surgery. "Proceed to mastectomy" still fails.
     """
     violations = []
     for sentence in re.split(r"(?<=[.;:\n])\s+", answer):
         if not PROPOSING.search(sentence):
             continue
         for phrase in forbidden:
-            if re.search(rf"\b{re.escape(phrase)}\b", sentence, re.I):
+            for match in re.finditer(rf"\b{re.escape(phrase)}\b", sentence, re.I):
+                if HISTORICAL.search(sentence[:match.start()]):
+                    continue
                 violations.append(f"{phrase} -> {sentence.strip()[:110]}")
+                break
     return violations
 
 

@@ -16,12 +16,32 @@ embeddings enter the index, and the index is git-ignored too.
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 
 RAG_DIR = Path(__file__).resolve().parents[3] / "rag"
+
+
+# Repeated on every page of an NCCN PDF. The Session 6 cleaner strips KHCC's
+# boilerplate, not this. Two reasons it has to go: it would be embedded and
+# retrieved as though it were clinical content, and the "Printed by ..." line
+# carries the name of whoever downloaded the PDF — which must never reach an
+# index that answers get cited from.
+NCCN_BOILERPLATE = re.compile(
+    r"(^Printed by .+ on \d"
+    r"|^NCCN Guidelines?\s+(Version|Index)"
+    r"|PLEASE NOTE that use of this NCCN Content"
+    r"|National Comprehensive Cancer Network"
+    r"|^Version \d+\.\d{4}"
+    r"|^Table of Contents$"
+    r"|^Discussion$"
+    r"|^\d+ OF \d+$"
+    r"|^Note: All recommendations are category 2A)",
+    re.I,
+)
 
 
 class Command(BaseCommand):
@@ -155,11 +175,18 @@ class Command(BaseCommand):
 
         # Reuse the Session 6 cleaning and packing, so these chunks look like the
         # existing ones and retrieval behaves the same.
-        text = "\n".join(
-            chunker.clean(reader.pages[page - 1].extract_text() or "")
-            for page in range(start, last + 1)
+        pages = []
+        for page in range(start, last + 1):
+            cleaned = chunker.clean(reader.pages[page - 1].extract_text() or "")
+            pages.append(self._strip_boilerplate(cleaned))
+        return chunker.chunk_text("\n".join(pages)), last - start + 1
+
+    def _strip_boilerplate(self, text):
+        """Drop the per-page furniture the Session 6 cleaner does not know about."""
+        return "\n".join(
+            line for line in text.splitlines()
+            if line.strip() and not NCCN_BOILERPLATE.search(line.strip())
         )
-        return chunker.chunk_text(text), last - start + 1
 
     def _append_chunks(self, chunks, label, page_range):
         path = RAG_DIR / "guideline_chunks.jsonl"

@@ -67,7 +67,13 @@ evidence for those. The two evaluation runs cover the parts where a model writes
 the answer. `eval_guidelines` scores refusal calibration, source correctness and
 history safety **deterministically** — whether a disease is covered by the index
 is a fact, not a judgement — with an optional LLM judge for clinical
-appropriateness. Results and baselines are in PRD §12.
+appropriateness.
+
+Those three sit at 100% and are identical across runs. The judge and the
+self-check grader move by up to 37 points between *identical* runs of the same
+command, which is why the release gate is the deterministic three and the judge
+is treated as a signal to investigate rather than a threshold to pass. Both runs
+are in PRD §12.
 
 ### The scheduled jobs
 
@@ -176,9 +182,21 @@ prints which diseases a label will answer for, and warns if the answer is none;
 a guideline nothing matches is indexed and then never consulted, which is the
 worst outcome because it looks finished.
 
-NCCN's own titles work as they are: `"Hepatobiliary (NCCN)"` answers for both
-liver and biliary, and `"Esophageal and Esophagogastric Junction (NCCN)"` for
-oesophageal and gastric.
+NCCN's own titles work as they are — labels resolve through aliases, matched on
+word boundaries. That boundary matters: without it `"gastric"` matches inside
+`"EsophagoGASTRIC"`, and a distal gastric cancer would be answered from the
+oesophageal guideline.
+
+The command also strips NCCN's per-page furniture before chunking, including the
+personalised **"Printed by ..."** watermark that names whoever downloaded the
+PDF. That would otherwise be embedded in the index and could be cited back
+inside an answer.
+
+**Currently indexed — ten guidelines, 2,660 chunks:** Breast, Colon, Rectal,
+Thyroid, Gastric and Pancreatic (KHCC), plus Hepatocellular Carcinoma, Biliary
+Tract, Ampullary Adenocarcinoma, and Esophageal and Esophagogastric Junction
+(NCCN). **Sarcoma is not covered** and is correctly refused rather than answered
+from a neighbouring cancer.
 
 Keep licensed PDFs (NCCN) in `data/guidelines/`, which is git-ignored, and never
 commit them. Only the extracted chunks enter the index, and that is git-ignored too. It reuses the Session 6 RAG

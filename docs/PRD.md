@@ -313,10 +313,22 @@ scripts. No module was rewritten.
   oesophagus. The check reads the index itself, so
   `manage.py add_guideline` widens coverage with no code change.
 
-  The KHCC set covers **Breast, Colon, Rectal, Thyroid, Gastric and Pancreatic**.
-  **Sarcoma, hepatobiliary other than pancreatic, and oesophageal have no KHCC
-  guideline** — NCCN is the agreed source for those, and the PDFs are still to be
-  supplied and indexed.
+  The index now holds **ten guidelines, 2,660 chunks**: the six KHCC ones
+  (Breast, Colon, Rectal, Thyroid, Gastric, Pancreatic) and four NCCN ones added
+  where KHCC has none — Hepatocellular Carcinoma, Biliary Tract, Ampullary
+  Adenocarcinoma, and Esophageal and Esophagogastric Junction.
+
+  **Sarcoma remains uncovered** and is correctly refused rather than answered
+  from a neighbouring cancer.
+
+  Two things had to be right for the NCCN documents. Their labels do not contain
+  the disease word — NCCN's oesophageal guideline is titled for the
+  oesophagogastric *junction* — so labels resolve through aliases, matched on
+  word boundaries: without them "gastric" matches inside "EsophagoGASTRIC" and a
+  distal gastric cancer would be answered from the oesophageal guideline. And
+  every NCCN page carries a personalised "Printed by ..." watermark naming
+  whoever downloaded the PDF; that is stripped before chunking, because it would
+  otherwise be embedded and could be cited back inside an answer.
 - **On refusal.** When the model replies "Not found in the provided guidelines",
   no citations are shown and no slide note is written — listing the passages a
   search happened to return would make a refusal look researched.
@@ -491,12 +503,12 @@ a disease is covered by the index is a fact, so refusal correctness is checkable
 exactly; so is whether every cited passage came from a guideline for that
 disease.
 
-| Metric | Before the fix | After |
-|---|---|---|
-| Refusal calibration — answers iff a guideline covers the disease | 11/12 (91%) | **12/12 (100%)** |
-| Source correctness — every cited passage is from a covering guideline | 11/12 (91%) | **12/12 (100%)** |
-| History safety — never proposes what was already done | 8/9 (88%) | **8/8 (100%)** |
-| Judge: appropriate for the point this patient reached | 7/9 (77%) | 6/8 (75%) |
+| Metric | First run | After the retrieval fix | With NCCN indexed |
+|---|---|---|---|
+| Refusal calibration — answers iff a guideline covers the disease | 11/12 (91%) | 12/12 | **12/12 (100%)** |
+| Source correctness — every cited passage is from a covering guideline | 11/12 (91%) | 12/12 | **12/12 (100%)** |
+| History safety — never proposes what was already done | 8/9 (88%) | 8/8 | **11/11 (100%)** |
+| Judge: appropriate for the point this patient reached | 7/9 (77%) | 6/8 (75%) | 63–100%, see below |
 
 **What the first run found, and what changed.** The oesophageal case was
 answered out of the *colon and gastric* guidelines instead of being refused, and
@@ -511,9 +523,8 @@ The third failure was in the evaluator, not the system: "mastectomy" matched
 inside "postmastectomy radiation therapy", which is the correct recommendation
 after a mastectomy. The check now matches on word boundaries.
 
-**The judge metric did not improve from the retrieval fix, and that is the
-honest result.** Retrieval addressed *grounding*, not *clinical judgement within
-a correctly retrieved guideline*.
+**The retrieval fix addressed *grounding*, not *clinical judgement within a
+correctly retrieved guideline*.** The judge metric did not move with it.
 
 ### Agentic RAG — grade-and-retry
 
@@ -557,6 +568,29 @@ one to read hardest.
 
 Workup suggestions stay single-shot: a list of investigation names gives the
 grader little to catch, and each round costs two more calls.
+
+### The judge metric is not stable, and that is the point
+
+Two runs of the identical command, same cases, same index, temperature 0:
+
+| Metric | Run 1 | Run 2 |
+|---|---|---|
+| Refusal calibration | 12/12 | 12/12 |
+| Source correctness | 12/12 | 12/12 |
+| History safety | 11/11 | 11/11 |
+| **Judge: appropriate** | **11/11 (100%)** | **7/11 (63%)** |
+| **Grader passed** | **11/11** | **7/11 (63%)** |
+
+The three deterministic metrics are identical across runs, because they check
+facts: whether a disease is in the index, whether a citation came from a
+covering guideline, whether a phrase appears as a proposal. The two
+model-judged ones move by 37 points on the same inputs.
+
+**So the release gate is the deterministic three, and only those.** A single
+run reporting 100% judge agreement would be a number worth nothing; quoting it
+as a headline result would be worse. The judge is kept because it reads answers
+a rule cannot, and it caught the ER-positive breast case — but it is a signal to
+investigate, never a threshold to pass.
 
 **What this does and does not tell you.** It shows the brain no longer answers
 from the wrong disease, and no longer proposes an operation on an organ already

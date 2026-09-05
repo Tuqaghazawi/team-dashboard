@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'reports',
     'ehr',
     'ai.guidelines',
+    'ai.eval',
 ]
 
 # Tell Django to use our custom User model (with the "role" field) instead of

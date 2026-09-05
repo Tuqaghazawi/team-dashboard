@@ -4,8 +4,10 @@
     "errors": 0,
     "refusal_calibration": "12/12 (100%)",
     "source_correctness": "12/12 (100%)",
-    "history_safety": "8/8 (100%)",
-    "judge_appropriate": "6/8 (75%)"
+    "history_safety": "11/11 (100%)",
+    "judge_appropriate": "11/11 (100%)",
+    "grader_passed": "11/11 (100%)",
+    "answers_rewritten": 4
   },
   "cases": [
     {
@@ -21,7 +23,9 @@
       "history_violations": [],
       "judge": "APPROPRIATE",
       "judge_reason": "The suggestion correctly addresses the primary treatment for a treatment-naive T3N2 rectal cancer, which includes preoperative chemoradiation followed by TME.",
-      "answer": "The guideline supports the use of preoperative chemoradiation followed by total mesorectal excision (TME) for this patient with mid rectal cancer, clinical stage T3N2.\n\nSupporting evidence:\n- Preoperative radiotherapy combined with TME is recommended for resectable rectal cancer, particularly in cases like T3N2 where there is a higher risk of local recurrence (Source 2).\n- TME is considered the gold standard for rectal cancer treatment, significantly reducing the risk of local recurrence (Source 2).\n- The multidisciplinary approach is emphasized for treatment planning, ensuring comprehensive management of the patient's condition (Source 5).",
+      "grade_attempts": 0,
+      "graded_pass": true,
+      "answer": "The guideline supports the use of preoperative chemoradiation followed by total mesorectal excision (TME) for this patient with mid rectal cancer, clinical stage T3N2.\n\nSupporting evidence:\n- Preoperative chemoradiation is recommended for T3N2 rectal cancers to reduce the risk of local recurrence and improve surgical outcomes (Source 2).\n- TME is the gold standard surgical approach for resectable rectal cancer, particularly for T3 tumors, as it ensures adequate margins and reduces local recurrence rates (Source 2).",
       "error": ""
     },
     {
@@ -35,9 +39,11 @@
       "sources_correct": true,
       "history_safe": true,
       "history_violations": [],
-      "judge": "INAPPROPRIATE",
-      "judge_reason": "The suggestion proposes adjuvant chemotherapy as a primary treatment, which is not appropriate for a patient with hormone-positive breast cancer who may be bett",
-      "answer": "The guideline supports the use of adjuvant chemotherapy for this patient with clinical stage cT2N0 breast cancer, given her HER2-negative status and the characteristics of her tumor.\n\nSupporting evidence:\n- Adjuvant chemotherapy is generally recommended for patients with stage II breast cancer, particularly when the tumor is larger than 2 cm (as in this case, 2.4 cm) and HER2-negative (Source 1).\n- The presence of a high Ki-67 index (18%) may indicate a more aggressive tumor, which can further support the need for chemotherapy (Source 1).\n\nReferences: [Source 1 - Breast, pages 42-112]",
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion correctly addresses the primary treatment options for a patient with early, hormone-positive breast cancer at clinical stage cT2N0.",
+      "grade_attempts": 2,
+      "graded_pass": true,
+      "answer": "The guideline supports the use of breast-conserving surgery (BCS) followed by whole-breast irradiation for this patient with clinical stage cT2N0 breast cancer, who is HER2-negative.\n\nSupporting evidence:\n- Patients with stage I or II invasive disease undergoing BCS should receive whole-breast irradiation (Source 2).\n- The patient's tumor size (2.4 cm) and node-negative status (N0) align with the recommendation for BCS followed by radiation (Source 2).\n- The HER2-negative status suggests a different risk profile, but the need for adjuvant treatment following surgery remains relevant for this stage (Source 1).",
       "error": ""
     },
     {
@@ -53,6 +59,8 @@
       "history_violations": [],
       "judge": "APPROPRIATE",
       "judge_reason": "The suggestion correctly addresses the next step after completing the neoadjuvant therapy and aligns with the patient's current treatment status.",
+      "grade_attempts": 0,
+      "graded_pass": true,
       "answer": "The guideline supports that after completing the neoadjuvant treatment and restaging, the next step would be to refer the patient for surgical evaluation. If the tumor is resectable and no metastatic disease is demonstrated, the patient would typically be scheduled for definite surgical resection.\n\nSupporting evidence:\n- Patients are referred again to surgery for surgical evaluation after finishing chemoradiotherapy.\n- They are reassessed with a rectal exam and imaging to evaluate tumor response and resectability (Source 2).\n- If no metastatic disease is demonstrated and the tumor is resectable, patients are usually scheduled for definite surgical resection (Source 1).",
       "error": ""
     },
@@ -69,7 +77,9 @@
       "history_violations": [],
       "judge": "APPROPRIATE",
       "judge_reason": "The suggestion addresses the adjuvant treatment options relevant to the patient's ypT2N1a status after total gastrectomy.",
-      "answer": "The guideline supports the option of concurrent chemoradiotherapy with the McDonald protocol or chemotherapy with Xelox for this patient, given the ypT2N1a status post R0 resection.\n\nSupporting evidence:\n- The patient is classified as ypT2 with N1 involvement, which falls under the recommendation for concurrent chemoradiotherapy or chemotherapy for patients who are not candidates for radiotherapy and had D2 resection (Source 1).\n- The presence of lymphovascular invasion (LVI) and positive lymph nodes indicates a higher risk, supporting the need for adjuvant treatment (Source 1).\n\nReferences: [Source 1 - Gastric, pages 177-209]",
+      "grade_attempts": 1,
+      "graded_pass": true,
+      "answer": "The guideline supports the option of concurrent chemoradiotherapy with the McDonald protocol or chemotherapy with Xelox for this patient, given the ypT2N1a status post resection.\n\nSupporting evidence:\n- The patient is classified as ypT2N1, which falls under the recommendation for concurrent chemoradiotherapy for patients with positive lymph nodes post-resection (Source 1).\n- The presence of positive lymphovascular invasion (LVI) and positive lymph nodes indicates a higher risk, supporting the need for adjuvant treatment (Source 1).\n\nReferences: [Source 1 - Gastric, pages 177-209]",
       "error": ""
     },
     {
@@ -84,8 +94,10 @@
       "history_safe": true,
       "history_violations": [],
       "judge": "APPROPRIATE",
-      "judge_reason": "The suggestion appropriately addresses the adjuvant plan for a patient with node-positive breast cancer after a completed mastectomy.",
-      "answer": "The guideline supports the consideration of postmastectomy radiation therapy (PMRT) for this patient due to the involvement of lymph nodes. \n\nSupporting evidence:\n- PMRT is indicated when there are four or more axillary lymph nodes involved, or in cases with clinical evidence of internal mammary lymph node involvement, or positive surgical margins (Source 3).\n- Although this patient has three positive lymph nodes, the guideline suggests that PMRT should be considered in patients with 1-3 positive nodes, especially given the patient's ypT2N1a status (Source 3).\n\nThis recommendation is based on the need to reduce the risk of local recurrence and improve overall outcomes in patients with node-positive breast cancer.",
+      "judge_reason": "The suggestion appropriately addresses the adjuvant treatment options for the patient after her mastectomy, considering her ypT2N1a status and the potential ben",
+      "grade_attempts": 2,
+      "graded_pass": true,
+      "answer": "The guideline suggests that postmastectomy radiation therapy (PMRT) could be considered for this patient, given her ypT2N1a status, although it is not strictly indicated based on her lymph node involvement.\n\nSupporting evidence:\n- PMRT is indicated when there are 4 or more axillary lymph nodes involved, clinical evidence of internal mammary lymph node involvement, or positive surgical margins (Source 3).\n- For patients with 1-3 positive lymph nodes, PMRT should be considered based on other high-risk features, such as tumor size (Source 3).\n\nGiven the patient's ypT2N1a status, the MDC may want to evaluate the potential benefits of PMRT in her treatment plan.",
       "error": ""
     },
     {
@@ -99,9 +111,11 @@
       "sources_correct": true,
       "history_safe": true,
       "history_violations": [],
-      "judge": "INAPPROPRIATE",
-      "judge_reason": "The suggestion proposes a treatment (surgical intervention) that the patient has not yet completed, but it incorrectly assumes the patient has already finished ",
-      "answer": "The guideline supports that after completing the neoadjuvant chemotherapy and restaging, the patient should consider surgical intervention, specifically a mastectomy, given her clinical stage of cT3N+ and triple-negative breast cancer status.\n\nSupporting evidence:\n- Neoadjuvant chemotherapy is often used for locally advanced breast cancer (Stage III), which includes patients with large tumors or multiple positive lymph nodes who have operable disease (Source 4).\n- The standard approach for triple-negative breast cancer includes neoadjuvant chemotherapy followed by surgical resection (Source 2).\n\nPassages used: [Source 2], [Source 4].",
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion correctly addresses the next step after neoadjuvant chemotherapy for a patient with locally advanced breast cancer.",
+      "grade_attempts": 1,
+      "graded_pass": true,
+      "answer": "The guideline supports that after completing the neoadjuvant chemotherapy and restaging, the patient should consider surgical intervention, as neoadjuvant chemotherapy is indicated for operable disease in locally advanced breast cancer.\n\nSupporting evidence:\n- Neoadjuvant chemotherapy is often used for locally advanced breast cancer (Stage III), which includes patients with large tumors or multiple positive lymph nodes who have operable disease (Source 4).\n- The standard approach for triple-negative breast cancer includes neoadjuvant chemotherapy followed by surgical resection (Source 2).\n\nThis recommendation is based on the patient's current treatment status and clinical characteristics.",
       "error": ""
     },
     {
@@ -117,7 +131,9 @@
       "history_violations": [],
       "judge": "APPROPRIATE",
       "judge_reason": "The suggestion correctly addresses the treatment options for a patient with non-resectable metastatic colon cancer and provides relevant evidence for the recomm",
-      "answer": "The guideline supports the use of palliative chemotherapy for this patient with non-resectable metastatic disease. \n\nSupporting evidence:\n- Patients with non-resectable metastatic disease are candidates for palliative treatment, and those with good performance status are usually offered palliative chemotherapy early in the course of their disease (Source 3).\n- The first-line chemotherapy options include FOLFOX, FOLFIRI, or Cetuximab for wild-type KRAS tumors, which is applicable to this patient (Source 5).\n\nReferences: Source 3, Source 5.",
+      "grade_attempts": 0,
+      "graded_pass": true,
+      "answer": "The guideline supports the use of palliative chemotherapy for this patient with non-resectable metastatic disease. \n\nSupporting evidence:\n- Patients with non-resectable metastatic disease are candidates for palliative treatment, and those with good performance status are usually offered palliative chemotherapy early in the course of their disease (Source 3).\n- The first-line chemotherapy options include FOLFOX, FOLFIRI, or Cetuximab for wild-type KRAS tumors (Source 3 and Source 5). \n\nThis patient, being KRAS wild type, may benefit from Cetuximab as part of her treatment regimen.",
       "error": ""
     },
     {
@@ -133,7 +149,9 @@
       "history_violations": [],
       "judge": "APPROPRIATE",
       "judge_reason": "The suggestion correctly addresses the primary treatment for node-positive papillary thyroid carcinoma at the specified clinical stage.",
-      "answer": "The guideline supports surgical intervention as the primary treatment for a patient with papillary thyroid carcinoma at clinical stage cT2N1a. \n\nSupporting evidence:\n- Surgical resection is the standard treatment for differentiated thyroid carcinoma, including papillary thyroid carcinoma, especially in cases with lymph node involvement (N1a).\n- The guidelines emphasize the importance of complete surgical excision of the tumor and any involved lymph nodes to achieve optimal outcomes (Source 3).",
+      "grade_attempts": 0,
+      "graded_pass": true,
+      "answer": "The guideline supports surgical intervention as the primary treatment for a patient with papillary thyroid carcinoma at clinical stage cT2N1a. \n\n- Surgical resection is typically recommended for patients with papillary thyroid carcinoma, especially when there is lymph node involvement (N1a).\n- The management of differentiated thyroid carcinoma, including papillary thyroid carcinoma, emphasizes the importance of surgical excision to achieve optimal outcomes (Source 1, Source 2).",
       "error": ""
     },
     {
@@ -147,49 +165,63 @@
       "history_violations": [],
       "judge": "",
       "judge_reason": "",
+      "grade_attempts": 0,
+      "graded_pass": null,
       "answer": "Not found in the provided guidelines.",
       "error": ""
     },
     {
-      "case": "biliary-uncovered",
-      "refused": true,
-      "should_refuse": true,
-      "sources": [],
+      "case": "biliary-nccn",
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Biliary Tract (NCCN), pages 1-108"
+      ],
       "refusal_correct": true,
       "sources_correct": true,
       "history_safe": true,
       "history_violations": [],
-      "judge": "",
-      "judge_reason": "",
-      "answer": "Not found in the provided guidelines.",
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion correctly addresses the treatment for hilar cholangiocarcinoma at clinical stage T2N0, emphasizing the importance of surgical resection.",
+      "grade_attempts": 0,
+      "graded_pass": true,
+      "answer": "The guideline supports surgical resection as the primary treatment for this patient with hilar cholangiocarcinoma at clinical stage T2N0. \n\nSupporting evidence:\n- Surgical resection is indicated for tumors that can be resected with a reasonable chance of a margin-negative resection, particularly in cases like Bismuth type IIIa where extended resection may improve outcomes (Source 1).\n- The management of hilar cholangiocarcinoma emphasizes the importance of resection along with the involved biliary tree and liver to achieve potential curative outcomes (Source 1).",
       "error": ""
     },
     {
       "case": "oesophageal-near-miss",
-      "refused": true,
-      "should_refuse": true,
-      "sources": [],
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Esophageal and Esophagogastric Junction (NCCN), pages 1-170"
+      ],
       "refusal_correct": true,
       "sources_correct": true,
       "history_safe": true,
       "history_violations": [],
-      "judge": "",
-      "judge_reason": "",
-      "answer": "Not found in the provided guidelines.",
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion correctly addresses the treatment for a patient with clinical stage cT3N1 distal esophageal cancer, recommending preoperative chemoradiation as s",
+      "grade_attempts": 0,
+      "graded_pass": true,
+      "answer": "The guideline supports preoperative chemoradiation as the preferred primary treatment for this patient with distal esophageal cancer at clinical stage cT3N1.\n\nSupporting evidence:\n- For patients with cT3 disease, preoperative chemoradiation is recommended (ESOPH-5).\n- Esophagectomy is also an option, but preoperative chemoradiation is preferred for this stage (ESOPH-5).",
       "error": ""
     },
     {
-      "case": "liver-uncovered",
-      "refused": true,
-      "should_refuse": true,
-      "sources": [],
+      "case": "liver-nccn",
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Hepatocellular Carcinoma (NCCN), pages 1-115"
+      ],
       "refusal_correct": true,
       "sources_correct": true,
       "history_safe": true,
       "history_violations": [],
-      "judge": "",
-      "judge_reason": "",
-      "answer": "Not found in the provided guidelines.",
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion correctly identifies resection as a suitable treatment option for the patient's hepatocellular carcinoma based on the provided clinical stage and",
+      "grade_attempts": 0,
+      "graded_pass": true,
+      "answer": "The guideline supports resection as the preferred primary treatment for this patient with a 3.1 cm hepatocellular carcinoma lesion, given that there is no macrovascular involvement or extrahepatic disease.\n\nSupporting evidence:\n- Resection is preferred for tumors 2\u20135 cm in diameter without macrovascular involvement or extrahepatic disease (Source 1).\n- The patient meets the criteria for resection as he has a single tumor measuring 3.1 cm (Source 1).",
       "error": ""
     }
   ]
