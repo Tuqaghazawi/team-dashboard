@@ -6,6 +6,8 @@ urlpatterns = [
     path("", views.mdc_board, name="mdc_board"),
     path("add/<int:patient_pk>/", views.add_listing, name="mdc_add_listing"),
     path("listing/<int:pk>/decision/", views.record_decision, name="record_decision"),
+    path("listing/<int:pk>/agents/run/", views.start_agent_review, name="start_agent_review"),
+    path("listing/<int:pk>/agents/sign-off/", views.sign_off_agent_review, name="sign_off_agent_review"),
     path(
         "suggest/<int:patient_pk>/<str:kind>/",
         views.request_suggestion,

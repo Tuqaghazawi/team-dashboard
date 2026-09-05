@@ -37,6 +37,64 @@
 </div>
 
 <div class="card">
+  <h2>
+    Multi-agent MDC workflow
+    {% if agent_review %}
+      <span class="right">
+        {% if agent_review.is_approved %}
+          <span class="pill done">approved by {{ agent_review.approved_by.get_full_name|default:agent_review.approved_by.username }}</span>
+        {% else %}
+          <span class="pill pending">awaiting sign-off</span>
+        {% endif %}
+        {% if agent_review.revisions %}<span class="pill info">{{ agent_review.revisions }} revision(s)</span>{% endif %}
+      </span>
+    {% endif %}
+  </h2>
+
+  {% if agent_review %}
+    <div class="ai-note">
+      <h4>Drafted recommendation &mdash; held for physician sign-off</h4>
+      <div style="white-space:pre-wrap">{{ agent_review.recommendation }}</div>
+      {% if agent_review.last_feedback %}
+        <cite>Your last feedback: {{ agent_review.last_feedback }}</cite>
+      {% endif %}
+    </div>
+
+    {% if not agent_review.is_approved and user.can_record_clinical %}
+      <form method="post" action="{% url 'sign_off_agent_review' listing.pk %}" class="stack" style="margin-top:16px">
+        {% csrf_token %}
+        <div class="field">
+          <label for="feedback">If sending it back, say what needs changing</label>
+          <textarea id="feedback" name="feedback" rows="2"
+                    placeholder="e.g. State the pre-op INR target and the bridging plan."></textarea>
+        </div>
+        <div class="actions">
+          <button type="submit" name="verdict" value="approve" class="btn">Approve the draft</button>
+          <button type="submit" name="verdict" value="reject" class="btn ghost">Send back with feedback</button>
+        </div>
+      </form>
+    {% endif %}
+
+    <p class="help" style="margin-top:14px">
+      Approving records that a physician reviewed the draft. It does <strong>not</strong>
+      write anything to the patient record &mdash; the MDC decision above is still
+      yours to enter.
+    </p>
+  {% else %}
+    <p class="empty">
+      The workflow runs a guideline agent and a peri-operative medication agent over
+      this case, drafts a recommendation, then stops and waits for a physician.
+    </p>
+    {% if user.can_record_clinical %}
+      <form method="post" action="{% url 'start_agent_review' listing.pk %}" style="margin-top:14px">
+        {% csrf_token %}
+        <button type="submit" class="btn ghost">Run the MDC workflow</button>
+      </form>
+    {% endif %}
+  {% endif %}
+</div>
+
+<div class="card">
   <h2>Guideline brain</h2>
   {% if suggestion %}
     <div class="ai-note">

@@ -111,19 +111,41 @@ clinical fact, never change the patient record, and their evidence is written
 into the slide's *notes* field so it supports the discussion instead of
 pre-empting it.
 
+**Structured extraction** — a report on the workup checklist can be run through
+the Capstone 1 extractor. The result is a *pending* extraction, shown as a review
+table: fields whose loss changes management (grade, margins, nodes, LVI,
+receptors, stage) are marked critical and sorted first, the extractor's own
+`needs_human_review` flag is shown, and the clinician's corrections are stored
+separately from what the model returned. Nothing reaches the record unconfirmed.
+
+**Peri-operative medication check** — a patient booked for surgery is checked
+against the KHCC GDLPT-25 rules. The pharmacy system is separate and keyed by its
+own MRNs, so the page distinguishes "no medication record is linked" from "no
+holds flagged" — those look the same if you only count alerts, and only one of
+them is safe.
+
+**The multi-agent MDC workflow** — the Session 5 LangGraph workflow runs a
+guideline agent and a peri-op medication agent over a case, drafts a
+recommendation, and stops at `interrupt()` for physician sign-off. Approve
+records who signed it off; reject sends feedback back into the graph, which
+revises and pauses again. It is compiled with `SqliteSaver`, so a case waiting
+for a physician survives a server restart. **Approving a draft does not write an
+MDC decision** — the clinician still enters that themselves.
+
 ## Not built yet
 
-- **The `ai/agents` LangGraph MDC workflow is not wired into the MDC screen.**
-  Decisions are recorded by a person; the guideline brain informs them. The
-  `interrupt()` / approve / reject-with-feedback loop is still standalone.
-- **`ai/extraction` is not wired in.** Investigation reports are typed or pasted;
-  they are not yet run through the extractor for structured fields.
-- **`ai/pharmacy` peri-op medication checks** are not surfaced on surgical
-  patients.
-- **The MDC decision suggestion is not offered per-patient in bulk** — it is
-  requested one patient at a time.
-- Post-MDC decisions do not yet open a treatment course automatically; a fellow
+- **The two agent tools inside `ai/agents/mdc_workflow.py` are still the Session 5
+  stubs.** The workflow is wired into the dashboard and its human gate is real,
+  but `guideline_lookup` and `drug_interaction_check` return placeholder text
+  rather than calling `ai/rag` and `ai/pharmacy`. The dashboard reaches those two
+  modules directly instead (the guideline brain and the peri-op page).
+- **A confirmed extraction is stored but not yet copied into the patient's
+  structured fields** — a clinician still types the clinical detail.
+- **The MDC decision suggestion is requested one patient at a time**, not in bulk
+  for a whole meeting.
+- Post-MDC decisions do not open a treatment course automatically; a fellow
   opens it.
+- **Nothing here is validated for clinical use.** It runs on synthetic data.
 
 ## The AI layer
 
@@ -137,6 +159,12 @@ Four modules, each built and evaluated as its own course assignment, live under
 | `ai/rag/` | RAG over six KHCC oncology guidelines; grounded, cited answers |
 | `ai/agents/` | LangGraph MDC workflow with a physician approval gate |
 | `ai/eval/` | functional and LLM-judge evaluation, judge validation, safety metrics |
+
+Three thin wrappers connect these to the app, because the originals print
+their results instead of returning them: `ai/guidelines/suggest.py` over
+`ai/rag`, `ai/pharmacy/periop_api.py` over `periop_flag`, and
+`ai/agents/dashboard_workflow.py` over `mdc_workflow` (adding durable pauses).
+`ai/extraction/review.py` flattens an extraction into a reviewable table.
 
 `ai/guidelines/` is the dashboard's wrapper over `ai/rag`: it returns the answer
 and its citations instead of printing them, and degrades to "unavailable" rather

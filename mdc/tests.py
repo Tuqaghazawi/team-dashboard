@@ -8,7 +8,7 @@ from accounts.models import User
 from patients.models import Patient
 from teams.models import MDC, Team
 
-from .models import MDCListing, suggested_mdc_for
+from .models import MDCAgentReview, MDCListing, suggested_mdc_for
 
 
 class MDCMeetingDateTests(TestCase):
@@ -229,3 +229,124 @@ class SlideDeckTests(TestCase):
             )
         )
         self.assertNotIn("Guideline says consider TNT", slide_text)
+
+
+class AgentReviewTests(TestCase):
+    """The workflow drafts; a physician signs off. Nothing is auto-recorded."""
+
+    def setUp(self):
+        from patients.models import Patient
+
+        self.team = Team.objects.create(consultant="Dr. Test", specialty="Colorectal cancer")
+        self.mdc = MDC.objects.create(name="Gastrointestinal (GI)", meeting_weekday=1)
+        self.patient = Patient.objects.create(
+            name="Agent Case", mrn="930001", date_of_birth=date(1958, 2, 2),
+            diagnosis="Low rectal cancer", specialty="COLORECTAL", team=self.team,
+            sex="M", clinical_stage="T3N2",
+        )
+        self.listing = MDCListing.objects.create(
+            patient=self.patient, mdc=self.mdc, meeting_date=date(2026, 9, 8)
+        )
+        self.user = User.objects.create_user(
+            "ax", password="x", role=User.Role.CONSULTANT, team=self.team
+        )
+        self.client.force_login(self.user)
+
+    def test_the_case_sent_to_the_agents_is_built_from_the_record(self):
+        from ai.agents.dashboard_workflow import case_text
+        from patients.models import Investigation
+
+        Investigation.objects.create(
+            patient=self.patient, kind=Investigation.Kind.PELVIC_MRI,
+            status=Investigation.Status.READY, result_text="T3N2, MRF intact.",
+        )
+        text = case_text(self.patient)
+        self.assertIn("Low rectal cancer", text)
+        self.assertIn("T3N2", text)
+        self.assertIn("T3N2, MRF intact.", text)
+        self.assertIn("MDC review requested.", text)
+
+    def test_an_unavailable_workflow_degrades_instead_of_breaking_the_page(self):
+        from unittest.mock import patch
+
+        from ai.agents import dashboard_workflow
+
+        with patch.object(
+            dashboard_workflow, "start_review",
+            side_effect=dashboard_workflow.WorkflowUnavailable("no API key"),
+        ):
+            response = self.client.post(
+                reverse("start_agent_review", args=[self.listing.pk]), follow=True
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "workflow is unavailable")
+        self.assertFalse(MDCAgentReview.objects.exists())
+
+    def test_a_drafted_recommendation_waits_for_sign_off(self):
+        from unittest.mock import patch
+
+        from ai.agents import dashboard_workflow
+
+        with patch.object(dashboard_workflow, "start_review", return_value="Draft plan."):
+            self.client.post(reverse("start_agent_review", args=[self.listing.pk]))
+
+        review = MDCAgentReview.objects.get()
+        self.assertEqual(review.status, MDCAgentReview.Status.AWAITING)
+        self.assertFalse(review.is_approved)
+        # The draft must not have leaked onto the patient's recorded decision.
+        self.listing.refresh_from_db()
+        self.assertEqual(self.listing.decision, "")
+        self.assertEqual(self.listing.decision_category, "")
+
+    def test_rejecting_requires_feedback(self):
+        MDCAgentReview.objects.create(listing=self.listing, recommendation="Draft.")
+        response = self.client.post(
+            reverse("sign_off_agent_review", args=[self.listing.pk]),
+            {"verdict": "reject", "feedback": "   "},
+            follow=True,
+        )
+        self.assertContains(response, "Say what needs changing")
+        self.assertEqual(MDCAgentReview.objects.get().status, MDCAgentReview.Status.AWAITING)
+
+    def test_approval_records_the_physician_but_writes_no_decision(self):
+        from unittest.mock import patch
+
+        from ai.agents import dashboard_workflow
+
+        MDCAgentReview.objects.create(listing=self.listing, recommendation="Draft.")
+        with patch.object(
+            dashboard_workflow, "resume_review", return_value=("approved", "Final plan.")
+        ), patch.object(dashboard_workflow, "revisions", return_value=1):
+            self.client.post(
+                reverse("sign_off_agent_review", args=[self.listing.pk]),
+                {"verdict": "approve"},
+            )
+
+        review = MDCAgentReview.objects.get()
+        self.assertTrue(review.is_approved)
+        self.assertEqual(review.approved_by, self.user)
+        self.assertIsNotNone(review.approved_at)
+        self.assertEqual(review.revisions, 1)
+        # Approving the draft is not the same as recording the MDC decision.
+        self.listing.refresh_from_db()
+        self.assertEqual(self.listing.decision_category, "")
+
+    def test_rejection_stores_the_feedback_and_the_revised_draft(self):
+        from unittest.mock import patch
+
+        from ai.agents import dashboard_workflow
+
+        MDCAgentReview.objects.create(listing=self.listing, recommendation="Draft.")
+        with patch.object(
+            dashboard_workflow, "resume_review", return_value=("revised", "Revised plan.")
+        ), patch.object(dashboard_workflow, "revisions", return_value=1):
+            self.client.post(
+                reverse("sign_off_agent_review", args=[self.listing.pk]),
+                {"verdict": "reject", "feedback": "State the bridging plan."},
+            )
+
+        review = MDCAgentReview.objects.get()
+        self.assertEqual(review.status, MDCAgentReview.Status.AWAITING)
+        self.assertEqual(review.recommendation, "Revised plan.")
+        self.assertEqual(review.last_feedback, "State the bridging plan.")
+        self.assertEqual(review.revisions, 1)

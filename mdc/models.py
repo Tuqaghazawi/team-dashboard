@@ -126,3 +126,46 @@ class GuidelineSuggestion(models.Model):
             lines.extend(["", "Sources:"])
             lines.extend(f"  - {c}" for c in self.citation_list)
         return "\n".join(lines)
+
+
+class MDCAgentReview(models.Model):
+    """The multi-agent workflow's draft recommendation for one MDC listing.
+
+    The LangGraph workflow pauses at ``interrupt()`` with a drafted plan. That
+    draft lives here while a physician looks at it. Approving records who signed
+    it off; rejecting sends feedback back into the graph, which revises and
+    pauses again. Nothing here is ever copied onto the patient record
+    automatically — the physician still types the MDC decision.
+    """
+
+    class Status(models.TextChoices):
+        AWAITING = "AWAITING", "Awaiting physician sign-off"
+        APPROVED = "APPROVED", "Approved by physician"
+
+    listing = models.OneToOneField(
+        MDCListing, on_delete=models.CASCADE, related_name="agent_review"
+    )
+    recommendation = models.TextField(help_text="The draft currently held for sign-off.")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.AWAITING)
+    revisions = models.PositiveSmallIntegerField(
+        default=0, help_text="How many times a physician sent it back."
+    )
+    last_feedback = models.TextField(blank=True)
+    started_by = models.ForeignKey(
+        "accounts.User", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="agent_reviews_started",
+    )
+    approved_by = models.ForeignKey(
+        "accounts.User", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="agent_reviews_approved",
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Agent review — {self.listing.patient.name} ({self.get_status_display()})"
+
+    @property
+    def is_approved(self):
+        return self.status == self.Status.APPROVED

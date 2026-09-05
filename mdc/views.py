@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from ai.agents import dashboard_workflow
 from ai.guidelines import suggest
 from patients import categories, flow
 from patients.views import visible_patients
@@ -16,7 +17,7 @@ from teams.models import MDC
 
 from . import slides
 from .forms import MDCDecisionForm, MDCListingForm
-from .models import GuidelineSuggestion, MDCListing
+from .models import GuidelineSuggestion, MDCAgentReview, MDCListing
 
 
 @login_required
@@ -122,7 +123,13 @@ def record_decision(request, pk):
     return render(
         request,
         "mdc/record_decision.html",
-        {"listing": listing, "patient": listing.patient, "form": form, "suggestion": suggestion},
+        {
+            "listing": listing,
+            "patient": listing.patient,
+            "form": form,
+            "suggestion": suggestion,
+            "agent_review": MDCAgentReview.objects.filter(listing=listing).first(),
+        },
     )
 
 
@@ -255,3 +262,87 @@ def _pptx_response(stream, filename):
     )
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
+
+
+# --- Multi-agent MDC workflow with physician sign-off (Session 5) --------------
+
+@login_required
+@require_POST
+def start_agent_review(request, pk):
+    """Run the multi-agent workflow and hold its draft for sign-off."""
+    listing = get_object_or_404(
+        MDCListing.objects.select_related("patient"),
+        pk=pk,
+        patient__in=visible_patients(request.user),
+    )
+    if not request.user.can_record_clinical:
+        raise PermissionDenied("Only the clinical team may run the MDC workflow.")
+
+    try:
+        draft = dashboard_workflow.start_review(listing)
+    except dashboard_workflow.WorkflowUnavailable as exc:
+        messages.error(request, f"The MDC workflow is unavailable ({exc}).")
+        return redirect("record_decision", pk=listing.pk)
+
+    MDCAgentReview.objects.update_or_create(
+        listing=listing,
+        defaults={
+            "recommendation": draft,
+            "status": MDCAgentReview.Status.AWAITING,
+            "started_by": request.user,
+            "approved_by": None,
+            "approved_at": None,
+        },
+    )
+    messages.info(
+        request,
+        "The workflow has drafted a recommendation and is holding it for sign-off. "
+        "Nothing has been recorded against the patient.",
+    )
+    return redirect("record_decision", pk=listing.pk)
+
+
+@login_required
+@require_POST
+def sign_off_agent_review(request, pk):
+    """Approve the draft, or reject it with feedback so the graph revises."""
+    listing = get_object_or_404(
+        MDCListing.objects.select_related("patient"),
+        pk=pk,
+        patient__in=visible_patients(request.user),
+    )
+    review = get_object_or_404(MDCAgentReview, listing=listing)
+    if not request.user.can_record_clinical:
+        raise PermissionDenied("Only the clinical team may sign off a recommendation.")
+
+    approved = request.POST.get("verdict") == "approve"
+    feedback = request.POST.get("feedback", "").strip()
+    if not approved and not feedback:
+        messages.error(request, "Say what needs changing so the workflow can revise it.")
+        return redirect("record_decision", pk=listing.pk)
+
+    try:
+        status, recommendation = dashboard_workflow.resume_review(
+            listing, "approved" if approved else "rejected", feedback
+        )
+    except dashboard_workflow.WorkflowUnavailable as exc:
+        messages.error(request, f"The MDC workflow is unavailable ({exc}).")
+        return redirect("record_decision", pk=listing.pk)
+
+    review.recommendation = recommendation or review.recommendation
+    review.revisions = dashboard_workflow.revisions(listing)
+    if status == "approved":
+        review.status = MDCAgentReview.Status.APPROVED
+        review.approved_by = request.user
+        review.approved_at = timezone.now()
+        messages.success(
+            request,
+            "Recommendation approved. Record the MDC decision below — approving the "
+            "draft does not write it to the patient record.",
+        )
+    else:
+        review.status = MDCAgentReview.Status.AWAITING
+        review.last_feedback = feedback
+        messages.info(request, "Sent back with your feedback. A revised draft is ready.")
+    review.save()
+    return redirect("record_decision", pk=listing.pk)
