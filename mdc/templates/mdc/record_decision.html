@@ -98,11 +98,25 @@
   <h2>Guideline brain</h2>
   {% if suggestion %}
     <div class="ai-note">
-      <h4>Suggested decision &mdash; for discussion, nothing has been recorded</h4>
+      <h4>Suggested decision &mdash; for discussion, nothing has been recorded
+        {% if suggestion.graded_pass is not None %}
+          {% if suggestion.graded_pass %}
+            <span class="pill done" style="font-size:11px">self-check passed{% if suggestion.grade_attempts %} after {{ suggestion.grade_attempts }} rewrite(s){% endif %}</span>
+          {% else %}
+            <span class="pill alert" style="font-size:11px">self-check still objects</span>
+          {% endif %}
+        {% endif %}
+      </h4>
       {% if suggestion.coverage_note %}
         <p style="color:var(--red);font-weight:600;margin:0 0 8px">{{ suggestion.coverage_note }}</p>
       {% endif %}
       <div style="white-space:pre-wrap">{{ suggestion.answer }}</div>
+      {% if suggestion.graded_pass is False and suggestion.grader_feedback %}
+        <p style="color:var(--red);font-size:12.5px;margin:8px 0 0">
+          <strong>The self-check could not fully ground this answer.</strong>
+          {{ suggestion.grader_feedback }} Read it with that in mind.
+        </p>
+      {% endif %}
       {% if suggestion.citation_list %}
         <cite>Sources: {% for c in suggestion.citation_list %}{{ c }}{% if not forloop.last %} &middot; {% endif %}{% endfor %}</cite>
       {% endif %}

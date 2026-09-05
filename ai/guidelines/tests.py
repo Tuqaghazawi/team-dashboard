@@ -266,3 +266,136 @@ class ScopedRetrievalTests(TestCase):
         )
         self.assertEqual(suggestion.citation_list, [])
         self.assertEqual(suggestion.as_slide_note(), "")
+
+
+class AgenticRagTests(TestCase):
+    """Grade-and-retry: the draft is checked against its own passages."""
+
+    KHCC = ["Breast", "Colon", "Gastric", "Pancreatic", "Rectal", "Thyroid"]
+
+    def setUp(self):
+        self.team = Team.objects.create(consultant="Dr. Test", specialty="General")
+        suggest._indexed_cache = list(self.KHCC)
+        self.addCleanup(setattr, suggest, "_indexed_cache", None)
+        self.patient = Patient.objects.create(
+            name="Test", mrn="962000", date_of_birth=date(1960, 1, 1),
+            diagnosis="Ascending colon cancer", specialty="COLORECTAL",
+            team=self.team, clinical_stage="T3N0",
+        )
+
+    def _rag(self, answers):
+        """A stand-in RAG whose chat call returns the given answers in order."""
+        from unittest import mock
+
+        rag = mock.MagicMock()
+        rag.embed.return_value = [[0.0]]
+        rag.chroma.get_collection.return_value.query.return_value = {
+            "documents": [["Colon guidance."]],
+            "metadatas": [[{"cancer": "Colon", "pages": "113-176"}]],
+        }
+        rag.build_context.return_value = "context"
+        rag.client.chat.completions.create.side_effect = [
+            mock.MagicMock(choices=[mock.MagicMock(message=mock.MagicMock(content=a))])
+            for a in answers
+        ]
+        return rag
+
+    def test_a_passing_draft_is_returned_unchanged_and_never_rewritten(self):
+        from unittest import mock
+
+        rag = self._rag(["Resect it."])
+        grader = mock.MagicMock()
+        grader.grade.return_value = (True, "")
+
+        with mock.patch.object(suggest, "_rag", return_value=rag), \
+             mock.patch.object(suggest, "_agentic_rag", return_value=grader):
+            result = suggest.suggest_decision(self.patient, agentic=True)
+
+        self.assertEqual(result["answer"], "Resect it.")
+        self.assertEqual(result["grading"]["attempts"], 0)
+        self.assertTrue(result["grading"]["passed"])
+
+    def test_a_failing_draft_is_rewritten_and_the_rewrite_returned(self):
+        from unittest import mock
+
+        rag = self._rag(["Bad draft.", "Corrected answer."])
+        grader = mock.MagicMock()
+        grader.grade.side_effect = [(False, "unsupported claim"), (True, "")]
+
+        with mock.patch.object(suggest, "_rag", return_value=rag), \
+             mock.patch.object(suggest, "_agentic_rag", return_value=grader):
+            result = suggest.suggest_decision(self.patient, agentic=True)
+
+        self.assertEqual(result["answer"], "Corrected answer.")
+        self.assertEqual(result["grading"]["attempts"], 1)
+        self.assertTrue(result["grading"]["passed"])
+
+    def test_it_gives_up_after_the_retry_limit_and_says_so(self):
+        """An answer the grader never accepts is still returned — with the
+        objection recorded, so the page can warn about it."""
+        from unittest import mock
+
+        rag = self._rag(["Draft.", "Second.", "Third."])
+        grader = mock.MagicMock()
+        grader.grade.return_value = (False, "still unsupported")
+
+        with mock.patch.object(suggest, "_rag", return_value=rag), \
+             mock.patch.object(suggest, "_agentic_rag", return_value=grader):
+            result = suggest.suggest_decision(self.patient, agentic=True)
+
+        self.assertEqual(result["grading"]["attempts"], suggest.MAX_RETRIES)
+        self.assertFalse(result["grading"]["passed"])
+        self.assertEqual(result["grading"]["feedback"], "still unsupported")
+
+    def test_the_retry_keeps_our_system_prompt_not_the_session_6_one(self):
+        """The Session 6 retry rewrites against its own generic prompt. Reusing
+        it would drop the rules that stop this system proposing a treatment the
+        patient has already had."""
+        from unittest import mock
+
+        rag = self._rag(["Bad draft.", "Corrected."])
+        grader = mock.MagicMock()
+        grader.grade.side_effect = [(False, "fix it"), (True, "")]
+
+        with mock.patch.object(suggest, "_rag", return_value=rag), \
+             mock.patch.object(suggest, "_agentic_rag", return_value=grader):
+            suggest.suggest_decision(self.patient, agentic=True)
+
+        retry_call = rag.client.chat.completions.create.call_args_list[1]
+        system = retry_call.kwargs["messages"][0]["content"]
+        self.assertIn("already completed", system)
+        self.assertIn("already been resected", system)
+
+    def test_a_refusal_is_never_graded(self):
+        from unittest import mock
+
+        uncovered = Patient.objects.create(
+            name="S", mrn="962001", date_of_birth=date(1970, 1, 1),
+            diagnosis="Soft tissue sarcoma, thigh", specialty="SARCOMA", team=self.team,
+        )
+        with mock.patch.object(suggest, "_agentic_rag") as grader:
+            result = suggest.suggest_decision(uncovered, agentic=True)
+
+        self.assertTrue(result["refused"])
+        self.assertIsNone(result["grading"]["passed"])
+        grader.assert_not_called()
+
+    def test_a_broken_grader_does_not_lose_the_draft(self):
+        from unittest import mock
+
+        rag = self._rag(["A good draft."])
+        with mock.patch.object(suggest, "_rag", return_value=rag), \
+             mock.patch.object(suggest, "_agentic_rag", side_effect=RuntimeError("no key")):
+            result = suggest.suggest_decision(self.patient, agentic=True)
+
+        self.assertEqual(result["answer"], "A good draft.")
+        self.assertIn("grader unavailable", result["grading"]["feedback"])
+
+    def test_workup_suggestions_are_single_shot_by_default(self):
+        from unittest import mock
+
+        rag = self._rag(["Order a CT."])
+        with mock.patch.object(suggest, "_rag", return_value=rag), \
+             mock.patch.object(suggest, "_agentic_rag") as grader:
+            suggest.suggest_workup(self.patient)
+        grader.assert_not_called()

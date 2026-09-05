@@ -29,6 +29,10 @@ RAG_DIR = Path(__file__).resolve().parents[1] / "rag"
 
 CHAT_MODEL = "gpt-4o-mini"
 
+# Grade-and-retry rounds before the draft is returned as it stands. Two is
+# the Session 6 default; a third has never changed a verdict here.
+MAX_RETRIES = 2
+
 # The exact sentence the RAG prompt uses to decline. Detected so that a refusal
 # is not decorated with citations that make it look researched.
 REFUSAL = "Not found in the provided guidelines"
@@ -241,23 +245,32 @@ def coverage_for(patient):
 
 # --- the two questions --------------------------------------------------------
 
-def suggest_workup(patient, k=5):
-    """Investigations the guideline expects for this patient, as they stand now."""
+def suggest_workup(patient, k=5, agentic=False):
+    """Investigations the guideline expects for this patient, as they stand now.
+
+    Single-shot by default: a workup list is a set of names, where the grader
+    has little to catch and each round costs another two calls.
+    """
     question = (
         "What staging and workup investigations does the guideline require for "
         "this patient?\n\n"
         f"Patient:\n{_case_block(patient)}"
     )
-    return _ask(question, WORKUP_SYSTEM, k, patient)
+    return _ask(question, WORKUP_SYSTEM, k, patient, agentic=agentic)
 
 
-def suggest_decision(patient, k=5):
-    """Treatment options the guideline supports, for the MDC to consider."""
+def suggest_decision(patient, k=5, agentic=True):
+    """Treatment options the guideline supports, for the MDC to consider.
+
+    Self-checked by default. This is the highest-stakes output in the app, and
+    the grader's question — is every claim supported by these passages? — is
+    exactly the one a cited guideline answer has to survive.
+    """
     question = (
         f"{decision_asked(patient)}\n\n"
         f"Patient:\n{_case_block(patient)}"
     )
-    return _ask(question, DECISION_SYSTEM, k, patient)
+    return _ask(question, DECISION_SYSTEM, k, patient, agentic=agentic)
 
 
 def _retrieve_scoped(rag, question, k, guidelines):
@@ -283,7 +296,7 @@ def _retrieve_scoped(rag, question, k, guidelines):
     ]
 
 
-def _ask(question, system, k, patient=None):
+def _ask(question, system, k, patient=None, agentic=False):
     """Retrieve, answer, and return the answer with its citations."""
     # No indexed guideline covers this disease, so there is nothing to ground an
     # answer in. Refuse before spending anything — rather than retrieving a
@@ -298,6 +311,7 @@ def _ask(question, system, k, patient=None):
             "citations": [],
             "refused": True,
             "retrieved_from": [],
+            "grading": {"attempts": 0, "passed": None, "feedback": ""},
             "coverage": coverage,
         }
 
@@ -308,18 +322,18 @@ def _ask(question, system, k, patient=None):
         else:
             chunks = rag.retrieve(question, k=k)
         context = rag.build_context(chunks)
-        response = rag.client.chat.completions.create(
-            model=CHAT_MODEL,
-            temperature=0,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"},
-            ],
-        )
+        answer = _draft(rag, system, context, question)
     except Exception as exc:
         raise GuidelineUnavailable(str(exc)) from exc
 
-    answer = response.choices[0].message.content.strip()
+    grading = {"attempts": 0, "passed": None, "feedback": ""}
+    if agentic and not answer.startswith(REFUSAL):
+        try:
+            answer, grading = _grade_and_retry(rag, system, context, question, answer)
+        except Exception as exc:
+            # A failed self-check must not lose the draft it was checking.
+            grading = {"attempts": 0, "passed": None, "feedback": f"grader unavailable: {exc}"}
+
     refused = answer.startswith(REFUSAL)
 
     # A refusal must not carry citations: listing the passages a vector search
@@ -335,7 +349,78 @@ def _ask(question, system, k, patient=None):
         "citations": citations,
         "refused": refused,
         "retrieved_from": sorted({c["cancer"] for c in chunks}),
+        "grading": grading,
     }
     if patient is not None:
         result["coverage"] = coverage_for(patient)
     return result
+
+
+# --- the agentic loop: draft, grade, retry ------------------------------------
+
+def _draft(rag, system, context, question):
+    response = rag.client.chat.completions.create(
+        model=CHAT_MODEL,
+        temperature=0,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"},
+        ],
+    )
+    return response.choices[0].message.content.strip()
+
+
+def _grade_and_retry(rag, system, context, question, answer, max_retries=MAX_RETRIES):
+    """Check the draft against its own passages, and rewrite it if it fails.
+
+    The grader comes from ``ai/rag/agentic_rag.py`` (Session 6) — it asks whether
+    every claim is supported by the context, which is exactly the check a cited
+    guideline answer needs. The **retry** is written here rather than reused,
+    because the Session 6 version rewrites against that module's generic system
+    prompt: reusing it would throw away the rules that stop this system
+    proposing a treatment the patient has already had.
+    """
+    agentic = _agentic_rag()
+    attempts = 0
+    passed, feedback = agentic.grade(question, context, answer)
+
+    while not passed and attempts < max_retries:
+        attempts += 1
+        answer = _retry(rag, system, context, question, answer, feedback)
+        passed, feedback = agentic.grade(question, context, answer)
+
+    return answer, {
+        "attempts": attempts,
+        "passed": passed,
+        "feedback": "" if passed else feedback,
+    }
+
+
+def _retry(rag, system, context, question, answer, feedback):
+    """Rewrite the answer against the grader's objection, under our own rules."""
+    response = rag.client.chat.completions.create(
+        model=CHAT_MODEL,
+        temperature=0,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": (
+                f"Context:\n{context}\n\nQuestion: {question}\n\n"
+                f"Your previous answer was:\n{answer}\n\n"
+                f"A reviewer found this problem with it: {feedback}\n"
+                f"Rewrite it, fixing the problem and staying strictly grounded in "
+                f"the context above. Keep the same citation labels."
+            )},
+        ],
+    )
+    return response.choices[0].message.content.strip()
+
+
+def _agentic_rag():
+    """The Session 6 grade-and-retry module, imported from its own folder."""
+    if str(RAG_DIR) not in sys.path:
+        sys.path.insert(0, str(RAG_DIR))
+    try:
+        import agentic_rag
+    except Exception as exc:
+        raise GuidelineUnavailable(str(exc)) from exc
+    return agentic_rag

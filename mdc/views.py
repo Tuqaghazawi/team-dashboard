@@ -154,6 +154,7 @@ def request_suggestion(request, patient_pk, kind):
         )
     else:
         coverage = result.get("coverage", {})
+        grading = result.get("grading", {})
         note = ""
         if not coverage.get("covered", True):
             topics = ", ".join(coverage.get("topics") or []) or patient.get_specialty_display()
@@ -171,6 +172,9 @@ def request_suggestion(request, patient_pk, kind):
             citations="\n".join(result["citations"]),
             refused=result.get("refused", False),
             coverage_note=note,
+            grade_attempts=grading.get("attempts", 0),
+            graded_pass=grading.get("passed"),
+            grader_feedback=grading.get("feedback", ""),
             requested_by=request.user,
         )
         if result.get("refused"):

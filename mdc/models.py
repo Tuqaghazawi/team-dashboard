@@ -111,6 +111,18 @@ class GuidelineSuggestion(models.Model):
         max_length=300, blank=True,
         help_text="Warning shown when no guideline for this patient's disease is indexed.",
     )
+    # The grade-and-retry self-check (ai/rag/agentic_rag.py).
+    grade_attempts = models.PositiveSmallIntegerField(
+        default=0, help_text="How many times the answer was rewritten after grading."
+    )
+    graded_pass = models.BooleanField(
+        null=True, blank=True,
+        help_text="Did the grader find every claim supported? Null means it did not run.",
+    )
+    grader_feedback = models.TextField(
+        blank=True,
+        help_text="What the grader still objected to, if it never passed.",
+    )
     requested_by = models.ForeignKey(
         "accounts.User", on_delete=models.SET_NULL, null=True, blank=True
     )

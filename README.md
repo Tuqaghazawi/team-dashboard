@@ -175,6 +175,13 @@ clinical fact, never change the patient record, and their evidence is written
 into the slide's *notes* field so it supports the discussion instead of
 pre-empting it.
 
+Decision suggestions are **self-checked**: the draft is graded against its own
+passages and rewritten if a claim is not supported (the Session 6 grade-and-retry
+loop). That raised judge-rated appropriateness from 75% to 87% on the evaluation
+set. An answer the grader still objects to after two rewrites is shown with
+*self-check still objects* and the objection, rather than presented as if it were
+sound — see PRD §12.
+
 **Structured extraction** — a report on the workup checklist can be run through
 the Capstone 1 extractor. The result is a *pending* extraction, shown as a review
 table: fields whose loss changes management (grade, margins, nodes, LVI,

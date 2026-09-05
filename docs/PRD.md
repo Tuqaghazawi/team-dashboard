@@ -511,12 +511,52 @@ The third failure was in the evaluator, not the system: "mastectomy" matched
 inside "postmastectomy radiation therapy", which is the correct recommendation
 after a mastectomy. The check now matches on word boundaries.
 
-**The judge metric did not improve, and that is the honest result.** Two cases
-remain marked inappropriate, and at least one is a real weakness rather than
-judge pedantry: for an ER 95% / PR 80% / HER2-negative early breast cancer the
-suggestion led with adjuvant chemotherapy where endocrine therapy is standard.
-The retrieval fix addressed *grounding*, not *clinical judgement within a
-correctly retrieved guideline*. That remains open.
+**The judge metric did not improve from the retrieval fix, and that is the
+honest result.** Retrieval addressed *grounding*, not *clinical judgement within
+a correctly retrieved guideline*.
+
+### Agentic RAG — grade-and-retry
+
+The Session 6 self-check (`ai/rag/agentic_rag.py`) is wired into decision
+suggestions: the draft is graded against its own passages — is every claim
+supported? — and rewritten with the grader's objection if not, up to twice.
+
+The **grader** is reused as-is. The **retry** is written here rather than
+reused, because the Session 6 version rewrites against that module's generic
+prompt; reusing it would throw away the rules that stop this system proposing a
+treatment the patient has already had.
+
+Measured with `eval_guidelines --agentic --judge` against the same 12 cases:
+
+| Metric | Single-shot | Grade-and-retry |
+|---|---|---|
+| Refusal calibration | 12/12 | 12/12 |
+| Source correctness | 12/12 | 12/12 |
+| History safety | 8/8 | 8/8 |
+| **Judge: appropriate** | 6/8 (75%) | **7/8 (87%)** |
+| Grader passed | — | 5/8 (62%) |
+| Answers rewritten | — | 4 of 8 |
+
+**What it bought.** One case genuinely improved: the patient seven of eight
+cycles into NACT was previously given a plan that assumed the course was
+finished; the rewrite fixed it. The deterministic metrics are unchanged, as
+expected — grading cannot affect what was retrieved.
+
+**What it cost, and what it did not fix.** Roughly two to three times the API
+calls on a decision suggestion. And the ER 95% / HER2-negative case still leads
+with adjuvant chemotherapy where endocrine therapy is standard — the grader
+*flagged* it and two rewrites did not fix it, because the grader can only check
+claims against the retrieved passages; it cannot supply knowledge that was never
+retrieved.
+
+**The most useful output is the 62%.** Three of eight answers are returned while
+the grader still objects. Rather than hide that, the page shows *self-check still
+objects* with the objection, so a clinician knows which suggestions are the
+weakly-grounded ones. An answer the self-check cannot fully ground is exactly the
+one to read hardest.
+
+Workup suggestions stay single-shot: a list of investigation names gives the
+grader little to catch, and each round costs two more calls.
 
 **What this does and does not tell you.** It shows the brain no longer answers
 from the wrong disease, and no longer proposes an operation on an organ already

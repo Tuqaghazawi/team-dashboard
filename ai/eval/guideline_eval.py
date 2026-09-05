@@ -68,6 +68,8 @@ class CaseResult:
     expect_sources: list = field(default_factory=list)
     history_violations: list = field(default_factory=list)
     answer: str = ""
+    grade_attempts: int = 0
+    graded_pass: object = None
     judge_verdict: str = ""
     judge_reason: str = ""
     error: str = ""
@@ -110,7 +112,7 @@ def check_history(answer, forbidden):
     return violations
 
 
-def evaluate_case(case, patient, use_judge=False):
+def evaluate_case(case, patient, use_judge=False, agentic=False):
     """Run the brain over one case and score it."""
     result = CaseResult(
         case_id=case["id"],
@@ -119,7 +121,7 @@ def evaluate_case(case, patient, use_judge=False):
         expect_sources=case["expect_sources"],
     )
     try:
-        outcome = suggest.suggest_decision(patient)
+        outcome = suggest.suggest_decision(patient, agentic=agentic)
     except suggest.GuidelineUnavailable as exc:
         result.error = str(exc)
         return result
@@ -127,6 +129,9 @@ def evaluate_case(case, patient, use_judge=False):
     result.answer = outcome["answer"]
     result.refused = outcome["refused"]
     result.sources = outcome["citations"]
+    grading = outcome.get("grading") or {}
+    result.grade_attempts = grading.get("attempts", 0)
+    result.graded_pass = grading.get("passed")
 
     if not result.refused:
         result.history_violations = check_history(result.answer, case.get("forbidden", []))
@@ -185,4 +190,11 @@ def summarise(results):
         summary["judge_appropriate"] = pct(
             sum(r.judge_verdict == "APPROPRIATE" for r in judged), len(judged)
         )
+
+    self_checked = [r for r in answered if r.graded_pass is not None]
+    if self_checked:
+        summary["grader_passed"] = pct(
+            sum(bool(r.graded_pass) for r in self_checked), len(self_checked)
+        )
+        summary["answers_rewritten"] = sum(1 for r in self_checked if r.grade_attempts)
     return summary

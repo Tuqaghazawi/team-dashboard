@@ -38,6 +38,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--judge", action="store_true",
                             help="Also run the LLM-judge appropriateness metric.")
+        parser.add_argument("--agentic", action="store_true",
+                            help="Use the grade-and-retry self-check (ai/rag/agentic_rag.py).")
         parser.add_argument("--case", help="Run one case by id.")
         parser.add_argument("--json", help="Write the full results to this path.")
 
@@ -50,8 +52,13 @@ class Command(BaseCommand):
                 return
 
         self.stdout.write(f"Indexed guidelines: {', '.join(suggest.indexed_guidelines())}")
+        mode = []
+        if options["agentic"]:
+            mode.append("grade-and-retry")
+        if options["judge"]:
+            mode.append("judge")
         self.stdout.write(f"Evaluating {len(cases)} case(s)"
-                          + (" with judge" if options["judge"] else "") + "...\n")
+                          + (f" [{', '.join(mode)}]" if mode else "") + "...\n")
 
         results = []
         try:
@@ -59,7 +66,10 @@ class Command(BaseCommand):
                 team = Team.objects.create(consultant="Eval Team", specialty="Evaluation")
                 for case in cases:
                     patient = self._build(case, team)
-                    result = evaluate_case(case, patient, use_judge=options["judge"])
+                    result = evaluate_case(
+                        case, patient,
+                        use_judge=options["judge"], agentic=options["agentic"],
+                    )
                     results.append(result)
                     self._report(result)
                 raise Rollback
@@ -122,6 +132,8 @@ class Command(BaseCommand):
         if r.judge_verdict:
             marks.append(self._mark("judge", r.judge_verdict == "APPROPRIATE"))
 
+        if r.graded_pass is not None:
+            marks.append(self._mark(f"grader(x{r.grade_attempts})", bool(r.graded_pass)))
         state = "refused" if r.refused else f"answered [{', '.join(r.sources) or 'no sources'}]"
         self.stdout.write(f"  {r.case_id:<26} {state:<34} {'  '.join(marks)}")
 
@@ -166,6 +178,7 @@ class Command(BaseCommand):
                 "sources_correct": r.sources_correct, "history_safe": r.history_safe,
                 "history_violations": r.history_violations,
                 "judge": r.judge_verdict, "judge_reason": r.judge_reason,
+                "grade_attempts": r.grade_attempts, "graded_pass": r.graded_pass,
                 "answer": r.answer, "error": r.error,
             }
             for r in results

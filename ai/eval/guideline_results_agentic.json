@@ -1,0 +1,222 @@
+{
+  "summary": {
+    "cases": 12,
+    "errors": 0,
+    "refusal_calibration": "12/12 (100%)",
+    "source_correctness": "12/12 (100%)",
+    "history_safety": "8/8 (100%)",
+    "judge_appropriate": "7/8 (87%)",
+    "grader_passed": "5/8 (62%)",
+    "answers_rewritten": 4
+  },
+  "cases": [
+    {
+      "case": "rectal-naive",
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Rectal, pages 233-280"
+      ],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion correctly addresses the primary treatment for a treatment-naive T3N2 rectal cancer, which includes preoperative chemoradiation followed by TME.",
+      "grade_attempts": 0,
+      "graded_pass": true,
+      "answer": "The guideline supports the use of preoperative chemoradiation followed by total mesorectal excision (TME) for this patient with mid rectal cancer, clinical stage T3N2.\n\nSupporting evidence:\n- Preoperative chemoradiation is recommended for T3N2 rectal cancers to reduce the risk of local recurrence and improve surgical outcomes (Source 2).\n- TME is the gold standard surgical approach for resectable rectal cancer, particularly for T3 tumors, as it helps achieve negative margins and reduces local recurrence rates (Source 2).",
+      "error": ""
+    },
+    {
+      "case": "breast-naive",
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Breast, pages 42-112"
+      ],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "INAPPROPRIATE",
+      "judge_reason": "The suggestion incorrectly recommends adjuvant chemotherapy for a patient with hormone-positive breast cancer, where endocrine therapy is typically preferred as",
+      "grade_attempts": 2,
+      "graded_pass": false,
+      "answer": "The guideline supports the use of adjuvant chemotherapy for this patient with clinical stage cT2N0 breast cancer, given her tumor size and hormone receptor status.\n\nSupporting evidence:\n- Adjuvant chemotherapy is generally recommended for patients with stage II breast cancer, particularly when the tumor is larger than 2 cm or has other high-risk features (Source 1).\n- The patient's tumor size (2.4 cm) and high ER/PR positivity indicate a need for consideration of chemotherapy to reduce the risk of recurrence (Source 1).\n\nReferences: Source 1, Source 3.",
+      "error": ""
+    },
+    {
+      "case": "rectal-mid-tnt",
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Rectal, pages 233-280"
+      ],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion correctly addresses the next step in management after the completion of neoadjuvant therapy and aligns with the patient's current treatment statu",
+      "grade_attempts": 0,
+      "graded_pass": true,
+      "answer": "The guideline supports that after completing the neoadjuvant treatment and restaging, the next step would be to refer the patient for surgical evaluation. If the tumor is resectable and no metastatic disease is demonstrated, the patient would typically be scheduled for definite surgical resection.\n\nSupporting evidence:\n- Patients are referred again to surgery for surgical evaluation after finishing chemoradiotherapy, where they are reassessed for tumor response and resectability (Source 2).\n- If no metastatic disease is demonstrated and the tumor is resectable, patients are usually scheduled for definite surgical resection (Source 1).",
+      "error": ""
+    },
+    {
+      "case": "gastric-post-gastrectomy",
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Gastric, pages 177-209"
+      ],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion addresses the adjuvant treatment options relevant to the patient's ypT2N1a status after total gastrectomy.",
+      "grade_attempts": 1,
+      "graded_pass": true,
+      "answer": "The guideline supports the option of concurrent chemoradiotherapy with the McDonald protocol or chemotherapy with Xelox for this patient, given the ypT2N1a status post resection.\n\nSupporting evidence:\n- The patient is classified as ypT2 with N1 positive nodes, which falls under the recommendation for concurrent chemoradiotherapy or chemotherapy for patients who had D2 resection.\n- The presence of lymphovascular invasion (LVI) and positive nodes indicates a higher risk, supporting the need for adjuvant treatment to improve outcomes.\n\nReferences: [Source 1 - Gastric, pages 177-209], [Source 2 - Gastric, pages 177-209].",
+      "error": ""
+    },
+    {
+      "case": "breast-post-mastectomy",
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Breast, pages 42-112"
+      ],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion appropriately addresses the adjuvant treatment options for the patient after her completed mastectomy, considering her ypT2N1a status and the pot",
+      "grade_attempts": 2,
+      "graded_pass": false,
+      "answer": "The guideline supports that postmastectomy radiation therapy (PMRT) is not strictly indicated for this patient based on the number of positive lymph nodes, but it may be considered due to other high-risk features.\n\nSupporting evidence:\n- PMRT is indicated when there are 4 or more axillary lymph nodes involved, clinical evidence of internal mammary lymph node involvement, or positive surgical margins (Source 3).\n- Although this patient has 3 positive lymph nodes, the guideline suggests that PMRT should be considered based on other high-risk features, such as tumor size (Source 3).\n\nGiven the patient's ypT2N1a status, the MDC may want to evaluate the potential benefits of PMRT in her treatment plan.",
+      "error": ""
+    },
+    {
+      "case": "breast-mid-nact",
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Breast, pages 42-112"
+      ],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion correctly addresses the next step after neoadjuvant chemotherapy for a patient with triple-negative breast cancer.",
+      "grade_attempts": 2,
+      "graded_pass": false,
+      "answer": "The guideline supports that after completing the neoadjuvant chemotherapy and restaging, the patient should consider surgical intervention, which may include mastectomy or breast-conserving surgery, depending on the MDT's assessment and the patient's specific situation.\n\nSupporting evidence:\n- Neoadjuvant chemotherapy is often used for locally advanced breast cancer (Stage III), which includes patients with large tumors or multiple positive lymph nodes who have operable disease (Source 4).\n- The standard approach for patients with hormone receptor-positive or HER2-positive tumors includes continuing appropriate therapy in the adjuvant setting, but for this patient with triple-negative breast cancer, surgical resection is the next step after neoadjuvant chemotherapy (Source 2).\n\nPassages used: [Source 2], [Source 4].",
+      "error": ""
+    },
+    {
+      "case": "colon-metastatic",
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Colon, pages 113-176"
+      ],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion correctly addresses the treatment options for a patient with non-resectable metastatic colon cancer and aligns with her KRAS wild type status.",
+      "grade_attempts": 0,
+      "graded_pass": true,
+      "answer": "The guideline supports the use of palliative chemotherapy for this patient with non-resectable metastatic disease. \n\n- Patients with non-resectable metastatic disease are candidates for palliative treatment, and those with good performance status are usually offered palliative chemotherapy early in the course of their disease.\n- The first-line chemotherapy options include FOLFOX, FOLFIRI, or Cetuximab for wild-type KRAS tumors, which is applicable to this patient given her KRAS wild type status. \n\n[Source 3 - Colon, pages 113-176]",
+      "error": ""
+    },
+    {
+      "case": "thyroid-naive",
+      "refused": false,
+      "should_refuse": false,
+      "sources": [
+        "Thyroid, pages 1-41"
+      ],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "APPROPRIATE",
+      "judge_reason": "The suggestion correctly addresses the primary treatment for node-positive papillary thyroid carcinoma at the specified clinical stage.",
+      "grade_attempts": 0,
+      "graded_pass": true,
+      "answer": "The guideline supports surgical intervention, specifically total thyroidectomy, for a patient with papillary thyroid carcinoma at clinical stage cT2N1a.\n\nSupporting evidence:\n- Total thyroidectomy is recommended for patients with T2 tumors (tumors >2 cm but \u22644 cm) and N1a (metastasis to level VI lymph nodes) to ensure complete removal of the cancer and affected lymph nodes.\n- The management of differentiated thyroid carcinoma emphasizes the importance of surgical resection in the treatment of papillary thyroid carcinoma, particularly in cases with lymph node involvement (Source 3).",
+      "error": ""
+    },
+    {
+      "case": "sarcoma-uncovered",
+      "refused": true,
+      "should_refuse": true,
+      "sources": [],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "",
+      "judge_reason": "",
+      "grade_attempts": 0,
+      "graded_pass": null,
+      "answer": "Not found in the provided guidelines.",
+      "error": ""
+    },
+    {
+      "case": "biliary-uncovered",
+      "refused": true,
+      "should_refuse": true,
+      "sources": [],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "",
+      "judge_reason": "",
+      "grade_attempts": 0,
+      "graded_pass": null,
+      "answer": "Not found in the provided guidelines.",
+      "error": ""
+    },
+    {
+      "case": "oesophageal-near-miss",
+      "refused": true,
+      "should_refuse": true,
+      "sources": [],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "",
+      "judge_reason": "",
+      "grade_attempts": 0,
+      "graded_pass": null,
+      "answer": "Not found in the provided guidelines.",
+      "error": ""
+    },
+    {
+      "case": "liver-uncovered",
+      "refused": true,
+      "should_refuse": true,
+      "sources": [],
+      "refusal_correct": true,
+      "sources_correct": true,
+      "history_safe": true,
+      "history_violations": [],
+      "judge": "",
+      "judge_reason": "",
+      "grade_attempts": 0,
+      "graded_pass": null,
+      "answer": "Not found in the provided guidelines.",
+      "error": ""
+    }
+  ]
+}
