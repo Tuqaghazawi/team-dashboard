@@ -120,7 +120,7 @@ raises a visible flag and an email to the team.
 
 | Role | Sees | Can do | Status |
 |---|---|---|---|
-| **Prep-clinic coordinator** | The **handover queue** — patients not yet placed on an MDC list. Reports cover everyone. | Register a patient and assign them to a team; generate weekly/monthly reports and Excel | Built |
+| **Prep-clinic coordinator** | The **handover queue** — patients the MDC has not yet discussed, grouped by team. Reports cover everyone. | Register a patient and assign them to a team; generate weekly/monthly reports and Excel | Built |
 | **Chairman** | All patients, all teams | View everything; view and download all reports | Built |
 | **Team nurse coordinator** | Their own team's patients | Assign that rotation's fellows; add patients to the MDC list; list patients for surgery; register a walk-in onto their own team | Built |
 | **Fellow** | The team(s) they are **currently rotating through** | Run the workup, record results, pull from the EHR, build MDC and planning slides, record MDC decisions | Built |
