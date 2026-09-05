@@ -1075,6 +1075,11 @@ KPIs need exactly that, and it exists.
 
 ## 20. How to run it
 
+**Live demo: https://khcc-surgical-oncology-dashboard.onrender.com** — sign in as
+`prep1` / `demo1234`. On Render's free tier the service sleeps after about
+fifteen minutes idle, so a first request can take a minute; the free database is
+removed after thirty days.
+
 ```bash
 python -m venv .venv
 .venv/Scripts/activate            # source .venv/bin/activate on macOS/Linux
@@ -1087,9 +1092,23 @@ python manage.py sync_ehr         # pull them into the dashboard
 python manage.py runserver
 ```
 
-Demo logins, password `demo1234`: `prep1` (prep coordinator), `chair1`
-(chairman), `coord2` (team coordinator), `cons2` (consultant), `fellow1`
-(fellow), `mdc1` (MDC coordinator).
+### Demo accounts
+
+The same accounts work locally and on the deployed instance.
+
+| Account | Role | What it shows |
+|---|---|---|
+| `prep1` | Prep-clinic coordinator | The handover queue, grouped by team. Registers patients. Weekly and monthly Excel reports |
+| `chair1` | Chairman | All 12 patients across every team, and the reports |
+| `coord2` | Team nurse coordinator | Dr. Amro Mureb's team. Lists patients for MDC and for surgery; assigns fellows to a rotation |
+| `cons2` | Consultant | Dr. Amro Mureb's team, and the team page |
+| `fellow1` | Fellow | Dr. Amro Mureb's team, via a current rotation. Runs the workup, records decisions, builds slides |
+| `coord1` / `cons1` / `fellow2` | The same three roles | Dr. Fade Alawneh's breast team — useful for checking that one team cannot see another |
+| `mdc1` | MDC coordinator | Only the patients listed on the Breast MDC |
+
+All nine use the password **`demo1234`**, and all nine were checked against the
+deployed instance. There is deliberately **no superuser**, so `/admin/` cannot be
+logged into.
 
 **Scheduled jobs** (Task Scheduler or cron):
 

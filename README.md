@@ -5,6 +5,13 @@
 > reviewed or approved for clinical use, and no real patient record has been
 > near it. Every AI output must be checked by a clinician before it is acted on.
 
+**Live demo: https://khcc-surgical-oncology-dashboard.onrender.com**
+Sign in as `prep1` / `demo1234` — [other accounts below](#demo-accounts).
+
+> On Render's free tier the service sleeps after about fifteen minutes idle, so
+> the **first request can take a minute**. It is waking up, not broken. The free
+> database is also removed after thirty days.
+
 A dashboard that follows a patient through the surgical oncology pathway — from
 registration at the preparatory clinic, through workup and MDC discussion, to
 surgery and post-operative re-discussion — and tells the right people when
@@ -39,19 +46,32 @@ python manage.py sync_ehr       # pull those into the dashboard
 python manage.py runserver
 ```
 
-Then open http://127.0.0.1:8000 and sign in. Demo logins (password `demo1234`):
+Then open http://127.0.0.1:8000 and sign in.
 
-| Login | Role | Sees |
+### Demo accounts
+
+| Account | Role | What it shows |
 |---|---|---|
-| `prep1` | Prep-clinic coordinator | every patient; registers new ones; reports |
-| `chair1` | Chairman | every patient; reports |
-| `coord2` | Team nurse coordinator | Dr. Amro Mureb's team; MDC and surgery lists; rotations |
-| `cons2` | Consultant | Dr. Amro Mureb's team |
-| `fellow1` | Fellow | whichever team they are rotating through |
-| `mdc1` | MDC coordinator | patients listed on the Breast MDC |
+| `prep1` | Prep-clinic coordinator | The handover queue, grouped by team. Registers patients. Weekly and monthly Excel reports |
+| `chair1` | Chairman | All 12 patients across every team, and the reports |
+| `coord2` | Team nurse coordinator | Dr. Amro Mureb's team. Lists patients for MDC and for surgery; assigns fellows to a rotation |
+| `cons2` | Consultant | Dr. Amro Mureb's team, and the team page |
+| `fellow1` | Fellow | Dr. Amro Mureb's team, via a current rotation. Runs the workup, records decisions, builds slides |
+| `coord1` / `cons1` / `fellow2` | The same three roles | Dr. Fade Alawneh's breast team — useful for checking that one team cannot see another |
+| `mdc1` | MDC coordinator | Only the patients listed on the Breast MDC |
 
-These demo logins exist for the synthetic prototype only and must never be
-created in a real deployment.
+All nine use the password **`demo1234`**, and all nine were checked against the
+deployed instance. There is deliberately **no superuser**, so `/admin/` cannot be
+logged into.
+
+These accounts exist for the synthetic prototype only and must never be created
+in a real deployment.
+
+**Worth trying, in this order:** sign in as `prep1` and look at the handover
+queue grouped by team; as `cons2`, open **My team** to see the patients who are
+stuck; as `fellow1`, open a patient to see the workup checklist and the timeline,
+then **MDC** to generate a slide deck. Signing in as `cons2` and trying to open
+one of `cons1`'s patients returns 404 — that is the access model, not an error.
 
 ### Tests and evaluation
 
