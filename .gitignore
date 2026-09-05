@@ -43,3 +43,7 @@ ai/pharmacy/pharmacy.db
 ai/agents/mdc_checkpoints.sqlite3
 data/synthetic/ehr.sqlite3
 staticfiles/
+
+# Node (only needed to regenerate the PRD .docx)
+node_modules/
+package-lock.json
