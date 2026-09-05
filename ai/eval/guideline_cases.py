@@ -9,8 +9,9 @@ actually shown, or a failure the design predicts:
   shape.
 * **Wrong-guideline answers.** A vector search always returns its nearest
   neighbours, so a disease with no indexed guideline still retrieves passages —
-  from a different cancer. Sarcoma has no guideline at all, and the only safe
-  answer there is a refusal.
+  from a different cancer. Every specialty is now covered, so this is tested by
+  checking the answer comes from the *right* guideline rather than by expecting
+  a refusal.
 * **Answering from the right neighbour.** Liver, biliary and oesophageal became
   covered when the NCCN guidelines were indexed. They stay in the set because
   each has a plausible wrong neighbour already indexed — pancreatic for biliary,
@@ -167,20 +168,68 @@ CASES = [
         "asks_about": "primary treatment for node-positive papillary thyroid carcinoma",
     },
 
-    # --- 9: no guideline exists at all. A refusal is the only safe answer. ---
+    # --- 9: sarcoma, covered by NCCN since its guideline was indexed. ---
     {
-        "id": "sarcoma-uncovered",
+        "id": "sarcoma-nccn",
         "diagnosis": "Soft tissue sarcoma, thigh",
         "specialty": "SARCOMA",
         "stage": MDC,
         "clinical_stage": "T2bN0",
         "sex": "F", "age": 46,
         "results": {"LOCAL_MRI": "Deep soft-tissue mass 9 cm, posterior thigh."},
+        "should_refuse": False,
+        "expect_sources": ["Sarcoma"],
+        "forbidden": [],
+        "asks_about": "primary treatment for a deep soft-tissue sarcoma of the thigh",
+    },
+    {
+        # Histology beats site. A GIST of the stomach must reach the sarcoma
+        # guideline, not the gastric one — matching on "stomach" first sent it
+        # to gastric adenocarcinoma guidance, which is a different disease.
+        "id": "gist-not-gastric",
+        "diagnosis": "GIST of stomach",
+        "specialty": "GENERAL",
+        "stage": MDC,
+        "clinical_stage": "T2N0",
+        "sex": "M", "age": 58,
+        "results": {"GASTROSCOPY": "Submucosal mass 4 cm at the gastric body."},
+        "should_refuse": False,
+        "expect_sources": ["Sarcoma"],
+        "forbidden": [],
+        "asks_about": "a gastric GIST, where the gastric adenocarcinoma guideline is the wrong neighbour",
+    },
+    # --- Diseases with no indexed guideline. These keep the refusal path under
+    # test: once every case in the set is answerable, refusal calibration passes
+    # trivially and stops meaning anything. A surgical oncology service sees all
+    # of these, and none is in the index.
+    {
+        "id": "melanoma-uncovered",
+        "diagnosis": "Cutaneous melanoma, back",
+        "specialty": "GENERAL",
+        "stage": MDC,
+        "clinical_stage": "T3bN0",
+        "sex": "M", "age": 54,
+        "results": {"PATHOLOGY": "Melanoma, Breslow 3.2 mm, ulcerated."},
         "should_refuse": True,
         "expect_sources": [],
         "forbidden": [],
-        "asks_about": "a sarcoma, for which no guideline is indexed",
+        "asks_about": "a melanoma, for which no guideline is indexed",
     },
+    {
+        "id": "neuroendocrine-uncovered",
+        "diagnosis": "Small bowel neuroendocrine tumour",
+        "specialty": "GENERAL",
+        "stage": MDC,
+        "clinical_stage": "T3N1",
+        "sex": "F", "age": 61,
+        "results": {"CAP_CT": "Mesenteric mass with desmoplastic reaction."},
+        "should_refuse": True,
+        "expect_sources": [],
+        "forbidden": [],
+        # Colon and pancreatic are both indexed and both plausible neighbours.
+        "asks_about": "a small bowel NET, with colon and pancreatic guidelines nearby",
+    },
+
     # --- 10-12: covered by NCCN, each with a plausible wrong neighbour indexed. ---
     {
         "id": "biliary-nccn",

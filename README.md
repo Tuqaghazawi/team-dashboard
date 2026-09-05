@@ -192,11 +192,12 @@ personalised **"Printed by ..."** watermark that names whoever downloaded the
 PDF. That would otherwise be embedded in the index and could be cited back
 inside an answer.
 
-**Currently indexed — ten guidelines, 2,660 chunks:** Breast, Colon, Rectal,
+**Currently indexed — eleven guidelines, 3,184 chunks:** Breast, Colon, Rectal,
 Thyroid, Gastric and Pancreatic (KHCC), plus Hepatocellular Carcinoma, Biliary
-Tract, Ampullary Adenocarcinoma, and Esophageal and Esophagogastric Junction
-(NCCN). **Sarcoma is not covered** and is correctly refused rather than answered
-from a neighbouring cancer.
+Tract, Ampullary Adenocarcinoma, Soft Tissue Sarcoma, and Esophageal and
+Esophagogastric Junction (NCCN). Every specialty the department runs is covered;
+anything else — melanoma, neuroendocrine tumours — is refused rather than
+answered from a neighbouring cancer.
 
 Keep licensed PDFs (NCCN) in `data/guidelines/`, which is git-ignored, and never
 commit them. Only the extracted chunks enter the index, and that is git-ignored too. It reuses the Session 6 RAG

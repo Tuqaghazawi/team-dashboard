@@ -270,3 +270,49 @@ class CreationTests(TestCase):
         )
         self.assertIn(K.PELVIC_MRI, kinds(restaging_items(rectum)))
         self.assertNotIn(K.PELVIC_MRI, kinds(restaging_items(self.patient)))
+
+
+class HistologyBeatsSiteTests(TestCase):
+    """A sarcoma is a sarcoma wherever it grows."""
+
+    def setUp(self):
+        self.team = Team.objects.create(consultant="Dr. Test", specialty="General")
+
+    def patient(self, diagnosis, mrn, specialty="GENERAL"):
+        return Patient.objects.create(
+            name="Test", mrn=mrn, date_of_birth=date(1960, 1, 1),
+            diagnosis=diagnosis, specialty=specialty, team=self.team,
+        )
+
+    def test_a_gastric_gist_is_a_sarcoma_not_a_gastric_cancer(self):
+        # Matching on "stomach" first sent this to the gastric adenocarcinoma
+        # guideline, which is a different disease with a different workup.
+        self.assertEqual(group_for(self.patient("GIST of stomach", "981000")), Group.SARCOMA)
+
+    def test_the_spelled_out_form_routes_the_same_way(self):
+        patient = self.patient("Gastrointestinal stromal tumour, stomach", "981001")
+        self.assertEqual(group_for(patient), Group.SARCOMA)
+
+    def test_a_rectal_leiomyosarcoma_is_a_sarcoma_not_a_rectal_cancer(self):
+        patient = self.patient("Leiomyosarcoma of the rectum", "981002")
+        self.assertEqual(group_for(patient), Group.SARCOMA)
+
+    def test_a_retroperitoneal_liposarcoma_is_a_sarcoma(self):
+        self.assertEqual(
+            group_for(self.patient("Retroperitoneal liposarcoma", "981003")), Group.SARCOMA
+        )
+
+    def test_ordinary_organ_cancers_are_unaffected(self):
+        for diagnosis, mrn, expected in [
+            ("Gastric cancer", "981010", Group.GASTRIC),
+            ("Low rectal cancer", "981011", Group.RECTUM),
+            ("Ascending colon cancer", "981012", Group.COLON),
+            ("Distal oesophageal cancer", "981013", Group.ESOPHAGEAL),
+        ]:
+            with self.subTest(diagnosis=diagnosis):
+                self.assertEqual(group_for(self.patient(diagnosis, mrn)), expected)
+
+    def test_a_gist_gets_the_sarcoma_checklist(self):
+        items = kinds(baseline_items(self.patient("GIST of stomach", "981020")))
+        self.assertIn(K.LOCAL_MRI, items)
+        self.assertNotIn(K.HER2, items)

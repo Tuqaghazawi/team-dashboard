@@ -313,13 +313,16 @@ scripts. No module was rewritten.
   oesophagus. The check reads the index itself, so
   `manage.py add_guideline` widens coverage with no code change.
 
-  The index now holds **ten guidelines, 2,660 chunks**: the six KHCC ones
-  (Breast, Colon, Rectal, Thyroid, Gastric, Pancreatic) and four NCCN ones added
+  The index holds **eleven guidelines, 3,184 chunks**: the six KHCC ones
+  (Breast, Colon, Rectal, Thyroid, Gastric, Pancreatic) and five NCCN ones added
   where KHCC has none — Hepatocellular Carcinoma, Biliary Tract, Ampullary
-  Adenocarcinoma, and Esophageal and Esophagogastric Junction.
+  Adenocarcinoma, Soft Tissue Sarcoma, and Esophageal and Esophagogastric
+  Junction. **Every specialty the department runs is now covered.**
 
-  **Sarcoma remains uncovered** and is correctly refused rather than answered
-  from a neighbouring cancer.
+  Anything outside those eleven — melanoma, neuroendocrine tumours, and the rest
+  a surgical oncology service sees — is still refused rather than answered from
+  a neighbouring cancer, and the evaluation keeps two such cases so that the
+  refusal path stays under test.
 
   Two things had to be right for the NCCN documents. Their labels do not contain
   the disease word — NCCN's oesophageal guideline is titled for the
@@ -503,11 +506,13 @@ a disease is covered by the index is a fact, so refusal correctness is checkable
 exactly; so is whether every cited passage came from a guideline for that
 disease.
 
-| Metric | First run | After the retrieval fix | With NCCN indexed |
+Fifteen cases:
+
+| Metric | First run | After the retrieval fix | With all NCCN indexed |
 |---|---|---|---|
-| Refusal calibration — answers iff a guideline covers the disease | 11/12 (91%) | 12/12 | **12/12 (100%)** |
-| Source correctness — every cited passage is from a covering guideline | 11/12 (91%) | 12/12 | **12/12 (100%)** |
-| History safety — never proposes what was already done | 8/9 (88%) | 8/8 | **11/11 (100%)** |
+| Refusal calibration — answers iff a guideline covers the disease | 11/12 (91%) | 12/12 | **15/15 (100%)** |
+| Source correctness — every cited passage is from a covering guideline | 11/12 (91%) | 12/12 | **15/15 (100%)** |
+| History safety — never proposes what was already done | 8/9 (88%) | 8/8 | **13/13 (100%)** |
 | Judge: appropriate for the point this patient reached | 7/9 (77%) | 6/8 (75%) | 63–100%, see below |
 
 **What the first run found, and what changed.** The oesophageal case was
@@ -568,6 +573,16 @@ one to read hardest.
 
 Workup suggestions stay single-shot: a list of investigation names gives the
 grader little to catch, and each round costs two more calls.
+
+### Histology beats site
+
+Indexing the sarcoma guideline exposed a routing bug worth recording. The
+diagnosis is matched against a keyword list, and the organ terms came first — so
+a **GIST of the stomach** matched "stomach" and was routed to the gastric
+adenocarcinoma guideline, a different disease with a different workup. Sarcoma
+terms now take precedence, because histology beats site: a leiomyosarcoma of the
+rectum is a sarcoma, not a rectal cancer. `gist-not-gastric` holds that in the
+evaluation set and six tests hold it in `patients/test_workup.py`.
 
 ### The judge metric is not stable, and that is the point
 

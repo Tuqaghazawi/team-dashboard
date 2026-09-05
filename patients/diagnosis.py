@@ -47,6 +47,13 @@ LABELS = {
 # Order matters: the first match wins, so the more specific phrases come first.
 # "Rectosigmoid" must reach RECTUM before "sigmoid" sends it to COLON.
 KEYWORDS = [
+    # Sarcoma first, because histology beats site here. A GIST of the stomach is
+    # a sarcoma, not a gastric adenocarcinoma, and matching on "stomach" first
+    # would send it to the wrong guideline entirely. Same for a
+    # leiomyosarcoma of the rectum.
+    (("sarcoma", "gist", "gastrointestinal stromal", "liposarc", "leiomyosarc",
+      "rhabdomyosarc", "angiosarc", "fibrosarc", "synovial sarc",
+      "desmoid", "mpnst"), Group.SARCOMA),
     (("rectosigmoid", "rectal", "rectum", "anal verge", "low rectal", "mid rectal"), Group.RECTUM),
     (("colon", "colonic", "sigmoid", "caecal", "cecal", "caecum", "appendiceal",
       "ascending", "descending", "transverse", "hepatic flexure", "splenic flexure"), Group.COLON),
@@ -57,7 +64,6 @@ KEYWORDS = [
     (("hepatocellular", "hcc", "liver", "hepatic tumour", "hepatic tumor"), Group.LIVER),
     (("thyroid", "papillary", "follicular carcinoma", "medullary"), Group.THYROID),
     (("breast",), Group.BREAST),
-    (("sarcoma", "gist", "liposarc", "leiomyosarc"), Group.SARCOMA),
 ]
 
 # Used only when the diagnosis text says nothing recognisable.
