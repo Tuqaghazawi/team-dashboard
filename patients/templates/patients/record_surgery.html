@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Record surgery &middot; {{ patient.name }}{% endblock %}
+{% block wrap_class %}narrow{% endblock %}
+
+{% block header %}
+<header class="page">
+  <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
+  <h1>Record the operation</h1>
+  <p>SUBRecord surgery &middot; {{ patient.name }}</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="post" class="stack">
+    {% csrf_token %}
+    {% include "_form_fields.html" %}
+    <div class="actions">
+      <button type="submit" class="btn">Record operation</button>
+      <a class="btn ghost" href="{% url 'patient_detail' patient.pk %}">Cancel</a>
+    </div>
+  </form>
+  <p class="help" style="margin-top:14px">This moves the patient to post-operative follow-up and flags them for re-discussion at MDC.</p>
+</div>
+{% endblock %}

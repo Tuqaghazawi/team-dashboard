@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}MDC board{% endblock %}
+{% block nav_mdc %}on{% endblock %}
+
+{% block header %}
+<header class="page">
+  <h1>MDC board</h1>
+  <p>Who is listed, whether their investigations are back, and the slide deck for each meeting.</p>
+</header>
+{% endblock %}
+
+{% block content %}
+
+{% if postop_flagged %}
+<div class="card">
+  <h2>Post-operative &mdash; not yet re-discussed</h2>
+  <table class="grid">
+    <tr><th>Patient</th><th>MRN</th><th>Diagnosis</th><th>Team</th><th></th></tr>
+    {% for patient in postop_flagged %}
+    <tr>
+      <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+      <td>{{ patient.mrn }}</td>
+      <td>{{ patient.diagnosis }}</td>
+      <td class="muted">{{ patient.team.consultant }}</td>
+      <td style="text-align:right">
+        {% if user.can_manage_mdc_list %}
+          <a class="btn ghost small" href="{% url 'mdc_add_listing' patient.pk %}">List for MDC</a>
+        {% else %}<span class="pill alert">Needs re-listing</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% for week in weeks %}
+<div class="card">
+  <h2>
+    {{ week.label }}
+    <span class="right muted" style="font-size:12px">{{ week.start }} &ndash; {{ week.end }}</span>
+  </h2>
+  {% if week.listings %}
+    <p style="font-size:13.5px;margin:0 0 14px" class="muted">
+      {{ week.ready_count }} of {{ week.listings|length }} listed patients have all results back.
+    </p>
+    <table class="grid">
+      <tr><th>Patient</th><th>MRN</th><th>MDC</th><th>Date</th><th>Workup</th><th>Outcome</th><th></th></tr>
+      {% for listing in week.listings %}
+      <tr>
+        <td><a href="{% url 'patient_detail' listing.patient.pk %}">{{ listing.patient.name }}</a><br>
+            <span class="muted" style="font-size:12.5px">{{ listing.patient.diagnosis }}</span></td>
+        <td>{{ listing.patient.mrn }}</td>
+        <td>{{ listing.mdc.name }}</td>
+        <td>{{ listing.meeting_date }}</td>
+        <td>
+          {% with progress=listing.patient.workup_progress %}
+            {% if listing.patient.workup_ready %}<span class="pill done">Ready</span>
+            {% else %}<span class="pill pending">{{ progress.0 }} of {{ progress.1 }}</span>{% endif %}
+          {% endwith %}
+        </td>
+        <td>
+          {% if listing.decision_category %}
+            <span class="pill done">{{ listing.get_decision_category_display }}</span>
+          {% else %}<span class="pill grey">Not discussed</span>{% endif %}
+        </td>
+        <td style="text-align:right">
+          {% if user.can_record_clinical and not listing.decision_category %}
+            <a class="btn ghost small" href="{% url 'record_decision' listing.pk %}">Record decision</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line)">
+      <div class="k" style="font-size:11px;text-transform:uppercase;letter-spacing:0.4px;color:var(--muted);font-weight:600;margin-bottom:9px">Generate slides</div>
+      {% regroup week.listings by mdc as by_mdc %}
+      {% for group in by_mdc %}
+        {% for listing in group.list|slice:":1" %}
+          <a class="btn ghost small" style="margin-right:8px"
+             href="{% url 'download_mdc_deck' group.grouper.pk listing.meeting_date|date:'Y-m-d' %}">
+            {{ group.grouper.name }} MDC &mdash; {{ listing.meeting_date }} (.pptx)
+          </a>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">Nobody listed.</p>
+  {% endif %}
+</div>
+{% endfor %}
+
+<div class="card">
+  <h2>Planning round</h2>
+  <p class="empty">The biweekly planning deck covers the patients currently on your team's surgery schedule.</p>
+  <p style="margin:14px 0 0"><a class="btn ghost" href="{% url 'download_planning_deck' %}">Generate planning slides (.pptx)</a></p>
+</div>
+
+{% endblock %}

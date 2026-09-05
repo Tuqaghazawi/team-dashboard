@@ -42,7 +42,10 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').strip().lower() in ('true', '1', 'yes', 'on')
 
-ALLOWED_HOSTS = []
+# Comma-separated list in .env for deployment, e.g. ALLOWED_HOSTS=dashboard.khcc.jo
+ALLOWED_HOSTS = [
+    h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()
+]
 
 
 # Application definition
@@ -61,6 +64,7 @@ INSTALLED_APPS = [
     'patients',
     'mdc',
     'notifications',
+    'reports',
 ]
 
 # Tell Django to use our custom User model (with the "role" field) instead of
@@ -86,13 +90,14 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'notifications.context_processors.unread_notifications',
             ],
         },
     },

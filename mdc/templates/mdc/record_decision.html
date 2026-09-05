@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}MDC decision &middot; {{ patient.name }}{% endblock %}
+{% block nav_mdc %}on{% endblock %}
+{% block wrap_class %}narrow{% endblock %}
+
+{% block header %}
+<header class="page">
+  <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
+  <h1>Record the MDC decision</h1>
+  <p>{{ listing.mdc.name }} MDC &middot; {{ listing.meeting_date }} &middot; MRN {{ patient.mrn }}</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  {% if not patient.workup_ready %}
+    <div class="flash warning">
+      This patient's workup is not complete. You can still record a decision &mdash;
+      but check what is outstanding first.
+    </div>
+  {% endif %}
+
+  <form method="post" class="stack">
+    {% csrf_token %}
+    {% include "_form_fields.html" %}
+    <div class="actions">
+      <button type="submit" class="btn">Record decision</button>
+      <a class="btn ghost" href="{% url 'patient_detail' patient.pk %}">Cancel</a>
+    </div>
+  </form>
+
+  <p class="help" style="margin-top:14px">
+    The category moves the patient on: surgery puts them on the schedule,
+    NACT or TNT keeps them on the team's follow-up list, a referral sends them to
+    medical oncology while still being tracked.
+  </p>
+</div>
+
+<div class="card">
+  <h2>Guideline brain</h2>
+  {% if suggestion %}
+    <div class="ai-note">
+      <h4>Suggested decision &mdash; for discussion, nothing has been recorded</h4>
+      <div style="white-space:pre-wrap">{{ suggestion.answer }}</div>
+      {% if suggestion.citation_list %}
+        <cite>Sources: {% for c in suggestion.citation_list %}{{ c }}{% if not forloop.last %} &middot; {% endif %}{% endfor %}</cite>
+      {% endif %}
+    </div>
+    <p class="help" style="margin-top:10px">This evidence is written into the notes
+       field of the patient's slide.</p>
+  {% else %}
+    <p class="empty">No suggestion requested for this patient yet.</p>
+  {% endif %}
+  {% if user.can_record_clinical %}
+    <form method="post" action="{% url 'request_suggestion' patient.pk 'DECISION' %}" style="margin-top:14px">
+      {% csrf_token %}
+      <button type="submit" class="btn ghost small">Ask the guideline brain</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

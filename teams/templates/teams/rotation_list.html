@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Fellow rotations{% endblock %}
+
+{% block header %}
+<header class="page">
+  <a class="back" href="{% url 'dashboard' %}">&larr; Dashboard</a>
+  <h1>Fellow rotations</h1>
+  <p>Rotations run in three-month blocks. Assigning a fellow is what gives them
+     access to the team dashboard. Current block: {{ quarter_start }} to {{ quarter_end }}.</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>Assign a fellow</h2>
+  <form method="post" class="stack">
+    {% csrf_token %}
+    {% include "_form_fields.html" %}
+    <div class="actions"><button type="submit" class="btn">Assign to rotation</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Current rotation</h2>
+  {% if current %}
+    <table class="grid">
+      <tr><th>Fellow</th><th>Team</th><th>From</th><th>To</th></tr>
+      {% for a in current %}
+      <tr>
+        <td>{{ a.fellow.get_full_name|default:a.fellow.username }}</td>
+        <td>{{ a.team.consultant }} <span class="muted">&mdash; {{ a.team.specialty }}</span></td>
+        <td>{{ a.start_date }}</td><td>{{ a.end_date }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty">No fellows assigned for the current block.</p>
+  {% endif %}
+</div>
+
+{% if past %}
+<div class="card">
+  <h2>Other rotations</h2>
+  <table class="grid">
+    <tr><th>Fellow</th><th>Team</th><th>From</th><th>To</th></tr>
+    {% for a in past %}
+    <tr>
+      <td>{{ a.fellow.get_full_name|default:a.fellow.username }}</td>
+      <td>{{ a.team.consultant }}</td>
+      <td>{{ a.start_date }}</td><td>{{ a.end_date }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

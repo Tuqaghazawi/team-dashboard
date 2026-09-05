@@ -56,6 +56,32 @@ class User(AbstractUser):
         }
 
     @property
+    def can_register_patients(self):
+        """Only the prep clinic registers a new patient onto a team."""
+        return self.is_superuser or self.role == self.Role.PREP_COORDINATOR
+
+    @property
+    def can_manage_team_schedule(self):
+        """Listing for MDC, listing for surgery, and assigning fellows to a rotation."""
+        return self.is_superuser or self.role in {
+            self.Role.TEAM_COORDINATOR,
+            self.Role.CHAIRMAN,
+        }
+
+    @property
+    def can_record_clinical(self):
+        """Who may enter workup results, clinical detail and MDC decisions.
+
+        Fellows do the workup and build the slides; consultants oversee it.
+        """
+        return self.is_superuser or self.role in {
+            self.Role.FELLOW,
+            self.Role.CONSULTANT,
+            self.Role.TEAM_COORDINATOR,
+            self.Role.MDC_COORDINATOR,
+        }
+
+    @property
     def can_manage_mdc_list(self):
         """Who may put a patient on an MDC discussion list (PRD step 2)."""
         return self.is_superuser or self.role in {

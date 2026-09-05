@@ -141,3 +141,91 @@ class AddListingViewTests(TestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 302)
         self.assertIn("/accounts/login/", response["Location"])
+
+
+class SlideDeckTests(TestCase):
+    """The generated deck must carry the fields the room asks for."""
+
+    def setUp(self):
+        from patients.models import Investigation, Patient
+
+        self.team = Team.objects.create(consultant="Dr. Amro Mureb", specialty="Colorectal cancer")
+        self.mdc = MDC.objects.create(name="Gastrointestinal (GI)", meeting_weekday=1)
+        self.patient = Patient.objects.create(
+            name="Test Case", mrn="920001", date_of_birth=date(1955, 3, 2),
+            diagnosis="Mid rectal cancer", specialty="COLORECTAL", team=self.team,
+            sex="M", comorbidities="DM, PS 1", clinical_stage="T3N2",
+            genetic_testing="Negative",
+        )
+        Investigation.objects.create(
+            patient=self.patient, kind=Investigation.Kind.PELVIC_MRI,
+            status=Investigation.Status.READY, result_text="T3N2, mesorectal fascia intact.",
+        )
+        self.listing = MDCListing.objects.create(
+            patient=self.patient, mdc=self.mdc, meeting_date=date(2026, 9, 8),
+            decision="For TNT", decision_category=MDCListing.Decision.TNT,
+        )
+
+    def _slide_text(self, stream):
+        import re
+        import zipfile
+        from io import BytesIO
+
+        archive = zipfile.ZipFile(BytesIO(stream.read()))
+        names = [n for n in archive.namelist() if re.match(r"ppt/slides/slide\d+\.xml$", n)]
+        return "\n".join(
+            " ".join(re.findall(r"<a:t>(.*?)</a:t>", archive.read(n).decode("utf8")))
+            for n in sorted(names)
+        )
+
+    def test_mdc_deck_carries_name_mrn_genetics_results_and_decision(self):
+        from mdc import slides
+
+        text = self._slide_text(
+            slides.build_mdc_deck(
+                self.mdc.name, date(2026, 9, 8), [self.listing], presenter="Dr. Amro Mureb"
+            )
+        )
+        self.assertIn("Test Case", text)
+        self.assertIn("920001", text)
+        self.assertIn("Genetics: Negative", text)
+        self.assertIn("Mid rectal cancer", text)
+        self.assertIn("T3N2", text)
+        self.assertIn("mesorectal fascia intact", text)
+        self.assertIn("For TNT", text)
+
+    def test_an_unresulted_investigation_shows_as_outstanding_not_blank(self):
+        from mdc import slides
+        from patients.models import Investigation
+
+        Investigation.objects.create(
+            patient=self.patient, kind=Investigation.Kind.CAP_CT,
+            status=Investigation.Status.ORDERED,
+        )
+        text = self._slide_text(
+            slides.build_mdc_deck(self.mdc.name, date(2026, 9, 8), [self.listing])
+        )
+        self.assertIn("[ordered]", text)
+
+    def test_guideline_evidence_goes_into_the_notes_not_onto_the_slide(self):
+        from mdc import slides
+
+        evidence = {self.patient.pk: "Guideline says consider TNT. Sources: Rectal, pages 3-9"}
+        stream = slides.build_mdc_deck(
+            self.mdc.name, date(2026, 9, 8), [self.listing], evidence=evidence
+        )
+        import zipfile
+        from io import BytesIO
+
+        archive = zipfile.ZipFile(BytesIO(stream.read()))
+        notes = [n for n in archive.namelist() if "notesSlide" in n]
+        self.assertTrue(notes, "expected a notes slide")
+        notes_text = archive.read(notes[0]).decode("utf8")
+        self.assertIn("Guideline says consider TNT", notes_text)
+
+        slide_text = self._slide_text(
+            slides.build_mdc_deck(
+                self.mdc.name, date(2026, 9, 8), [self.listing], evidence=evidence
+            )
+        )
+        self.assertNotIn("Guideline says consider TNT", slide_text)

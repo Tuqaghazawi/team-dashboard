@@ -1,123 +1,261 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ patient.name }} · Patient</title>
-  <style>
-    :root { --teal: #028090; --ink: #13343b; --muted: #5b7b7a; --line: #e2ebea; --bg: #f4f8f7; --gold: #e9a23b; }
-    * { box-sizing: border-box; }
-    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
-    header { background: var(--teal); color: #fff; padding: 18px 28px; }
-    header a.back { color: #cdeaea; text-decoration: none; font-size: 13px; }
-    header a.back:hover { text-decoration: underline; }
-    header h1 { margin: 6px 0 0; font-size: 22px; }
-    header p { margin: 4px 0 0; opacity: 0.92; font-size: 13px; }
-    .wrap { padding: 24px 28px; max-width: 980px; }
-    .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 22px 24px; margin-bottom: 22px; }
-    .card h2 { margin: 0 0 16px; font-size: 15px; color: var(--teal); text-transform: uppercase; letter-spacing: 0.5px; }
-    .facts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 32px; }
-    .facts .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
-    .facts .v { font-size: 15px; margin-top: 2px; }
+{% extends "base.html" %}
+{% block title %}{{ patient.name }} &middot; Patient{% endblock %}
+{% block nav_patients %}on{% endblock %}
 
-    /* Timeline */
-    .timeline { display: flex; list-style: none; padding: 0; margin: 8px 0 4px; }
-    .timeline li { flex: 1; text-align: center; position: relative; }
-    .timeline li::before { content: ""; position: absolute; top: 17px; left: -50%; width: 100%; height: 3px; background: var(--line); z-index: 0; }
-    .timeline li:first-child::before { display: none; }
-    .timeline .done::before, .timeline .current::before { background: var(--teal); }
-    .dot { width: 36px; height: 36px; border-radius: 50%; background: #c9d6d5; color: #fff;
-           margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;
-           font-size: 14px; position: relative; z-index: 1; }
-    .done .dot { background: var(--teal); }
-    .current .dot { background: var(--gold); box-shadow: 0 0 0 5px rgba(233,162,59,0.22); }
-    .lbl { font-size: 12px; color: var(--muted); }
-    .current .lbl { color: var(--ink); font-weight: 700; }
-    .stage-now { margin-top: 14px; font-size: 14px; }
-    .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; background: #fbeccd; color: #9a6b16; font-weight: 600; }
+{% block extra_head %}
+<style>
+  .timeline { display: flex; list-style: none; padding: 0; margin: 8px 0 4px; }
+  .timeline li { flex: 1; text-align: center; position: relative; }
+  .timeline li::before { content: ""; position: absolute; top: 17px; left: -50%; width: 100%;
+                         height: 3px; background: var(--line); z-index: 0; }
+  .timeline li:first-child::before { display: none; }
+  .timeline .done::before, .timeline .current::before { background: var(--teal); }
+  .dot { width: 36px; height: 36px; border-radius: 50%; background: #c9d6d5; color: #fff;
+         margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;
+         font-size: 14px; position: relative; z-index: 1; }
+  .done .dot { background: var(--teal); }
+  .current .dot { background: var(--gold); box-shadow: 0 0 0 5px rgba(233,162,59,0.22); }
+  .lbl { font-size: 12px; color: var(--muted); }
+  .current .lbl { color: var(--ink); font-weight: 700; }
+  .bar { background: var(--line); border-radius: 999px; height: 8px; overflow: hidden; margin: 6px 0 14px; }
+  .bar span { display: block; height: 100%; background: var(--teal); }
+  .result { font-size: 13.5px; color: var(--ink); margin: 4px 0 0; white-space: pre-wrap; }
+  .listings { list-style: none; padding: 0; margin: 0; }
+  .listings li { padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .listings li:last-child { border-bottom: 0; }
+  .genetics { background: #fdf6e8; border: 1px solid #f0d9a8; color: #7d5810;
+              border-radius: 6px; padding: 3px 11px; font-size: 12.5px; font-weight: 600;
+              display: inline-block; }
+</style>
+{% endblock %}
 
-    /* MDC listings */
-    .flash { background: #e6f4ee; border: 1px solid #b9ddcd; color: #1c6444; border-radius: 8px;
-             padding: 11px 14px; font-size: 14px; margin-bottom: 20px; }
-    .card h2 .btn { float: right; text-transform: none; letter-spacing: 0; }
-    .btn { background: var(--teal); color: #fff; text-decoration: none; border-radius: 6px;
-           padding: 7px 15px; font-size: 13px; font-weight: 600; display: inline-block; }
-    .btn:hover { background: #026a77; }
-    .listings { list-style: none; padding: 0; margin: 0; }
-    .listings li { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
-    .listings li:last-child { border-bottom: 0; }
-    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-    .pill.pending { background: #fbeccd; color: #9a6b16; }
-    .pill.done { background: #e6f4ee; color: #1c6444; }
-    .empty { color: var(--muted); font-size: 14px; margin: 0; }
-  </style>
-</head>
-<body>
-  <header>
-    <a class="back" href="{% url 'patient_list' %}">&larr; Back to patients</a>
-    <h1>{{ patient.name }}</h1>
-    <p>MRN {{ patient.mrn }} · Age {{ patient.age }} · {{ patient.get_specialty_display }}</p>
-  </header>
+{% block header %}
+<header class="page">
+  <a class="back" href="{% url 'patient_list' %}">&larr; Back to patients</a>
+  <h1>{{ patient.name }}</h1>
+  <p>
+    MRN {{ patient.mrn }} &middot; Age {{ patient.age }} &middot; {{ patient.get_specialty_display }}
+    &middot; {{ patient.team.consultant }}
+    &nbsp; <span class="genetics">Genetics: {{ patient.genetic_testing|default:"not recorded" }}</span>
+  </p>
+</header>
+{% endblock %}
 
-  <div class="wrap">
-    {% for message in messages %}
-    <div class="flash">{{ message }}</div>
+{% block content %}
+
+<div class="card">
+  <h2>Progress
+    {% if user.can_record_clinical %}
+      <a class="btn ghost small right" href="{% url 'edit_clinical' patient.pk %}">Edit clinical details</a>
+    {% endif %}
+  </h2>
+  <ul class="timeline">
+    {% for phase in patient.journey %}
+      <li class="{{ phase.status }}">
+        <div class="dot">{% if phase.status == "done" %}&#10003;{% else %}{{ forloop.counter }}{% endif %}</div>
+        <div class="lbl">{{ phase.label }}</div>
+      </li>
     {% endfor %}
+  </ul>
+  <p style="margin-top:14px;font-size:14px">
+    Currently: <span class="pill pending">{{ patient.get_stage_display }}</span>
+    {% if patient.needs_postop_mdc %}
+      <span class="pill alert">Needs post-op MDC re-discussion</span>
+    {% endif %}
+  </p>
+  <div class="facts" style="margin-top:18px">
+    <div><div class="k">Diagnosis</div><div class="v">{{ patient.diagnosis }}</div></div>
+    <div><div class="k">Clinical stage</div><div class="v">{{ patient.clinical_stage|default:"&mdash;" }}</div></div>
+    <div><div class="k">Background</div><div class="v">{{ patient.comorbidities|default:"&mdash;" }}</div></div>
+    <div><div class="k">Family history</div><div class="v">{{ patient.family_history|default:"&mdash;" }}</div></div>
+  </div>
+</div>
 
-    <div class="card">
-      <h2>Journey</h2>
-      <ul class="timeline">
-        {% for step in patient.journey %}
-        <li class="{{ step.status }}">
-          <div class="dot">{% if step.status == 'done' %}&#10003;{% else %}{{ forloop.counter }}{% endif %}</div>
-          <div class="lbl">{{ step.label }}</div>
-        </li>
-        {% endfor %}
-      </ul>
-      <p class="stage-now">Current stage: <span class="badge">{{ patient.get_stage_display }}</span></p>
-    </div>
+<div class="card">
+  <h2>
+    Workup checklist
+    {% if user.can_record_clinical %}
+      {% if workup_total %}
+        <a class="btn ghost small right" href="{% url 'add_investigation' patient.pk %}">Add investigation</a>
+      {% endif %}
+    {% endif %}
+  </h2>
 
-    <div class="card">
-      <h2>Details</h2>
-      <div class="facts">
-        <div><div class="k">Diagnosis</div><div class="v">{{ patient.diagnosis }}</div></div>
-        <div><div class="k">Team</div><div class="v">{{ patient.team.consultant }}</div></div>
-        <div><div class="k">Date of birth</div><div class="v">{{ patient.date_of_birth }}</div></div>
-        <div><div class="k">Registered</div><div class="v">{{ patient.registered_at }}</div></div>
-        {% if patient.watch_wait_start %}
-        <div><div class="k">Watch &amp; wait start</div><div class="v">{{ patient.watch_wait_start }}</div></div>
-        {% endif %}
-        {% if patient.next_review_date %}
-        <div><div class="k">Next review</div><div class="v">{{ patient.next_review_date }}</div></div>
+  {% if workup_total %}
+    <p style="font-size:14px;margin:0">
+      {{ workup_ready_count }} of {{ workup_total }} required results back
+      {% if patient.workup_ready %}
+        &nbsp;<span class="pill done">Ready to present at MDC</span>
+      {% else %}
+        &nbsp;<span class="pill pending">Not ready for MDC</span>
+      {% endif %}
+    </p>
+    <div class="bar"><span style="width:{{ workup_percent }}%"></span></div>
+
+    <table class="grid">
+      <tr><th>Investigation</th><th>Status</th><th>Report</th><th></th></tr>
+      {% for item in baseline %}
+      <tr>
+        <td>
+          {{ item.get_kind_display }}
+          {% if not item.required %}<br><span class="muted" style="font-size:12px">optional</span>{% endif %}
+          {% if item.suggested_by_ai %}<br><span class="pill info" style="font-size:11px">guideline suggested</span>{% endif %}
+        </td>
+        <td>
+          {% if item.status == "READY" %}<span class="pill done">Ready</span>
+          {% elif item.status == "ORDERED" %}<span class="pill pending">Ordered</span>
+          {% else %}<span class="pill grey">Planned</span>{% endif %}
+          {% if item.resulted_on %}<br><span class="muted" style="font-size:12px">{{ item.resulted_on }}</span>{% endif %}
+        </td>
+        <td>{% if item.result_text %}<div class="result">{{ item.result_text }}</div>
+            {% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+        <td style="text-align:right">
+          {% if user.can_record_clinical %}
+            <a class="btn ghost small" href="{% url 'record_result' patient.pk item.pk %}">
+              {% if item.status == "READY" %}Edit{% else %}Enter result{% endif %}</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty">No checklist yet.</p>
+    {% if user.can_record_clinical %}
+      <form method="post" action="{% url 'begin_workup' patient.pk %}" style="margin-top:14px">
+        {% csrf_token %}
+        <button type="submit" class="btn">Start workup for {{ patient.get_specialty_display }}</button>
+      </form>
+    {% endif %}
+  {% endif %}
+
+  {% if user.can_record_clinical %}
+    <form method="post" action="{% url 'request_suggestion' patient.pk 'WORKUP' %}" style="margin-top:16px">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="patient_detail">
+      <button type="submit" class="btn ghost small">Ask the guideline brain what workup is needed</button>
+    </form>
+  {% endif %}
+
+  {% for suggestion in patient.guideline_suggestions.all %}
+    {% if suggestion.kind == "WORKUP" %}
+      <div class="ai-note">
+        <h4>Guideline suggestion &mdash; for the team to consider, not applied</h4>
+        <div style="white-space:pre-wrap">{{ suggestion.answer }}</div>
+        {% if suggestion.citation_list %}
+          <cite>Sources: {% for c in suggestion.citation_list %}{{ c }}{% if not forloop.last %} &middot; {% endif %}{% endfor %}</cite>
         {% endif %}
       </div>
-    </div>
+    {% endif %}
+  {% endfor %}
+</div>
 
-    <div class="card">
-      <h2>
-        MDC listings
-        {% if request.user.can_manage_mdc_list %}
-        <a class="btn" href="{% url 'mdc_add_listing' patient.pk %}">+ Add to MDC list</a>
+{% if restaging %}
+<div class="card">
+  <h2>Restaging</h2>
+  <table class="grid">
+    <tr><th>Investigation</th><th>Status</th><th>Report</th><th></th></tr>
+    {% for item in restaging %}
+    <tr>
+      <td>{{ item.get_kind_display }}</td>
+      <td>{% if item.status == "READY" %}<span class="pill done">Ready</span>
+          {% else %}<span class="pill pending">{{ item.get_status_display }}</span>{% endif %}</td>
+      <td>{% if item.result_text %}<div class="result">{{ item.result_text }}</div>
+          {% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+      <td style="text-align:right">
+        {% if user.can_record_clinical %}
+          <a class="btn ghost small" href="{% url 'record_result' patient.pk item.pk %}">
+            {% if item.status == "READY" %}Edit{% else %}Enter result{% endif %}</a>
         {% endif %}
-      </h2>
-      {% if listings %}
-      <ul class="listings">
-        {% for listing in listings %}
-        <li>
-          <strong>{{ listing.mdc.name }}</strong> · {{ listing.meeting_date }}
-          {% if listing.presented %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>
+    MDC
+    {% if user.can_manage_mdc_list %}
+      <a class="btn small right" href="{% url 'mdc_add_listing' patient.pk %}">Add to an MDC list</a>
+    {% endif %}
+  </h2>
+  {% if listings %}
+    <ul class="listings">
+      {% for listing in listings %}
+      <li>
+        <strong>{{ listing.mdc.name }}</strong> &middot; {{ listing.meeting_date }}
+        {% if listing.is_postop %}<span class="pill info">post-op</span>{% endif %}
+        {% if listing.presented %}
           <span class="pill done">Discussed</span>
-          {% else %}
-          <span class="pill pending">Pending</span>
+          {% if listing.decision_category %}
+            <div style="margin-top:6px"><strong>{{ listing.get_decision_category_display }}</strong>
+              {% if listing.decision %}&mdash; {{ listing.decision }}{% endif %}</div>
           {% endif %}
-          {% if listing.decision %}<div class="empty">{{ listing.decision }}</div>{% endif %}
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="empty">Not yet listed for any MDC.</p>
+        {% else %}
+          <span class="pill pending">Awaiting discussion</span>
+          {% if user.can_record_clinical %}
+            <a class="btn ghost small" style="float:right" href="{% url 'record_decision' listing.pk %}">Record decision</a>
+          {% endif %}
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty">Not listed for any MDC yet.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>
+    Treatment &amp; surgery
+    {% if user.can_record_clinical %}
+      <a class="btn ghost small right" href="{% url 'start_treatment' patient.pk %}">Open NACT / TNT course</a>
+    {% endif %}
+  </h2>
+
+  {% for course in courses %}
+    <div style="border-bottom:1px solid var(--line);padding:11px 0">
+      <strong>{{ course.get_kind_display }}</strong> &mdash; {{ course.regimen }}
+      {% if course.active %}<span class="pill info">active</span>{% else %}<span class="pill grey">closed</span>{% endif %}
+      <div class="muted" style="font-size:13px;margin-top:4px">
+        Cycle {{ course.completed_cycles }} of {{ course.total_cycles }}
+        {% if course.on_last_cycle %} &middot; <span class="pill alert">last cycle &mdash; order restaging</span>{% endif %}
+        {% if course.restaging_alert_sent_on %} &middot; restaging alert sent {{ course.restaging_alert_sent_on }}{% endif %}
+      </div>
+      {% if user.can_record_clinical and course.active %}
+        <div style="margin-top:9px;display:flex;gap:8px">
+          <form method="post" action="{% url 'record_cycle' patient.pk course.pk %}">{% csrf_token %}
+            <button class="btn ghost small" type="submit">Record a cycle</button></form>
+          <form method="post" action="{% url 'close_treatment' patient.pk course.pk %}">{% csrf_token %}
+            <button class="btn ghost small" type="submit">Close course</button></form>
+        </div>
       {% endif %}
     </div>
-  </div>
-</body>
-</html>
+  {% endfor %}
+
+  {% for booking in bookings %}
+    <div style="border-bottom:1px solid var(--line);padding:11px 0">
+      <strong>{{ booking.procedure }}</strong>
+      {% if booking.performed %}
+        <span class="pill done">done {{ booking.performed_on }}</span>
+        {% if booking.final_pathology %}<div class="result">{{ booking.final_pathology }}</div>{% endif %}
+      {% else %}
+        <span class="pill info">planned {{ booking.planned_date }}</span>
+        {% if user.can_record_clinical %}
+          <a class="btn ghost small" style="float:right" href="{% url 'record_surgery' patient.pk booking.pk %}">Record operation</a>
+        {% endif %}
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  {% if not courses and not bookings %}
+    <p class="empty">No treatment or surgery recorded.</p>
+  {% endif %}
+
+  {% if user.can_manage_team_schedule %}
+    <p style="margin:16px 0 0"><a class="btn ghost small" href="{% url 'list_for_surgery' patient.pk %}">List for surgery</a></p>
+  {% endif %}
+</div>
+
+{% endblock %}

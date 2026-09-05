@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Register a patient{% endblock %}
+{% block wrap_class %}narrow{% endblock %}
+
+{% block header %}
+<header class="page">
+  <a class="back" href="{% url 'dashboard' %}">&larr; Dashboard</a>
+  <h1>Register a patient</h1>
+  <p>SUBRegister a patient</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="post" class="stack">
+    {% csrf_token %}
+    {% include "_form_fields.html" %}
+    <div class="actions">
+      <button type="submit" class="btn">Register and notify the team</button>
+      <a class="btn ghost" href="{% url 'dashboard' %}">Cancel</a>
+    </div>
+  </form>
+  
+</div>
+{% endblock %}

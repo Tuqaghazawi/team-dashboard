@@ -1,27 +1,21 @@
-"""
-URL configuration for config project.
+"""URL routing for the surgical oncology dashboard."""
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import include, path
-from django.views.generic import RedirectView
+
+from patients import views as patient_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+
+    path('', patient_views.dashboard, name='dashboard'),
     path('patients/', include('patients.urls')),
+    path('treatment/', patient_views.treatment_list, name='treatment_list'),
+    path('surgery/', patient_views.surgery_schedule, name='surgery_schedule'),
+
     path('mdc/', include('mdc.urls')),
-    path('', RedirectView.as_view(url='/patients/', permanent=False)),
+    path('inbox/', include('notifications.urls')),
+    path('reports/', include('reports.urls')),
+    path('teams/', include('teams.urls')),
 ]

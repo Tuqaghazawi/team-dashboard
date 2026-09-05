@@ -1,186 +1,159 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Patients</title>
-  <style>
-    :root { --teal: #028090; --ink: #13343b; --muted: #5b7b7a; --line: #e2ebea; --bg: #f4f8f7; --gold: #e9a23b; }
-    * { box-sizing: border-box; }
-    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
-    header { background: var(--teal); color: #fff; padding: 18px 28px;
-             display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    header h1 { margin: 0; font-size: 22px; }
-    header p { margin: 4px 0 0; opacity: 0.9; font-size: 13px; }
-    .userbox { text-align: right; font-size: 13px; }
-    .userbox .who { display: block; margin-bottom: 6px; opacity: 0.95; }
-    .logout { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.5);
-              padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
-    .logout:hover { background: rgba(255,255,255,0.30); }
-    .wrap { padding: 24px 28px; }
-    table { border-collapse: collapse; width: 100%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 14px; }
-    th { background: #eaf4f2; color: var(--teal); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-    tr.prow { cursor: pointer; }
-    tr.prow:hover td { background: #f7fbfa; }
-    tr.prow .pname { font-weight: 600; color: var(--teal); }
-    tr.prow .caret { color: var(--muted); font-size: 11px; margin-right: 6px; }
-    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; background: #eaf4f2; color: var(--teal); font-size: 12px; }
-    .muted { color: var(--muted); }
-    .empty { padding: 40px; text-align: center; color: var(--muted); }
+{% extends "base.html" %}
+{% block title %}Patients{% endblock %}
+{% block nav_patients %}on{% endblock %}
 
-    /* filter bar */
-    .filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; align-items: center; }
-    .filters input[type=text], .filters select { padding: 8px 10px; border: 1px solid #cfe0de; border-radius: 6px; font-size: 14px; background: #fff; }
-    .filters input[type=text] { min-width: 220px; }
-    .filters button { padding: 8px 16px; background: var(--teal); color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
-    .filters button:hover { background: #026b78; }
-    .filters .check { font-size: 13px; color: var(--ink); display: flex; align-items: center; gap: 6px; }
-    .filters .clear { font-size: 13px; color: var(--muted); text-decoration: none; }
-    .filters .clear:hover { text-decoration: underline; }
+{% block extra_head %}
+<style>
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+             background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+             padding: 14px 16px; margin-bottom: 20px; }
+  .filters input[type=text], .filters select {
+    padding: 8px 10px; border: 1px solid #cfdcdb; border-radius: 6px; font-size: 13.5px;
+    font-family: inherit; background: #fff; color: var(--ink); }
+  .filters input[type=text] { min-width: 210px; }
+  .filters button { background: var(--teal); color: #fff; border: 0; border-radius: 6px;
+                    padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+                    font-family: inherit; }
+  .filters .check { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .filters .clear { font-size: 13px; color: var(--muted); text-decoration: none; }
+  tr.prow { cursor: pointer; }
+  tr.prow:hover { background: #f7fbfb; }
+  .caret { color: var(--teal); margin-right: 7px; font-size: 11px; }
+  .pname { font-weight: 600; }
+  tr.detail td { background: #f9fcfc; }
 
-    /* expandable detail row */
-    tr.detail > td { background: #f0f7f6; padding: 18px 24px; }
-    .stage-now { margin: 12px 0 0; font-size: 13px; }
-    .stage-now .badge { background: #fbeccd; color: #9a6b16; font-weight: 600; }
-    .row-actions { margin: 14px 0 0; display: flex; gap: 10px; align-items: center; }
-    .row-actions .btn { background: var(--teal); color: #fff; text-decoration: none; border-radius: 6px;
-                        padding: 6px 14px; font-size: 12px; font-weight: 600; }
-    .row-actions .btn:hover { background: #026a77; }
-    .row-actions .link { color: var(--teal); font-size: 12px; font-weight: 600; text-decoration: none; }
-    .row-actions .link:hover { text-decoration: underline; }
+  .timeline { display: flex; list-style: none; padding: 0; margin: 8px 0 4px; }
+  .timeline li { flex: 1; text-align: center; position: relative; }
+  .timeline li::before { content: ""; position: absolute; top: 17px; left: -50%; width: 100%;
+                         height: 3px; background: var(--line); z-index: 0; }
+  .timeline li:first-child::before { display: none; }
+  .timeline .done::before, .timeline .current::before { background: var(--teal); }
+  .dot { width: 36px; height: 36px; border-radius: 50%; background: #c9d6d5; color: #fff;
+         margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;
+         font-size: 14px; position: relative; z-index: 1; }
+  .done .dot { background: var(--teal); }
+  .current .dot { background: var(--gold); box-shadow: 0 0 0 5px rgba(233,162,59,0.22); }
+  .lbl { font-size: 12px; color: var(--muted); }
+  .current .lbl { color: var(--ink); font-weight: 700; }
+  .stage-now { margin-top: 14px; font-size: 14px; }
+  .row-actions { margin-top: 14px; display: flex; gap: 12px; align-items: center; }
+</style>
+{% endblock %}
 
-    /* timeline */
-    .timeline { display: flex; list-style: none; padding: 0; margin: 0; }
-    .timeline li { flex: 1; text-align: center; position: relative; }
-    .timeline li::before { content: ""; position: absolute; top: 15px; left: -50%; width: 100%; height: 3px; background: #d7e3e1; z-index: 0; }
-    .timeline li:first-child::before { display: none; }
-    .timeline .done::before, .timeline .current::before { background: var(--teal); }
-    .dot { width: 32px; height: 32px; border-radius: 50%; background: #c9d6d5; color: #fff; margin: 0 auto 6px;
-           display: flex; align-items: center; justify-content: center; font-size: 13px; position: relative; z-index: 1; }
-    .done .dot { background: var(--teal); }
-    .current .dot { background: var(--gold); box-shadow: 0 0 0 4px rgba(233,162,59,0.22); }
-    .lbl { font-size: 11px; color: var(--muted); }
-    .current .lbl { color: var(--ink); font-weight: 700; }
-  </style>
-</head>
-<body>
-  <header>
-    <div>
-      <h1>Patients</h1>
-      <p>{{ patients|length }} patient(s) you can see · click a row to see the journey</p>
-    </div>
-    <div class="userbox">
-      <span class="who">
-        {{ request.user.get_full_name|default:request.user.username }}
-        {% if request.user.get_role_display %} · {{ request.user.get_role_display }}{% endif %}
-        {% if request.user.team %} · {{ request.user.team.consultant }}{% endif %}
-        {% if request.user.mdc %} · {{ request.user.mdc.name }} MDC{% endif %}
-      </span>
-      <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button class="logout" type="submit">Log out</button>
-      </form>
-    </div>
-  </header>
+{% block header %}
+<header class="page">
+  <h1>Patients</h1>
+  <p>{{ patients|length }} patient(s) you can see &middot; click a row to see the journey</p>
+</header>
+{% endblock %}
 
-  <div class="wrap">
-    <form class="filters" method="get">
-      <input type="text" name="q" value="{{ q }}" placeholder="Search name or MRN">
-      {% if show_team_filter %}
-      <select name="team">
-        <option value="">All teams</option>
-        {% for team in teams %}
-        <option value="{{ team.id }}" {% if team.id|stringformat:'s' == selected_team %}selected{% endif %}>{{ team.consultant }}</option>
-        {% endfor %}
-      </select>
-      {% endif %}
-      <select name="stage">
-        <option value="">All stages</option>
-        {% for value, label in stages %}
-        <option value="{{ value }}" {% if value == selected_stage %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-      <select name="period">
-        <option value="">MDC: any time</option>
-        <option value="this_week" {% if selected_period == 'this_week' %}selected{% endif %}>MDC this week</option>
-        <option value="next_week" {% if selected_period == 'next_week' %}selected{% endif %}>MDC next week</option>
-        <option value="this_month" {% if selected_period == 'this_month' %}selected{% endif %}>MDC this month</option>
-      </select>
-      <label class="check"><input type="checkbox" name="new" value="1" {% if new_only %}checked{% endif %}> New (last 30 days)</label>
-      <button type="submit">Filter</button>
-      <a class="clear" href="{% url 'patient_list' %}">Clear</a>
-    </form>
+{% block content %}
+<form class="filters" method="get">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search name or MRN">
+  {% if show_team_filter %}
+  <select name="team">
+    <option value="">All teams</option>
+    {% for team in teams %}
+    <option value="{{ team.id }}" {% if team.id|stringformat:'s' == selected_team %}selected{% endif %}>{{ team.consultant }}</option>
+    {% endfor %}
+  </select>
+  {% endif %}
+  <select name="stage">
+    <option value="">All stages</option>
+    {% for value, label in stages %}
+    <option value="{{ value }}" {% if value == selected_stage %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="period">
+    <option value="">MDC: any time</option>
+    <option value="this_week" {% if selected_period == 'this_week' %}selected{% endif %}>MDC this week</option>
+    <option value="next_week" {% if selected_period == 'next_week' %}selected{% endif %}>MDC next week</option>
+    <option value="this_month" {% if selected_period == 'this_month' %}selected{% endif %}>MDC this month</option>
+  </select>
+  <label class="check"><input type="checkbox" name="new" value="1" {% if new_only %}checked{% endif %}> New (last 30 days)</label>
+  <button type="submit">Filter</button>
+  <a class="clear" href="{% url 'patient_list' %}">Clear</a>
+  {% if user.can_register_patients %}
+    <span style="flex:1"></span>
+    <a class="btn" href="{% url 'patient_register' %}">Register a patient</a>
+  {% endif %}
+</form>
 
-    {% if patients %}
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>MRN</th>
-          <th>Age</th>
-          <th>Diagnosis</th>
-          <th>Specialty</th>
-          <th>Team</th>
-          <th>Stage</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for patient in patients %}
-        <tr class="prow" data-target="p{{ patient.pk }}">
-          <td class="pname"><span class="caret">&#9656;</span>{{ patient.name }}</td>
-          <td class="muted">{{ patient.mrn }}</td>
-          <td>{{ patient.age }}</td>
-          <td>{{ patient.diagnosis }}</td>
-          <td>{{ patient.get_specialty_display }}</td>
-          <td>{{ patient.team.consultant }}</td>
-          <td><span class="badge">{{ patient.get_stage_display }}</span></td>
-        </tr>
-        <tr class="detail" id="p{{ patient.pk }}" style="display:none">
-          <td colspan="7">
-            <ul class="timeline">
-              {% for step in patient.journey %}
-              <li class="{{ step.status }}">
-                <div class="dot">{% if step.status == 'done' %}&#10003;{% else %}{{ forloop.counter }}{% endif %}</div>
-                <div class="lbl">{{ step.label }}</div>
-              </li>
-              {% endfor %}
-            </ul>
-            <p class="stage-now">Current stage: <span class="badge">{{ patient.get_stage_display }}</span>
-              {% if patient.next_review_date %} · Next review: {{ patient.next_review_date }}{% endif %}
-              {% if patient.watch_wait_start %} · W&amp;W since: {{ patient.watch_wait_start }}{% endif %}
-            </p>
-            {% if patient.mdc_listings.all %}
-            <p class="stage-now">MDC:
-              {% for listing in patient.mdc_listings.all %}{{ listing.mdc.name }} ({{ listing.meeting_date }}{% if listing.presented %}, discussed{% else %}, pending{% endif %}){% if not forloop.last %}; {% endif %}{% endfor %}
-            </p>
-            {% endif %}
-            <p class="row-actions">
-              <a class="link" href="{% url 'patient_detail' patient.pk %}">Open patient page &rarr;</a>
-              {% if request.user.can_manage_mdc_list %}
-              <a class="btn" href="{% url 'mdc_add_listing' patient.pk %}">+ Add to MDC list</a>
-              {% endif %}
-            </p>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <p class="empty">No patients to show for your account yet.</p>
-    {% endif %}
-  </div>
+<div class="card">
+{% if patients %}
+<table class="grid">
+  <thead>
+    <tr>
+      <th>Name</th><th>MRN</th><th>Age</th><th>Diagnosis</th>
+      <th>Specialty</th><th>Team</th><th>Stage</th><th>Workup</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for patient in patients %}
+    <tr class="prow" data-target="p{{ patient.pk }}">
+      <td class="pname"><span class="caret">&#9656;</span>{{ patient.name }}</td>
+      <td class="muted">{{ patient.mrn }}</td>
+      <td>{{ patient.age }}</td>
+      <td>{{ patient.diagnosis }}</td>
+      <td>{{ patient.get_specialty_display }}</td>
+      <td>{{ patient.team.consultant }}</td>
+      <td><span class="pill pending">{{ patient.get_stage_display }}</span></td>
+      <td>
+        {% with progress=patient.workup_progress %}
+          {% if progress.1 %}
+            {% if patient.workup_ready %}<span class="pill done">Ready</span>
+            {% else %}<span class="pill grey">{{ progress.0 }} of {{ progress.1 }}</span>{% endif %}
+          {% else %}<span class="muted">&mdash;</span>{% endif %}
+        {% endwith %}
+      </td>
+    </tr>
+    <tr class="detail" id="p{{ patient.pk }}" style="display:none">
+      <td colspan="8">
+        <ul class="timeline">
+          {% for step in patient.journey %}
+          <li class="{{ step.status }}">
+            <div class="dot">{% if step.status == 'done' %}&#10003;{% else %}{{ forloop.counter }}{% endif %}</div>
+            <div class="lbl">{{ step.label }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+        <p class="stage-now">Current stage: <span class="pill pending">{{ patient.get_stage_display }}</span>
+          {% if patient.needs_postop_mdc %} <span class="pill alert">Needs post-op MDC</span>{% endif %}
+          {% if patient.next_review_date %} &middot; Next review: {{ patient.next_review_date }}{% endif %}
+          {% if patient.watch_wait_start %} &middot; W&amp;W since: {{ patient.watch_wait_start }}{% endif %}
+        </p>
+        {% if patient.mdc_listings.all %}
+        <p class="stage-now">MDC:
+          {% for listing in patient.mdc_listings.all %}{{ listing.mdc.name }} ({{ listing.meeting_date }}{% if listing.presented %}, discussed{% else %}, pending{% endif %}){% if not forloop.last %}; {% endif %}{% endfor %}
+        </p>
+        {% endif %}
+        <p class="row-actions">
+          <a href="{% url 'patient_detail' patient.pk %}">Open patient page &rarr;</a>
+          {% if user.can_manage_mdc_list %}
+          <a class="btn small" href="{% url 'mdc_add_listing' patient.pk %}">+ Add to MDC list</a>
+          {% endif %}
+        </p>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">No patients to show for your account yet.</p>
+{% endif %}
+</div>
+{% endblock %}
 
-  <script>
-    document.querySelectorAll("tr.prow").forEach(function (row) {
-      row.addEventListener("click", function () {
-        var detail = document.getElementById(row.dataset.target);
-        var open = detail.style.display === "table-row";
-        detail.style.display = open ? "none" : "table-row";
-        var caret = row.querySelector(".caret");
-        if (caret) caret.innerHTML = open ? "&#9656;" : "&#9662;";  // ▸ / ▾
-      });
+{% block extra_body %}
+<script>
+  document.querySelectorAll("tr.prow").forEach(function (row) {
+    row.addEventListener("click", function () {
+      var detail = document.getElementById(row.dataset.target);
+      var open = detail.style.display === "table-row";
+      detail.style.display = open ? "none" : "table-row";
+      var caret = row.querySelector(".caret");
+      if (caret) caret.innerHTML = open ? "&#9656;" : "&#9662;";
     });
-  </script>
-</body>
-</html>
+  });
+</script>
+{% endblock %}

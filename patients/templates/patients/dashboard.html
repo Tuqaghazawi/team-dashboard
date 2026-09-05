@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block nav_home %}on{% endblock %}
+
+{% block extra_head %}
+<style>
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .tile { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+          padding: 16px 18px; text-decoration: none; color: inherit; display: block; }
+  .tile:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.13); }
+  .tile .n { font-size: 30px; font-weight: 700; color: var(--teal); line-height: 1.1; }
+  .tile .l { font-size: 12px; color: var(--muted); text-transform: uppercase;
+             letter-spacing: 0.4px; margin-top: 5px; font-weight: 600; }
+  .tile.flag .n { color: var(--red); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+  .bar { background: var(--line); border-radius: 999px; height: 6px; width: 90px; display: inline-block;
+         vertical-align: middle; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--teal); }
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="page">
+  <h1>Dashboard</h1>
+  <p>
+    {% if user.can_see_all_patients %}All patients across every team.
+    {% elif user.team %}{{ user.team.consultant }} &mdash; {{ user.team.specialty }}.
+    {% else %}Patients you have access to.{% endif %}
+  </p>
+</header>
+{% endblock %}
+
+{% block content %}
+
+<div class="tiles">
+  <a class="tile" href="{% url 'patient_list' %}?new=1"><div class="n">{{ counts.new }}</div><div class="l">New &mdash; no MDC plan</div></a>
+  <a class="tile" href="{% url 'patient_list' %}?stage=WORKUP"><div class="n">{{ counts.workup }}</div><div class="l">In workup</div></a>
+  <a class="tile" href="{% url 'mdc_board' %}"><div class="n">{{ counts.mdc_next_week }}</div><div class="l">MDC next week</div></a>
+  <a class="tile" href="{% url 'treatment_list' %}"><div class="n">{{ counts.neoadjuvant }}</div><div class="l">NACT / TNT</div></a>
+  <a class="tile" href="{% url 'surgery_schedule' %}"><div class="n">{{ counts.surgery }}</div><div class="l">For surgery</div></a>
+  <a class="tile {% if counts.postop_flagged %}flag{% endif %}" href="{% url 'patient_list' %}?stage=POSTOP"><div class="n">{{ counts.postop_flagged }}</div><div class="l">Post-op &mdash; needs MDC</div></a>
+</div>
+
+{% if user.can_register_patients %}
+<div class="card">
+  <h2>Prep clinic <a class="btn" href="{% url 'patient_register' %}">Register a patient</a></h2>
+  <p class="empty">Registering assigns the patient to a consultant's team and emails
+     that team's coordinator, consultant and rotating fellows.</p>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>
+    For MDC next week
+    <span class="right muted" style="font-size:12px">{{ next_week_range.0 }} &ndash; {{ next_week_range.1 }}</span>
+  </h2>
+  {% if next_week_listings %}
+    <table class="grid">
+      <tr><th>Patient</th><th>MRN</th><th>MDC</th><th>Date</th><th>Workup</th><th>Team</th></tr>
+      {% for listing in next_week_listings %}
+      <tr>
+        <td><a href="{% url 'patient_detail' listing.patient.pk %}">{{ listing.patient.name }}</a></td>
+        <td>{{ listing.patient.mrn }}</td>
+        <td>{{ listing.mdc.name }}</td>
+        <td>{{ listing.meeting_date }}</td>
+        <td>
+          {% if listing.patient.workup_ready %}
+            <span class="pill done">Ready</span>
+          {% else %}
+            <span class="pill pending">Awaiting results</span>
+          {% endif %}
+        </td>
+        <td class="muted">{{ listing.patient.team.consultant }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <p style="margin:16px 0 0"><a class="btn ghost" href="{% url 'mdc_board' %}">Open the MDC board &amp; build slides</a></p>
+  {% else %}
+    <p class="empty">Nobody is listed for next week yet.</p>
+  {% endif %}
+</div>
+
+{% if postop_flagged %}
+<div class="card">
+  <h2>Post-operative &mdash; awaiting MDC re-discussion</h2>
+  <table class="grid">
+    <tr><th>Patient</th><th>MRN</th><th>Diagnosis</th><th>Team</th><th></th></tr>
+    {% for patient in postop_flagged %}
+    <tr>
+      <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+      <td>{{ patient.mrn }}</td>
+      <td>{{ patient.diagnosis }}</td>
+      <td class="muted">{{ patient.team.consultant }}</td>
+      <td><span class="pill alert">Re-list for MDC</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+<div class="cols">
+  <div class="card">
+    <h2>New patients &mdash; no MDC plan</h2>
+    {% if new_patients %}
+      <table class="grid">
+        {% for patient in new_patients %}
+        <tr>
+          <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a><br>
+              <span class="muted" style="font-size:12.5px">{{ patient.diagnosis }}</span></td>
+          <td style="text-align:right">
+            <span class="pill grey">{{ patient.get_stage_display }}</span><br>
+            <span class="muted" style="font-size:12px">{{ patient.team.consultant }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% else %}<p class="empty">Nothing waiting.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>In workup</h2>
+    {% if workup %}
+      <table class="grid">
+        {% for patient in workup %}
+        {% with progress=patient.workup_progress %}
+        <tr>
+          <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a><br>
+              <span class="muted" style="font-size:12.5px">{{ patient.diagnosis }}</span></td>
+          <td style="text-align:right">
+            {% if patient.workup_ready %}
+              <span class="pill done">Ready for MDC</span>
+            {% else %}
+              <span class="pill pending">{{ progress.0 }} of {{ progress.1 }} back</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endwith %}
+        {% endfor %}
+      </table>
+    {% else %}<p class="empty">Nobody in workup.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>On NACT / TNT</h2>
+    {% if neoadjuvant %}
+      <table class="grid">
+        {% for patient in neoadjuvant %}
+        <tr>
+          <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a><br>
+              <span class="muted" style="font-size:12.5px">{{ patient.diagnosis }}</span></td>
+          <td style="text-align:right">
+            {% with course=patient.active_treatment %}
+              {% if course %}
+                <span class="pill info">{{ course.get_kind_display }}</span><br>
+                <span class="muted" style="font-size:12px">cycle {{ course.completed_cycles }} of {{ course.total_cycles }}</span>
+              {% else %}<span class="pill grey">{{ patient.get_stage_display }}</span>{% endif %}
+            {% endwith %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      <p style="margin:16px 0 0"><a class="btn ghost" href="{% url 'treatment_list' %}">Open the follow-up page</a></p>
+    {% else %}<p class="empty">No patients on neoadjuvant treatment.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>For surgery</h2>
+    {% if surgery %}
+      <table class="grid">
+        {% for patient in surgery %}
+        <tr>
+          <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a><br>
+              <span class="muted" style="font-size:12.5px">{{ patient.diagnosis }}</span></td>
+          <td style="text-align:right">
+            {% for booking in patient.surgery_bookings.all %}{% if not booking.performed %}
+              <span class="pill info">{{ booking.planned_date }}</span><br>
+              <span class="muted" style="font-size:12px">{{ booking.procedure }}</span>
+            {% endif %}{% empty %}
+              <span class="pill pending">Not scheduled</span>
+            {% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      <p style="margin:16px 0 0"><a class="btn ghost" href="{% url 'surgery_schedule' %}">Open the surgery schedule</a></p>
+    {% else %}<p class="empty">Nobody awaiting surgery.</p>{% endif %}
+  </div>
+</div>
+
+{% endblock %}

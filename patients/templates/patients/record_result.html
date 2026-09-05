@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ investigation.get_kind_display }} &middot; {{ patient.name }}{% endblock %}
+{% block wrap_class %}narrow{% endblock %}
+
+{% block header %}
+<header class="page">
+  <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
+  <h1>{{ investigation.get_kind_display }}</h1>
+  <p>SUB{{ investigation.get_kind_display }} &middot; {{ patient.name }}</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="post" class="stack">
+    {% csrf_token %}
+    {% include "_form_fields.html" %}
+    <div class="actions">
+      <button type="submit" class="btn">Record result</button>
+      <a class="btn ghost" href="{% url 'patient_detail' patient.pk %}">Cancel</a>
+    </div>
+  </form>
+  <p class="help" style="margin-top:14px">Saving marks this investigation as ready. When the last required item is in, the team is emailed automatically.</p>
+</div>
+{% endblock %}

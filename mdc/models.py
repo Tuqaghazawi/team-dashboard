@@ -82,3 +82,47 @@ class MDCListing(models.Model):
 
     def __str__(self):
         return f"{self.patient.name} — {self.mdc.name} ({self.meeting_date})"
+
+
+class GuidelineSuggestion(models.Model):
+    """A cached answer from the guideline brain, for one patient.
+
+    Stored rather than re-asked on every page load, and kept as a *suggestion*:
+    it is displayed distinctly from recorded clinical fact, it never changes the
+    patient record, and it carries the citations that go into the slide notes.
+    """
+
+    class Kind(models.TextChoices):
+        WORKUP = "WORKUP", "Suggested workup"
+        DECISION = "DECISION", "Suggested decision"
+
+    patient = models.ForeignKey(
+        "patients.Patient", on_delete=models.CASCADE, related_name="guideline_suggestions"
+    )
+    kind = models.CharField(max_length=10, choices=Kind.choices)
+    question = models.TextField()
+    answer = models.TextField()
+    citations = models.TextField(blank=True, help_text="One source label per line.")
+    requested_by = models.ForeignKey(
+        "accounts.User", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.get_kind_display()} — {self.patient.name}"
+
+    @property
+    def citation_list(self):
+        return [c for c in self.citations.splitlines() if c.strip()]
+
+    def as_slide_note(self):
+        """The evidence block written into a slide's notes field."""
+        lines = [f"{self.get_kind_display()} (guideline brain — for discussion only)", ""]
+        lines.append(self.answer)
+        if self.citation_list:
+            lines.extend(["", "Sources:"])
+            lines.extend(f"  - {c}" for c in self.citation_list)
+        return "\n".join(lines)

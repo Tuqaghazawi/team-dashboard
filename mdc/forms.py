@@ -42,3 +42,23 @@ class MDCListingForm(forms.ModelForm):
                     f"for {meeting_date}."
                 )
         return cleaned
+
+
+class MDCDecisionForm(forms.ModelForm):
+    """Record what the MDC decided. The category is what moves the patient on."""
+
+    class Meta:
+        model = MDCListing
+        fields = ["decision_category", "decision"]
+        widgets = {
+            "decision": forms.Textarea(
+                attrs={"rows": 3, "placeholder": "The decision as it should read on the slide."}
+            )
+        }
+        labels = {"decision_category": "Decision", "decision": "Notes / wording"}
+
+    def clean_decision_category(self):
+        category = self.cleaned_data.get("decision_category")
+        if not category:
+            raise forms.ValidationError("Choose the decision category.")
+        return category

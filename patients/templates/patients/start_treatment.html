@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Start treatment &middot; {{ patient.name }}{% endblock %}
+{% block wrap_class %}narrow{% endblock %}
+
+{% block header %}
+<header class="page">
+  <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
+  <h1>Open a treatment course</h1>
+  <p>SUBStart treatment &middot; {{ patient.name }}</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="post" class="stack">
+    {% csrf_token %}
+    {% include "_form_fields.html" %}
+    <div class="actions">
+      <button type="submit" class="btn">Open course</button>
+      <a class="btn ghost" href="{% url 'patient_detail' patient.pk %}">Cancel</a>
+    </div>
+  </form>
+  <p class="help" style="margin-top:14px">When the patient reaches the last cycle the team is emailed to order restaging. A second email goes out once every restaging report is back.</p>
+</div>
+{% endblock %}

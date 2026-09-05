@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Surgery schedule{% endblock %}
+{% block nav_surgery %}on{% endblock %}
+
+{% block header %}
+<header class="page">
+  <h1>Surgery schedule</h1>
+  <p>Patients listed for theatre. Recording an operation flags the patient for
+     post-operative MDC re-discussion.</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>Scheduled
+    <a class="btn ghost small right" href="{% url 'download_planning_deck' %}">Planning slides (.pptx)</a>
+  </h2>
+  {% if bookings %}
+    <table class="grid">
+      <tr><th>Date</th><th>Patient</th><th>MRN</th><th>Procedure</th><th>Team</th><th></th></tr>
+      {% for booking in bookings %}
+      <tr>
+        <td>{{ booking.planned_date }}</td>
+        <td><a href="{% url 'patient_detail' booking.patient.pk %}">{{ booking.patient.name }}</a></td>
+        <td>{{ booking.patient.mrn }}</td>
+        <td>{{ booking.procedure }}</td>
+        <td class="muted">{{ booking.patient.team.consultant }}</td>
+        <td style="text-align:right">
+          {% if user.can_record_clinical %}
+            <a class="btn ghost small" href="{% url 'record_surgery' booking.patient.pk booking.pk %}">Record operation</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty">Nobody is currently scheduled.</p>
+  {% endif %}
+</div>
+
+{% if recent %}
+<div class="card">
+  <h2>Recently operated</h2>
+  <table class="grid">
+    <tr><th>Date</th><th>Patient</th><th>Procedure</th><th>Post-op MDC</th></tr>
+    {% for booking in recent %}
+    <tr>
+      <td>{{ booking.performed_on }}</td>
+      <td><a href="{% url 'patient_detail' booking.patient.pk %}">{{ booking.patient.name }}</a></td>
+      <td>{{ booking.procedure }}</td>
+      <td>{% if booking.patient.needs_postop_mdc %}<span class="pill alert">Not re-listed</span>
+          {% else %}<span class="pill done">Re-listed</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

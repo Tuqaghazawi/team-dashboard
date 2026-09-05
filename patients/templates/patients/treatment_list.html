@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}NACT / TNT follow-up{% endblock %}
+{% block nav_treatment %}on{% endblock %}
+
+{% block header %}
+<header class="page">
+  <h1>NACT / TNT follow-up</h1>
+  <p>Patients stay here until the definitive decision. The team is emailed before the
+     last cycle to order restaging, and again once every report is back.</p>
+</header>
+{% endblock %}
+
+{% block content %}
+{% if rows %}
+  {% for row in rows %}
+  <div class="card">
+    <h2>
+      {{ row.patient.name }}
+      <span class="right muted" style="font-size:12px">MRN {{ row.patient.mrn }} &middot; {{ row.patient.team.consultant }}</span>
+    </h2>
+    <div class="facts" style="margin-bottom:16px">
+      <div><div class="k">Treatment</div><div class="v">{{ row.course.get_kind_display }} &mdash; {{ row.course.regimen }}</div></div>
+      <div><div class="k">Cycles</div><div class="v">{{ row.course.completed_cycles }} of {{ row.course.total_cycles }}
+        {% if row.course.on_last_cycle %}<span class="pill alert">last cycle</span>{% endif %}</div></div>
+      <div><div class="k">Next cycle due</div><div class="v">{{ row.course.next_cycle_date|default:"&mdash;" }}</div></div>
+      <div><div class="k">Restaging alert</div><div class="v">
+        {% if row.course.restaging_alert_sent_on %}sent {{ row.course.restaging_alert_sent_on }}
+        {% else %}<span class="muted">not yet due</span>{% endif %}</div></div>
+    </div>
+
+    {% if row.restaging %}
+      <table class="grid">
+        <tr><th>Restaging investigation</th><th>Status</th><th>Report</th><th></th></tr>
+        {% for item in row.restaging %}
+        <tr>
+          <td>{{ item.get_kind_display }}</td>
+          <td>{% if item.status == "READY" %}<span class="pill done">Ready</span>
+              {% else %}<span class="pill pending">{{ item.get_status_display }}</span>{% endif %}</td>
+          <td>{{ item.result_text|default:"&mdash;" }}</td>
+          <td style="text-align:right">
+            {% if user.can_record_clinical %}
+              <a class="btn ghost small" href="{% url 'record_result' row.patient.pk item.pk %}">Enter result</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% if row.restaging_ready %}
+        <p style="margin:14px 0 0"><span class="pill done">Restaging complete &mdash; review before the next clinic</span></p>
+      {% endif %}
+    {% else %}
+      <p class="empty">Restaging not ordered yet.</p>
+    {% endif %}
+
+    <p style="margin:16px 0 0">
+      <a class="btn ghost small" href="{% url 'patient_detail' row.patient.pk %}">Open patient</a>
+      {% if user.can_record_clinical %}
+        <span style="display:inline-block;width:6px"></span>
+      {% endif %}
+    </p>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="card"><p class="empty">No patients are on neoadjuvant treatment.</p></div>
+{% endif %}
+{% endblock %}

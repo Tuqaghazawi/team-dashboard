@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Inbox{% endblock %}
+{% block nav_inbox %}on{% endblock %}
+
+{% block header %}
+<header class="page">
+  <h1>Inbox</h1>
+  <p>Every alert the pathway has raised for you. Each one was also emailed.</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>
+    Notifications
+    {% if unread %}
+      <a class="btn ghost small right" href="{% url 'mark_all_read' %}">Mark all read</a>
+    {% endif %}
+  </h2>
+  {% if notes %}
+    <table class="grid">
+      <tr><th>When</th><th>Alert</th><th>Patient</th><th>Emailed</th></tr>
+      {% for note in notes %}
+      <tr {% if not note.is_read %}style="background:#f7fbfb"{% endif %}>
+        <td class="muted" style="white-space:nowrap">{{ note.created_at|date:"d M H:i" }}</td>
+        <td>
+          <a href="{% url 'open_notification' note.pk %}">{{ note.subject }}</a>
+          {% if not note.is_read %}<span class="pill pending">new</span>{% endif %}
+          <div class="muted" style="font-size:12.5px;margin-top:3px">{{ note.get_kind_display }}</div>
+        </td>
+        <td>{{ note.patient.name }}<br><span class="muted" style="font-size:12px">MRN {{ note.patient.mrn }}</span></td>
+        <td>{% if note.emailed_at %}<span class="pill done">sent</span>
+            {% else %}<span class="pill grey">in-app only</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty">Nothing yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

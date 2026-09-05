@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block nav_reports %}on{% endblock %}
+
+{% block header %}
+<header class="page">
+  <h1>Prep clinic reports</h1>
+  <p>Registrations broken down by specialty, consultant, age band and diagnosis.
+     Each one downloads as an Excel workbook.</p>
+</header>
+{% endblock %}
+
+{% block content %}
+{% for period in periods %}
+<div class="card">
+  <h2>
+    {{ period.label }}
+    <a class="btn right" href="{% url 'download_report' period.period %}">Download .xlsx</a>
+  </h2>
+  <p style="font-size:15px;margin:0 0 18px">
+    <strong>{{ period.data.total }}</strong> patient(s) registered
+    <span class="muted">&middot; {{ period.start }} to {{ period.end }}</span>
+  </p>
+
+  {% if period.data.total %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px">
+    <div>
+      <div class="k" style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:7px">By specialty</div>
+      <table class="grid">
+        {% for key, count in period.data.by_specialty %}
+          <tr><td>{{ key }}</td><td style="text-align:right"><strong>{{ count }}</strong></td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div>
+      <div class="k" style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:7px">By consultant</div>
+      <table class="grid">
+        {% for key, count in period.data.by_consultant %}
+          <tr><td>{{ key }}</td><td style="text-align:right"><strong>{{ count }}</strong></td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div>
+      <div class="k" style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:7px">By age band</div>
+      <table class="grid">
+        {% for key, count in period.data.by_age %}
+          <tr><td>{{ key }}</td><td style="text-align:right"><strong>{{ count }}</strong></td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+  {% else %}
+    <p class="empty">No registrations in this period.</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

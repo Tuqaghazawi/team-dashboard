@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}List for surgery &middot; {{ patient.name }}{% endblock %}
+{% block wrap_class %}narrow{% endblock %}
+
+{% block header %}
+<header class="page">
+  <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
+  <h1>List for surgery</h1>
+  <p>SUBList for surgery &middot; {{ patient.name }}</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="post" class="stack">
+    {% csrf_token %}
+    {% include "_form_fields.html" %}
+    <div class="actions">
+      <button type="submit" class="btn">Add to surgery schedule</button>
+      <a class="btn ghost" href="{% url 'patient_detail' patient.pk %}">Cancel</a>
+    </div>
+  </form>
+  
+</div>
+{% endblock %}
