@@ -202,7 +202,8 @@ deliberately unmapped, because those cases vary and the coordinator chooses.
 
 | ID | Requirement | Status |
 |---|---|---|
-| FR-2.1 | Starting a workup creates the standard checklist for that specialty. | Built |
+| FR-2.1 | Starting a workup creates the standard checklist for that **diagnosis** — colon and rectum, gastric and oesophageal, pancreas/biliary/liver are separate. | Built |
+| FR-2.6 | Conditional items apply per patient (breast staging by stage, genetics by age or family history, fertility counselling under 40, RAS/BRAF if metastatic), and each records why it was added. | Built |
 | FR-2.2 | The checklist is visible to the whole team, showing what is outstanding. | Built |
 | FR-2.3 | A patient is "ready for MDC" only when every **required baseline** item has a result. Restaging is tracked separately and does not affect this. | Built |
 | FR-2.4 | Completing the last required result emails the team — **once**, not on every later edit or sync pass. | Built |
@@ -506,8 +507,6 @@ absent from the guideline table.
       structured fields. Which fields should populate automatically?
 - [ ] **Per-MDC Excel export** for MDC coordinators — still open from v0.9.
 - [ ] **Pre-operative consult checklist** — needed for v2?
-- [ ] **Thyroid, gastric, oesophageal, HPB, liver and sarcoma workup checklists**
-      in Appendix A are still marked draft and need clinical sign-off.
 - [ ] **Deployment.** Azure App Service + PostgreSQL is assumed
       `[assumed — change if you want]`. Nothing has been provisioned.
 - [ ] **Real EHR access.** Which system, which interface, whose approval?
@@ -520,10 +519,25 @@ The system shows the matching checklist per patient; items fill in as results
 arrive from the EHR. The guideline brain *suggests* additions; it never edits the
 checklist itself.
 
-> **Implementation note.** `patients/workup.py` currently implements a simpler
-> checklist keyed by **specialty**, not by diagnosis. The per-diagnosis detail
-> below is the clinical target and is not yet fully encoded — in particular the
-> conditional breast staging rule and the age/family-history genetics trigger.
+> **Status: signed off 5 September 2026 and fully encoded.**
+> `patients/workup.py` implements these per **diagnosis group**, not per
+> specialty — colon and rectum, gastric and oesophageal, and pancreas/biliary/liver
+> are separate checklists, resolved from the diagnosis text by
+> `patients/diagnosis.py`. The conditional rules below are live:
+>
+> | Rule | Condition |
+> |---|---|
+> | Fertility counselling | female and under 40 |
+> | Breast: abdomen US + CXR | early — a stage is recorded and it is not T3/T4, node-positive or III/IV |
+> | Breast: CAP CT + bone scan | locally advanced, node-positive, **or no stage recorded** |
+> | Breast: genetic testing | under 65 **or** a positive family history |
+> | Colorectal: RAS/BRAF | metastatic (M1, stage IV, or "metastatic" in the diagnosis) |
+> | Thyroid: calcitonin, RET | optional — if medullary is suspected |
+>
+> An unrecorded stage deliberately gets the *fuller* staging, because
+> under-staging is the worse error; the reason is written onto the investigation
+> so the fellow can see it and change it. Every conditional item records why it
+> was added.
 
 ### Baseline — applies to every patient
 - Pathology/biopsy confirmation
@@ -548,25 +562,25 @@ checklist itself.
 ### Rectum ✅ *(confirmed)*
 - **Pelvic MRI** (key) · Colonoscopy + biopsy · **DRE for tumour distance** · **CAP CT** · CEA · MMR/MSI
 
-### Thyroid 🟡 *(draft)*
+### Thyroid ✅
 - Neck US · FNA (Bethesda) · TSH/thyroid function · Calcitonin if medullary suspected · Laryngoscopy · Genetic (RET) for medullary
 
-### Gastric 🟡 *(draft)*
+### Gastric ✅
 - EGD + biopsy · HER2 · EUS · Staging laparoscopy (selected) · CEA · CAP CT
 
-### Oesophageal 🟡 *(draft)*
+### Oesophageal ✅
 - EGD + biopsy · EUS · PET-CT · HER2 / PD-L1 · CAP CT
 
-### Pancreas / HPB (biliary) 🟡 *(draft)*
+### Pancreas / HPB (biliary) ✅
 - Pancreas-protocol CT · CA 19-9 · EUS + biopsy · MRCP
 
-### Liver (HCC) 🟡 *(draft)*
+### Liver (HCC) ✅
 - Triphasic CT or MRI · AFP · Hepatitis serology · Child-Pugh score
 
-### Sarcoma 🟡 *(draft)*
+### Sarcoma ✅
 - MRI of primary site · Core biopsy (ideally at a sarcoma centre) · CT chest
 
-> ✅ = clinically confirmed · 🟡 = draft, awaiting review.
+> ✅ = clinically confirmed. All nine signed off on 5 September 2026.
 
 ---
 

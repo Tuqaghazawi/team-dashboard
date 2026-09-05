@@ -37,30 +37,13 @@ TEAMS = [
     ("Dr. Amro Mureb", "Colorectal cancer"),
 ]
 
-# Synthetic reports, written to read like the decks the teams actually present.
-RESULTS = {
-    "COLONOSCOPY": "Malignant-looking mass at 10-13 cm from the anal verge; scope passed.",
-    "SIGMOIDOSCOPY": "Obstructing mass at 8 cm from the anal verge.",
-    "GASTROSCOPY": "Ulcerated mass at the gastro-oesophageal junction, 5 cm in length.",
-    "PATHOLOGY": "Moderately differentiated adenocarcinoma.",
-    "FNA": "Papillary thyroid carcinoma (Bethesda VI).",
-    "MAMMOGRAM": "Spiculated mass in the upper outer quadrant, 2.8 cm, with calcifications.",
-    "BREAST_US": "Irregular hypoechoic mass 2.6 cm; two abnormal axillary nodes.",
-    "NECK_US": "Hypoechoic nodule 2.1 cm in the right lobe, microcalcifications, TIRADS 5.",
-    "CAP_CT": "No distant metastasis. No enlarged intrathoracic lymph nodes.",
-    "PELVIC_MRI": "T3N2 rectal cancer 8.6 cm from the anal verge. Mesorectal fascia intact.",
-    "ABDOMEN_MRI": "No definite hepatic metastasis. Two benign hepatic cysts.",
-    "BREAST_MRI": "Unifocal enhancing mass 2.9 cm, no contralateral disease.",
-    "LOCAL_MRI": "Deep soft-tissue mass 9 cm in the posterior thigh, abutting the femur.",
-    "PET_CT": "Hypermetabolic primary. No distant hypermetabolic disease.",
-    "BONE_SCAN": "No scintigraphic evidence of skeletal metastasis.",
-    "CEA": "2.4",
-    "TUMOR_MARKERS": "CA 19-9: 38",
-    "THYROID_FUNCTION": "TSH 1.8, euthyroid.",
-    "GENETICS": "No pathogenic variant identified.",
-    "ECHO": "EF 60%, no regional wall motion abnormality.",
-    "PFT": "FEV1 82% predicted.",
-}
+# Report text comes from the same corpus the synthetic EHR uses, so a patient
+# seeded directly and one filled by `sync_ehr` read identically.
+def _reports():
+    from ehr.management.commands.build_ehr import REPORTS
+
+    return REPORTS
+
 
 CASES = [
     # (name, mrn, dob, diagnosis, specialty, sex, comorbidities, stage, genetics, target_stage)
@@ -285,7 +268,7 @@ class Command(BaseCommand):
         for i, item in enumerate(items):
             if i < cutoff:
                 item.mark_ready(
-                    RESULTS.get(item.kind, "Reported."),
+                    _reports().get(item.kind, "Reported."),
                     on=timezone.localdate() - timedelta(days=random.randint(2, 25)),
                 )
             else:

@@ -34,6 +34,9 @@ SLIDE_H = Inches(7.5)
 
 # The order investigations read on a slide — endoscopy, tissue, then imaging.
 KIND_ORDER = [
+    # Endoscopy and tissue first, then labs, then imaging — the order the teams
+    # read a case out in. Anything not listed sorts to the end.
+    Investigation.Kind.DRE,
     Investigation.Kind.COLONOSCOPY,
     Investigation.Kind.SIGMOIDOSCOPY,
     Investigation.Kind.GASTROSCOPY,
@@ -42,10 +45,25 @@ KIND_ORDER = [
     Investigation.Kind.NECK_US,
     Investigation.Kind.FNA,
     Investigation.Kind.PATHOLOGY,
+    Investigation.Kind.PATH_REVIEW,
+    Investigation.Kind.BIOMARKERS,
+    Investigation.Kind.HER2,
+    Investigation.Kind.PD_L1,
+    Investigation.Kind.MMR_MSI,
+    Investigation.Kind.RAS_BRAF,
     Investigation.Kind.CEA,
+    Investigation.Kind.CA_19_9,
+    Investigation.Kind.AFP,
+    Investigation.Kind.CALCITONIN,
     Investigation.Kind.TUMOR_MARKERS,
     Investigation.Kind.THYROID_FUNCTION,
+    Investigation.Kind.EUS,
+    Investigation.Kind.CXR,
+    Investigation.Kind.ABDOMEN_US,
     Investigation.Kind.CAP_CT,
+    Investigation.Kind.PANCREAS_CT,
+    Investigation.Kind.TRIPHASIC,
+    Investigation.Kind.MRCP,
     Investigation.Kind.PELVIC_MRI,
     Investigation.Kind.ABDOMEN_MRI,
     Investigation.Kind.BREAST_MRI,
@@ -54,8 +72,26 @@ KIND_ORDER = [
     Investigation.Kind.BONE_SCAN,
     Investigation.Kind.ECHO,
     Investigation.Kind.PFT,
+    Investigation.Kind.STAGING_LAP,
+    Investigation.Kind.LARYNGOSCOPY,
     Investigation.Kind.GENETICS,
+    Investigation.Kind.RET_GENETIC,
+    Investigation.Kind.HEPATITIS,
+    Investigation.Kind.CHILD_PUGH,
 ]
+
+# On the checklist but not on the slide. These gate MDC readiness and matter
+# clinically, but the room does not read them out — putting them on the slide
+# buries the findings the discussion is actually about. Performance status is
+# already in the history line.
+NOT_ON_SLIDE = {
+    Investigation.Kind.CBC,
+    Investigation.Kind.CMP,
+    Investigation.Kind.PERFORMANCE_STATUS,
+    Investigation.Kind.PRIOR_IMAGING,
+    Investigation.Kind.FERTILITY,
+    Investigation.Kind.PATH_REVIEW,
+}
 
 
 def build_mdc_deck(mdc_name, meeting_date, listings, presenter="", evidence=None):
@@ -239,7 +275,10 @@ def _case_lines(patient):
 
 def _ordered(patient, purpose):
     """This patient's investigations for a purpose, in presentation order."""
-    items = [i for i in patient.investigations.all() if i.purpose == purpose]
+    items = [
+        i for i in patient.investigations.all()
+        if i.purpose == purpose and i.kind not in NOT_ON_SLIDE
+    ]
     position = {kind: n for n, kind in enumerate(KIND_ORDER)}
     return sorted(items, key=lambda i: position.get(i.kind, len(KIND_ORDER)))
 

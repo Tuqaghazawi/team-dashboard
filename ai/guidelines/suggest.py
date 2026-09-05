@@ -39,33 +39,9 @@ REFUSAL = "Not found in the provided guidelines"
 # reached at all.
 FALLBACK_GUIDELINES = {"Breast", "Colon", "Rectal", "Thyroid", "Gastric", "Pancreatic"}
 
-# The topic a patient needs answered, worked out from their diagnosis first and
-# their specialty second. Diagnosis is the better signal: "Upper GI" covers both
-# gastric and oesophageal cancer, and a guideline for one does not answer the
-# other.
-DIAGNOSIS_TOPICS = [
-    (("oesophag", "esophag"), "esophageal"),
-    (("gastric", "stomach"), "gastric"),
-    (("rectal", "rectum"), "rectal"),
-    (("colon", "colonic", "sigmoid", "caecal", "cecal"), "colon"),
-    (("pancrea",), "pancreatic"),
-    (("cholangio", "biliary", "gallbladder", "bile duct"), "biliary"),
-    (("hepatocellular", "hcc", "liver"), "liver"),
-    (("thyroid",), "thyroid"),
-    (("breast",), "breast"),
-    (("sarcoma", "gist"), "sarcoma"),
-]
-
-# Fallback when the diagnosis text says nothing recognisable.
-SPECIALTY_TOPICS = {
-    "BREAST": ["breast"],
-    "COLORECTAL": ["colon", "rectal"],
-    "THYROID": ["thyroid"],
-    "UPPER_GI": ["gastric", "esophageal"],
-    "HPB": ["pancreatic", "biliary", "liver"],
-    "SARCOMA": ["sarcoma"],
-    "GENERAL": [],
-}
+# Which guideline topic a patient needs is decided by ``patients.diagnosis`` —
+# the same module the workup checklist uses, so the two can never disagree about
+# what a patient has.
 
 _indexed_cache = None
 
@@ -87,11 +63,9 @@ def indexed_guidelines(refresh=False):
 
 def topics_for(patient):
     """The guideline topic(s) this patient actually needs."""
-    text = (patient.diagnosis or "").lower()
-    for needles, topic in DIAGNOSIS_TOPICS:
-        if any(needle in text for needle in needles):
-            return [topic]
-    return SPECIALTY_TOPICS.get(patient.specialty, [])
+    from patients.diagnosis import topics_for as diagnosis_topics
+
+    return diagnosis_topics(patient)
 
 WORKUP_SYSTEM = (
     "You are a clinical guideline assistant for a surgical oncology MDC at KHCC.\n"

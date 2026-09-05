@@ -207,12 +207,23 @@ class Investigation(models.Model):
     """
 
     class Kind(models.TextChoices):
+        # Applies to every patient
+        PATH_REVIEW = "PATH_REVIEW", "Pathology review (tumour board)"
+        CBC = "CBC", "CBC"
+        CMP = "CMP", "CMP (LFTs + renal)"
+        PERFORMANCE_STATUS = "PERFORMANCE_STATUS", "Performance status"
+        PRIOR_IMAGING = "PRIOR_IMAGING", "Review of prior / outside imaging"
+        FERTILITY = "FERTILITY", "Fertility counselling"
         # Endoscopy / tissue
         COLONOSCOPY = "COLONOSCOPY", "Colonoscopy"
         SIGMOIDOSCOPY = "SIGMOIDOSCOPY", "Sigmoidoscopy"
         GASTROSCOPY = "GASTROSCOPY", "Gastroscopy / OGD"
         PATHOLOGY = "PATHOLOGY", "Pathology"
         FNA = "FNA", "FNA / core biopsy"
+        EUS = "EUS", "Endoscopic ultrasound (EUS)"
+        STAGING_LAP = "STAGING_LAP", "Staging laparoscopy"
+        DRE = "DRE", "DRE for tumour distance"
+        LARYNGOSCOPY = "LARYNGOSCOPY", "Laryngoscopy (vocal cords)"
         # Imaging
         MAMMOGRAM = "MAMMOGRAM", "Mammogram"
         BREAST_US = "BREAST_US", "Breast ultrasound"
@@ -224,11 +235,27 @@ class Investigation(models.Model):
         LOCAL_MRI = "LOCAL_MRI", "MRI of primary site"
         PET_CT = "PET_CT", "PET scan"
         BONE_SCAN = "BONE_SCAN", "Bone scan"
+        ABDOMEN_US = "ABDOMEN_US", "Abdomen ultrasound"
+        CXR = "CXR", "Chest X-ray"
+        PANCREAS_CT = "PANCREAS_CT", "Pancreas-protocol CT"
+        MRCP = "MRCP", "MRCP"
+        TRIPHASIC = "TRIPHASIC", "Triphasic CT or MRI"
         # Labs
         CEA = "CEA", "CEA"
         TUMOR_MARKERS = "TUMOR_MARKERS", "Tumour markers"
         THYROID_FUNCTION = "THYROID_FUNCTION", "Thyroid function"
         GENETICS = "GENETICS", "Genetic testing"
+        BIOMARKERS = "BIOMARKERS", "ER / PR / HER2 + Ki-67"
+        HER2 = "HER2", "HER2"
+        PD_L1 = "PD_L1", "PD-L1"
+        MMR_MSI = "MMR_MSI", "MMR / MSI"
+        RAS_BRAF = "RAS_BRAF", "RAS / BRAF"
+        CA_19_9 = "CA_19_9", "CA 19-9"
+        CALCITONIN = "CALCITONIN", "Calcitonin"
+        RET_GENETIC = "RET_GENETIC", "RET genetic testing"
+        AFP = "AFP", "AFP"
+        HEPATITIS = "HEPATITIS", "Hepatitis serology"
+        CHILD_PUGH = "CHILD_PUGH", "Child-Pugh score"
         # Fitness
         ECHO = "ECHO", "Echocardiogram"
         PFT = "PFT", "Pulmonary function tests"
@@ -245,7 +272,7 @@ class Investigation(models.Model):
     patient = models.ForeignKey(
         Patient, on_delete=models.CASCADE, related_name="investigations"
     )
-    kind = models.CharField(max_length=24, choices=Kind.choices)
+    kind = models.CharField(max_length=32, choices=Kind.choices)
     purpose = models.CharField(
         max_length=12, choices=Purpose.choices, default=Purpose.BASELINE
     )

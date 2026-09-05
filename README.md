@@ -90,8 +90,14 @@ changes.
    diagnosis, specialty, consultant's team). The team coordinator, consultant and
    the fellows currently rotating through that team are emailed.
 2. The coordinator lists the patient on an MDC for the following week.
-3. The fellow starts the workup. Each specialty has a standard checklist, visible
-   to the whole team, that fills in as reports come back.
+3. The fellow starts the workup. Each **diagnosis** has its own checklist —
+   colon and rectum, gastric and oesophageal, pancreas/biliary/liver are
+   separate — visible to the whole team and filling in as reports come back.
+   Some items are conditional on the patient: early breast cancer gets abdomen
+   ultrasound and a chest X-ray where a locally advanced one gets a CAP CT,
+   genetic testing is offered under 65 or with a family history, fertility
+   counselling to women under 40. Each conditional item records why it was
+   added, and a fellow can change any of it.
 4. When the last required result lands, the team is emailed that the patient is
    ready to present. Until then the MDC board shows them as not ready.
 5. The MDC decision is recorded as a category, which moves the patient:

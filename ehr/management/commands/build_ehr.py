@@ -22,7 +22,7 @@ from django.utils import timezone
 
 from ehr.source import database_path
 from patients.models import Investigation, Patient
-from patients.workup import BASELINE_WORKUP, RESTAGING_WORKUP
+from patients.workup import baseline_items, restaging_items
 
 K = Investigation.Kind
 
@@ -48,6 +48,38 @@ REPORTS = {
     K.GENETICS: "No pathogenic or likely pathogenic variant identified.",
     K.ECHO: "EF 60%. No regional wall motion abnormality.",
     K.PFT: "FEV1 82% predicted. FEV1/FVC 0.74.",
+    # Universal
+    K.PATH_REVIEW: "Reviewed at tumour board; diagnosis confirmed.",
+    K.CBC: "Hb 12.8 g/dL, WBC 6.4, platelets 244.",
+    K.CMP: "Creatinine 78 umol/L, bilirubin 11, ALT 24, albumin 39.",
+    K.PERFORMANCE_STATUS: "ECOG 0-1.",
+    K.PRIOR_IMAGING: "Outside imaging reviewed; no additional findings.",
+    K.FERTILITY: "Fertility counselling offered and documented.",
+    # Breast
+    K.BIOMARKERS: "ER 95% positive, PR 80% positive, HER2 negative (1+), Ki-67 22%.",
+    K.ABDOMEN_US: "Normal liver, no focal lesion. No ascites.",
+    K.CXR: "Clear lung fields. No pulmonary metastasis.",
+    # Colorectal
+    K.MMR_MSI: "MMR proficient (MSS).",
+    K.RAS_BRAF: "KRAS wild type. BRAF V600E not detected.",
+    K.DRE: "Tumour palpable at 5 cm from the anal verge, mobile.",
+    # Thyroid
+    K.CALCITONIN: "Within normal limits.",
+    K.LARYNGOSCOPY: "Both vocal cords mobile.",
+    K.RET_GENETIC: "No RET germline variant identified.",
+    # Upper GI
+    K.HER2: "HER2 negative (IHC 1+).",
+    K.PD_L1: "CPS 4.",
+    K.EUS: "uT3N1. No invasion of adjacent organs.",
+    K.STAGING_LAP: "No peritoneal disease. Washings negative.",
+    # HPB
+    K.PANCREAS_CT: "Hypodense head mass 2.8 cm. Abuts but does not encase the SMV. Resectable.",
+    K.CA_19_9: "142 U/mL",
+    K.MRCP: "Double duct sign. No intrahepatic biliary dilatation beyond the hilum.",
+    K.TRIPHASIC: "Arterially enhancing lesion 3.1 cm segment VII with washout — LI-RADS 5.",
+    K.AFP: "18 ng/mL",
+    K.HEPATITIS: "HBsAg negative, anti-HCV negative.",
+    K.CHILD_PUGH: "Child-Pugh A5.",
 }
 
 RESTAGING_REPORTS = {
@@ -60,6 +92,11 @@ RESTAGING_REPORTS = {
     K.PET_CT: "Marked reduction in metabolic activity at the primary site.",
     K.LOCAL_MRI: "Mass reduced to 6 cm. Femoral cortex intact.",
     K.NECK_US: "No residual nodule identified.",
+    K.GASTROSCOPY: "Marked reduction in the ulcerated lesion.",
+    K.PANCREAS_CT: "Stable mass, now 2.2 cm. Vascular planes preserved.",
+    K.CA_19_9: "48 U/mL (down from 142)",
+    K.TRIPHASIC: "Reduced arterial enhancement, consistent with treatment response.",
+    K.AFP: "9 ng/mL (down from 18)",
 }
 
 # Drug names must match the guideline rule table in ai/pharmacy so the check has
@@ -153,8 +190,9 @@ class Command(BaseCommand):
         today = timezone.localdate()
         written = 0
 
-        baseline = BASELINE_WORKUP.get(patient.specialty, BASELINE_WORKUP["GENERAL"])
-        for kind in baseline:
+        # The EHR holds a result for whatever the checklist would ask for, so
+        # the demo has something to pull for every conditional item too.
+        for kind in [item.kind for item in baseline_items(patient)]:
             pending = random.random() < pending_fraction
             connection.execute(
                 "INSERT INTO ehr_results (mrn, test_code, purpose, status, resulted_on, report)"
@@ -170,8 +208,7 @@ class Command(BaseCommand):
 
         # Restaging exists in the EHR only for patients who have had treatment.
         if patient.treatment_courses.exists():
-            restaging = RESTAGING_WORKUP.get(patient.specialty, RESTAGING_WORKUP["GENERAL"])
-            for kind in restaging:
+            for kind in [item.kind for item in restaging_items(patient)]:
                 connection.execute(
                     "INSERT INTO ehr_results (mrn, test_code, purpose, status, resulted_on, report)"
                     " VALUES (?, ?, ?, ?, ?, ?)",
