@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Review extraction &middot; {{ patient.name }}{% endblock %}
+{% block nav_patients %}on{% endblock %}
+
+{% block extra_head %}
+<style>
+  .crit td { background: #fff8f6; }
+  .crit .fname { font-weight: 700; }
+  .tag { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px;
+         font-weight: 700; color: var(--red); margin-left: 7px; }
+  .report { white-space: pre-wrap; font-size: 13.5px; background: #f9fcfc;
+            border: 1px solid var(--line); border-radius: 8px; padding: 13px 15px; }
+  table.grid input[type=text] { width: 100%; padding: 7px 9px; border: 1px solid #cfdcdb;
+                                border-radius: 5px; font-size: 13.5px; font-family: inherit; }
+  .spans { font-size: 12.5px; color: var(--muted); margin: 0; padding-left: 18px; }
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="page">
+  <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
+  <h1>Review the extracted fields</h1>
+  <p>MRN {{ patient.mrn }} &middot; {{ investigation.get_kind_display }} &middot;
+     nothing here is saved to the record until you confirm it.</p>
+</header>
+{% endblock %}
+
+{% block content %}
+
+<div class="flash warning">
+  <strong>Check every field against the report.</strong>
+  On the evaluation set this extractor missed a critical finding in about
+  4 of every 10 cases &mdash; grade, positive nodes and LVI are the ones it drops.
+  Fields that change management are marked <span class="tag">critical</span> and
+  shown first. An empty box means the extractor found nothing, which may be wrong.
+</div>
+
+{% if meta.needs_human_review %}
+  <div class="flash error">
+    The extractor flagged this note itself as ambiguous
+    (<code>needs_human_review</code>). Read the report carefully.
+  </div>
+{% endif %}
+
+<div class="card">
+  <h2>The report</h2>
+  <div class="report">{{ investigation.result_text }}</div>
+  {% if meta.missing_fields %}
+    <p class="help" style="margin-top:12px">
+      <strong>The extractor reported these as missing:</strong>
+      {% for field in meta.missing_fields %}{{ field }}{% if not forloop.last %}, {% endif %}{% endfor %}
+    </p>
+  {% endif %}
+  {% if meta.evidence_spans %}
+    <p class="help" style="margin:12px 0 4px"><strong>Evidence it quoted:</strong></p>
+    <ul class="spans">
+      {% for span in meta.evidence_spans %}<li>{{ span }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="card">
+    <h2>Extracted fields
+      <span class="right muted" style="font-size:12px">
+        {% if meta.confidence %}extractor confidence: {{ meta.confidence }}{% endif %}
+      </span>
+    </h2>
+    <table class="grid">
+      <tr><th style="width:34%">Field</th><th>Value &mdash; correct it if it is wrong</th></tr>
+      {% for row in rows %}
+      <tr class="{% if row.critical %}crit{% endif %}">
+        <td class="fname">
+          {{ row.label }}
+          {% if row.critical %}<span class="tag">critical</span>{% endif %}
+          <div class="muted" style="font-size:11.5px;font-weight:400">{{ row.path }}</div>
+        </td>
+        <td><input type="text" name="field__{{ row.path }}" value="{{ row.value }}"></td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <div class="actions">
+      <button type="submit" class="btn">Confirm these fields</button>
+      <button type="submit" name="reject" value="1" class="btn ghost">Reject the extraction</button>
+      <a class="btn ghost" href="{% url 'patient_detail' patient.pk %}">Cancel</a>
+    </div>
+  </div>
+</form>
+
+{% endblock %}

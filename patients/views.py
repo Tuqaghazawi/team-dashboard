@@ -9,6 +9,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from ai.extraction import review
+from ai.pharmacy import periop_api
 from teams.models import FellowAssignment, Team
 
 from . import categories, flow
@@ -21,7 +23,13 @@ from .forms import (
     SurgeryBookingForm,
     TreatmentCourseForm,
 )
-from .models import Investigation, Patient, SurgeryBooking, TreatmentCourse
+from .models import (
+    Investigation,
+    Patient,
+    ReportExtraction,
+    SurgeryBooking,
+    TreatmentCourse,
+)
 
 
 def visible_teams(user):
@@ -458,4 +466,118 @@ def record_surgery(request, pk, booking_pk):
         request,
         "patients/record_surgery.html",
         {"patient": patient, "booking": booking, "form": form},
+    )
+
+
+# --- Report extraction (Capstone 1) -------------------------------------------
+
+@login_required
+@require_POST
+def run_extraction(request, pk, investigation_pk):
+    """Run the extractor over one report and open it for review.
+
+    Nothing is saved to the patient record here — the result is stored as a
+    pending extraction that a clinician must confirm.
+    """
+    patient = get_object_or_404(visible_patients(request.user), pk=pk)
+    investigation = get_object_or_404(patient.investigations, pk=investigation_pk)
+    if not request.user.can_record_clinical:
+        raise PermissionDenied("Only the clinical team may run an extraction.")
+    if not investigation.result_text.strip():
+        messages.warning(request, "There is no report text to extract from yet.")
+        return redirect("patient_detail", pk=patient.pk)
+
+    try:
+        extraction = review.extract(investigation.result_text)
+    except review.ExtractionUnavailable as exc:
+        messages.error(request, f"The extractor is unavailable ({exc}).")
+        return redirect("patient_detail", pk=patient.pk)
+
+    rows, meta = review.flatten(extraction)
+    ReportExtraction.objects.update_or_create(
+        investigation=investigation,
+        defaults={
+            "raw_fields": {"rows": rows, "meta": meta},
+            "needs_human_review": meta["needs_human_review"],
+            "status": ReportExtraction.Status.PENDING,
+            "confirmed_fields": None,
+            "reviewed_by": None,
+            "reviewed_at": None,
+        },
+    )
+    messages.info(
+        request,
+        "Extraction ready for review. Nothing has been saved to the record — "
+        "check every field, especially the ones marked critical.",
+    )
+    return redirect("review_extraction", pk=patient.pk, investigation_pk=investigation.pk)
+
+
+@login_required
+def review_extraction(request, pk, investigation_pk):
+    """The clinician checks, corrects and confirms an extraction."""
+    patient = get_object_or_404(visible_patients(request.user), pk=pk)
+    investigation = get_object_or_404(patient.investigations, pk=investigation_pk)
+    extraction = get_object_or_404(ReportExtraction, investigation=investigation)
+    if not request.user.can_record_clinical:
+        raise PermissionDenied("Only the clinical team may review an extraction.")
+
+    rows = extraction.raw_fields.get("rows", [])
+    meta = extraction.raw_fields.get("meta", {})
+
+    if request.method == "POST":
+        if "reject" in request.POST:
+            extraction.status = ReportExtraction.Status.REJECTED
+            extraction.reviewed_by = request.user
+            extraction.reviewed_at = timezone.now()
+            extraction.save()
+            messages.success(request, "Extraction rejected. The report text is unchanged.")
+            return redirect("patient_detail", pk=patient.pk)
+
+        confirmed = {
+            row["path"]: request.POST.get(f"field__{row['path']}", "").strip()
+            for row in rows
+        }
+        extraction.confirmed_fields = confirmed
+        extraction.status = ReportExtraction.Status.CONFIRMED
+        extraction.reviewed_by = request.user
+        extraction.reviewed_at = timezone.now()
+        extraction.save()
+        messages.success(
+            request,
+            f"Extraction confirmed by {request.user.get_full_name() or request.user.username}.",
+        )
+        return redirect("patient_detail", pk=patient.pk)
+
+    return render(
+        request,
+        "patients/review_extraction.html",
+        {
+            "patient": patient,
+            "investigation": investigation,
+            "extraction": extraction,
+            "rows": rows,
+            "meta": meta,
+        },
+    )
+
+
+# --- Peri-operative medication check (Session 3) -------------------------------
+
+@login_required
+def periop_check_view(request, pk, booking_pk):
+    """Medication alerts for a patient booked for surgery."""
+    patient = get_object_or_404(visible_patients(request.user), pk=pk)
+    booking = get_object_or_404(patient.surgery_bookings, pk=booking_pk)
+
+    result, error = None, None
+    try:
+        result = periop_api.periop_alerts(patient.pharmacy_mrn, booking.planned_date)
+    except periop_api.PeriopUnavailable as exc:
+        error = str(exc)
+
+    return render(
+        request,
+        "patients/periop_check.html",
+        {"patient": patient, "booking": booking, "result": result, "error": error},
     )

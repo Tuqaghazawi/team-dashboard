@@ -8,7 +8,13 @@ from accounts.models import User
 from mdc.models import MDCListing
 from notifications.models import Notification
 from patients import flow
-from patients.models import Investigation, Patient, SurgeryBooking, TreatmentCourse
+from patients.models import (
+    Investigation,
+    Patient,
+    ReportExtraction,
+    SurgeryBooking,
+    TreatmentCourse,
+)
 from patients.workup import create_baseline_workup
 from teams.models import MDC, FellowAssignment, Team
 
@@ -360,3 +366,128 @@ class RestagingDoesNotAffectBaselineReadinessTests(TestCase):
         self.assertEqual((ready_after, total_after), (ready, total))
         self.assertTrue(patient.workup_ready)
         self.assertEqual(patient.outstanding_investigations, [])
+
+
+class PeriopCheckTests(TestCase):
+    """A missing medication record must never read as 'nothing to hold'."""
+
+    def setUp(self):
+        self.team = Team.objects.create(consultant="Dr. Test", specialty="Colorectal cancer")
+        self.patient = make_patient(self.team, mrn="900060")
+
+    def test_a_patient_with_no_pharmacy_mrn_is_reported_as_unlinked(self):
+        from ai.pharmacy import periop_api
+
+        result = periop_api.periop_alerts(self.patient.pharmacy_mrn, "2026-10-01")
+        self.assertFalse(result["linked"])
+        self.assertEqual(result["alerts"], [])
+        self.assertEqual(result["orders_checked"], 0)
+
+    def test_the_page_says_no_record_rather_than_no_holds(self):
+        booking = SurgeryBooking.objects.create(
+            patient=self.patient, procedure="Anterior resection",
+            planned_date=timezone.localdate(),
+        )
+        user = User.objects.create_user(
+            "px", password="x", role=User.Role.CONSULTANT, team=self.team
+        )
+        self.client.force_login(user)
+        response = self.client.get(
+            f"/patients/{self.patient.pk}/surgery/{booking.pk}/periop/"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No medication record is linked")
+        self.assertNotContains(response, "No medication holds flagged")
+
+
+class ExtractionReviewTests(TestCase):
+    """An extraction is a draft for a clinician, never a saved fact."""
+
+    def setUp(self):
+        self.team = Team.objects.create(consultant="Dr. Test", specialty="Thyroid and breast")
+        self.patient = make_patient(self.team, mrn="900070", specialty="BREAST")
+        self.investigation = Investigation.objects.create(
+            patient=self.patient, kind=Investigation.Kind.PATHOLOGY,
+            status=Investigation.Status.READY,
+            result_text="IDC grade 3, 3 of 14 nodes positive, LVI present.",
+        )
+        self.user = User.objects.create_user(
+            "fx", password="x", role=User.Role.FELLOW, team=self.team
+        )
+        self.client.force_login(self.user)
+
+    def test_critical_fields_are_marked_and_sorted_first(self):
+        from ai.extraction import review
+
+        class FakeExtraction:
+            def model_dump(self):
+                return {
+                    "histologic_type": "IDC",
+                    "grade": "3",
+                    "nodes_positive": 3,
+                    "meta": {"needs_human_review": True, "missing_fields": ["margins"]},
+                }
+
+        rows, meta = review.flatten(FakeExtraction())
+        self.assertTrue(meta["needs_human_review"])
+        self.assertEqual(meta["missing_fields"], ["margins"])
+        critical = [r["path"] for r in rows if r["critical"]]
+        self.assertEqual(set(critical), {"grade", "nodes_positive"})
+        # Critical rows come first so they cannot be scrolled past.
+        self.assertTrue(rows[0]["critical"])
+        self.assertFalse(rows[-1]["critical"])
+
+    def test_a_failing_extractor_degrades_instead_of_breaking_the_page(self):
+        from unittest.mock import patch
+
+        from ai.extraction import review
+
+        with patch("ai.extraction.review.extract", side_effect=review.ExtractionUnavailable("no key")):
+            response = self.client.post(
+                f"/patients/{self.patient.pk}/workup/{self.investigation.pk}/extract/",
+                follow=True,
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "extractor is unavailable")
+        self.assertFalse(ReportExtraction.objects.exists())
+
+    def test_an_extraction_starts_pending_and_only_a_person_confirms_it(self):
+        extraction = ReportExtraction.objects.create(
+            investigation=self.investigation,
+            raw_fields={
+                "rows": [
+                    {"path": "grade", "label": "Grade", "value": "3", "critical": True},
+                    {"path": "nodes_positive", "label": "Nodes positive", "value": "", "critical": True},
+                ],
+                "meta": {"needs_human_review": True, "missing_fields": [], "evidence_spans": []},
+            },
+            needs_human_review=True,
+        )
+        self.assertFalse(extraction.is_confirmed)
+
+        response = self.client.post(
+            f"/patients/{self.patient.pk}/workup/{self.investigation.pk}/extract/review/",
+            {"field__grade": "3", "field__nodes_positive": "3"},
+        )
+        self.assertEqual(response.status_code, 302)
+
+        extraction.refresh_from_db()
+        self.assertTrue(extraction.is_confirmed)
+        self.assertEqual(extraction.reviewed_by, self.user)
+        # The clinician's correction is kept separately from what the model said.
+        self.assertEqual(extraction.confirmed_fields["nodes_positive"], "3")
+        self.assertEqual(extraction.raw_fields["rows"][1]["value"], "")
+
+    def test_rejecting_an_extraction_records_it_and_changes_nothing(self):
+        ReportExtraction.objects.create(
+            investigation=self.investigation,
+            raw_fields={"rows": [], "meta": {}},
+        )
+        self.client.post(
+            f"/patients/{self.patient.pk}/workup/{self.investigation.pk}/extract/review/",
+            {"reject": "1"},
+        )
+        extraction = ReportExtraction.objects.get()
+        self.assertEqual(extraction.status, ReportExtraction.Status.REJECTED)
+        self.investigation.refresh_from_db()
+        self.assertIn("grade 3", self.investigation.result_text)

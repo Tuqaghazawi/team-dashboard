@@ -80,6 +80,12 @@ class Patient(models.Model):
         max_length=60, blank=True, help_text="Clinical stage, e.g. 'cT4N+', 'T3N2'.",
     )
 
+    pharmacy_mrn = models.CharField(
+        max_length=20, blank=True,
+        help_text="This patient's MRN in the pharmacy system, for the peri-op "
+                  "medication check. Blank means no medication record is linked.",
+    )
+
     # --- Bookkeeping ---
     registered_at = models.DateTimeField(auto_now_add=True)
 
@@ -359,3 +365,44 @@ class SurgeryBooking(models.Model):
 
     def __str__(self):
         return f"{self.patient.name} — {self.procedure} ({self.planned_date})"
+
+
+class ReportExtraction(models.Model):
+    """A structured extraction of one investigation's report, pending review.
+
+    The extractor is never treated as fact: a row is created ``PENDING`` and only
+    a clinician moves it to ``CONFIRMED``, with whatever corrections they made.
+    Nothing else in the app reads an unconfirmed extraction.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Awaiting clinician review"
+        CONFIRMED = "CONFIRMED", "Confirmed by clinician"
+        REJECTED = "REJECTED", "Rejected by clinician"
+
+    investigation = models.OneToOneField(
+        Investigation, on_delete=models.CASCADE, related_name="extraction"
+    )
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    raw_fields = models.JSONField(
+        help_text="What the extractor returned, kept unchanged for audit."
+    )
+    confirmed_fields = models.JSONField(
+        null=True, blank=True, help_text="What the clinician confirmed, after any corrections."
+    )
+    needs_human_review = models.BooleanField(
+        default=False, help_text="The extractor's own flag that this note is ambiguous."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by = models.ForeignKey(
+        "accounts.User", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="extractions_reviewed",
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Extraction of {self.investigation} ({self.get_status_display()})"
+
+    @property
+    def is_confirmed(self):
+        return self.status == self.Status.CONFIRMED

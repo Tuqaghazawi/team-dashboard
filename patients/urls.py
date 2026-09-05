@@ -15,6 +15,16 @@ urlpatterns = [
         views.record_result,
         name="record_result",
     ),
+    path(
+        "<int:pk>/workup/<int:investigation_pk>/extract/",
+        views.run_extraction,
+        name="run_extraction",
+    ),
+    path(
+        "<int:pk>/workup/<int:investigation_pk>/extract/review/",
+        views.review_extraction,
+        name="review_extraction",
+    ),
     # Neoadjuvant treatment
     path("<int:pk>/treatment/start/", views.start_treatment, name="start_treatment"),
     path("<int:pk>/treatment/<int:course_pk>/cycle/", views.record_cycle, name="record_cycle"),
@@ -25,5 +35,10 @@ urlpatterns = [
         "<int:pk>/surgery/<int:booking_pk>/performed/",
         views.record_surgery,
         name="record_surgery",
+    ),
+    path(
+        "<int:pk>/surgery/<int:booking_pk>/periop/",
+        views.periop_check_view,
+        name="periop_check",
     ),
 ]

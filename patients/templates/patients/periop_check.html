@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Peri-op medications &middot; {{ patient.name }}{% endblock %}
+{% block nav_surgery %}on{% endblock %}
+
+{% block header %}
+<header class="page">
+  <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
+  <h1>Peri-operative medication check</h1>
+  <p>MRN {{ patient.mrn }} &middot; {{ booking.procedure }} on {{ booking.planned_date }}</p>
+</header>
+{% endblock %}
+
+{% block content %}
+
+{% if error %}
+  <div class="flash error">The medication check could not run: {{ error }}</div>
+
+{% elif not result.linked %}
+  <div class="flash warning">
+    <strong>No medication record is linked for this patient.</strong>
+    {% if patient.pharmacy_mrn %}
+      MRN <code>{{ patient.pharmacy_mrn }}</code> was not found in the pharmacy system.
+    {% else %}
+      No pharmacy MRN has been recorded against this patient.
+    {% endif %}
+    This is <em>not</em> the same as "no medications to hold" &mdash; nothing has
+    been checked. Confirm the patient's medications directly before surgery.
+  </div>
+
+{% else %}
+  <div class="card">
+    <h2>Alerts</h2>
+    {% if result.alerts %}
+      <table class="grid">
+        <tr><th>Drug</th><th>Action</th><th>Timing</th><th>Last dose by</th><th>Refer</th></tr>
+        {% for alert in result.alerts %}
+        <tr>
+          <td>
+            <strong>{{ alert.drug }}</strong>
+            {% if alert.high_alert %}<span class="pill alert">high alert</span>{% endif %}
+            <div class="muted" style="font-size:12px">{{ alert.drug_class }}</div>
+          </td>
+          <td>
+            {% if alert.action == "DISCONTINUE" %}<span class="pill alert">Discontinue</span>
+            {% elif alert.action == "HOLD" %}<span class="pill pending">Hold</span>
+            {% else %}<span class="pill info">Review</span>{% endif %}
+          </td>
+          <td>{{ alert.timing }}</td>
+          <td>{% if alert.stop_by %}<strong>{{ alert.stop_by }}</strong>{% else %}&mdash;{% endif %}</td>
+          <td class="muted">{{ alert.consult|default:"&mdash;" }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p class="empty">
+        No medication holds flagged across {{ result.orders_checked }} active
+        medication(s).
+      </p>
+    {% endif %}
+
+    <p class="help" style="margin-top:16px">
+      {{ result.orders_checked }} active medication(s) checked against
+      {{ result.source }}. This is a deterministic rule check, not a model
+      output &mdash; but it can only see medications recorded in the pharmacy
+      system. The surgical team remains responsible for the final decision.
+    </p>
+  </div>
+{% endif %}
+
+<p><a class="btn ghost" href="{% url 'patient_detail' patient.pk %}">Back to the patient</a></p>
+{% endblock %}

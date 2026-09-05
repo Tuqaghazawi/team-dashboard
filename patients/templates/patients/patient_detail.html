@@ -113,6 +113,27 @@
           {% if user.can_record_clinical %}
             <a class="btn ghost small" href="{% url 'record_result' patient.pk item.pk %}">
               {% if item.status == "READY" %}Edit{% else %}Enter result{% endif %}</a>
+            {% if item.result_text %}
+              <form method="post" action="{% url 'run_extraction' patient.pk item.pk %}" style="margin-top:6px">
+                {% csrf_token %}
+                <button type="submit" class="btn ghost small">Extract fields</button>
+              </form>
+            {% endif %}
+          {% endif %}
+          {% if item.extraction %}
+            <div style="margin-top:6px">
+              {% if item.extraction.is_confirmed %}
+                <span class="pill done">fields confirmed</span>
+              {% elif item.extraction.status == "REJECTED" %}
+                <span class="pill grey">extraction rejected</span>
+              {% else %}
+                <a class="pill pending" style="text-decoration:none"
+                   href="{% url 'review_extraction' patient.pk item.pk %}">review extraction</a>
+              {% endif %}
+              {% if item.extraction.needs_human_review %}
+                <span class="pill alert">flagged</span>
+              {% endif %}
+            </div>
           {% endif %}
         </td>
       </tr>
@@ -245,6 +266,8 @@
         {% if user.can_record_clinical %}
           <a class="btn ghost small" style="float:right" href="{% url 'record_surgery' patient.pk booking.pk %}">Record operation</a>
         {% endif %}
+        <a class="btn ghost small" style="float:right;margin-right:8px"
+           href="{% url 'periop_check' patient.pk booking.pk %}">Peri-op medication check</a>
       {% endif %}
     </div>
   {% endfor %}
