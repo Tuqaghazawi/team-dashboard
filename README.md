@@ -165,8 +165,20 @@ is read from the index itself, so adding a guideline widens it with no code
 change:
 
 ```bash
-python manage.py add_guideline --pdf data/guidelines/nccn_esophageal.pdf     --label "Esophageal (NCCN)"
+python manage.py add_guideline --pdf data/guidelines/nccn_hepatobiliary.pdf     --label "Hepatobiliary (NCCN)" --dry-run     # check the text extracts
+python manage.py add_guideline --pdf data/guidelines/nccn_hepatobiliary.pdf     --label "Hepatobiliary (NCCN)"               # then index it
 ```
+
+**The label matters.** It is cited under every answer, and it is what the
+coverage check matches a patient's disease against. Put the disease in it and say
+whose guideline it is — `"Esophageal (NCCN)"`, not `"Upper GI 2026"`. The command
+prints which diseases a label will answer for, and warns if the answer is none;
+a guideline nothing matches is indexed and then never consulted, which is the
+worst outcome because it looks finished.
+
+NCCN's own titles work as they are: `"Hepatobiliary (NCCN)"` answers for both
+liver and biliary, and `"Esophageal and Esophagogastric Junction (NCCN)"` for
+oesophageal and gastric.
 
 Keep licensed PDFs (NCCN) in `data/guidelines/`, which is git-ignored, and never
 commit them. Only the extracted chunks enter the index, and that is git-ignored too. It reuses the Session 6 RAG

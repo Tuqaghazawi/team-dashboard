@@ -53,6 +53,7 @@ class Command(BaseCommand):
         if not label:
             raise CommandError("A label is required.")
 
+        self._check_label(label)
         chunker, embed_index = self._rag_modules()
         chunks, pages = self._chunk(pdf, chunker, options["start"], options["end"])
         if not chunks:
@@ -97,6 +98,34 @@ class Command(BaseCommand):
         )
 
     # --- helpers ---
+
+    def _check_label(self, label):
+        """Warn if no disease topic will ever match this label.
+
+        Coverage matches a patient's disease against the label text, so a
+        guideline labelled in a way no topic matches is indexed and then never
+        consulted — the worst outcome, because it looks done.
+        """
+        from ai.guidelines.suggest import label_covers
+        from patients.diagnosis import GROUP_TOPICS
+
+        every_topic = sorted({t for topics in GROUP_TOPICS.values() for t in topics})
+        matched = [topic for topic in every_topic if label_covers(label, topic)]
+
+        if matched:
+            self.stdout.write(f"  label answers for: {', '.join(matched)}")
+            return
+
+        self.stdout.write(self.style.WARNING(
+            f"  WARNING: no disease matches the label {label!r}, so this guideline "
+            f"would be indexed and then never consulted."
+        ))
+        self.stdout.write(self.style.WARNING(
+            f"  Put the disease in the label — one of: {', '.join(every_topic)}."
+        ))
+        self.stdout.write(self.style.WARNING(
+            '  For example "Esophageal (NCCN)" rather than "Upper GI 2026".'
+        ))
 
     def _rag_modules(self):
         """The Session 6 chunker and index, which expect to run from their folder."""

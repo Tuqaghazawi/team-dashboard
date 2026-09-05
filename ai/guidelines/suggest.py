@@ -47,6 +47,35 @@ FALLBACK_GUIDELINES = {"Breast", "Colon", "Rectal", "Thyroid", "Gastric", "Pancr
 # the same module the workup checklist uses, so the two can never disagree about
 # what a patient has.
 
+# A guideline label does not always contain the disease word. NCCN publishes one
+# "Hepatobiliary Cancers" guideline covering liver and biliary tract, and one
+# "Esophageal and Esophagogastric Junction" guideline. Without these aliases a
+# hepatocellular carcinoma would read as uncovered next to a shelf that covers
+# it, which is the wrong kind of wrong: the tool would refuse an answer it could
+# have grounded.
+TOPIC_ALIASES = {
+    "hepatobiliary": {"liver", "biliary"},
+    "hepatocellular": {"liver"},
+    "cholangiocarcinoma": {"biliary"},
+    "gallbladder": {"biliary"},
+    "esophagogastric": {"esophageal", "gastric"},
+    "oesophageal": {"esophageal"},
+    "colorectal": {"colon", "rectal"},
+    "upper gastrointestinal": {"gastric", "esophageal"},
+    "soft tissue": {"sarcoma"},
+}
+
+
+def label_covers(label, topic):
+    """Whether a guideline label answers for a disease topic."""
+    text = label.lower()
+    if topic in text:
+        return True
+    return any(
+        alias in text and topic in topics for alias, topics in TOPIC_ALIASES.items()
+    )
+
+
 _indexed_cache = None
 
 
@@ -232,7 +261,7 @@ def coverage_for(patient):
     matched = sorted(
         {
             label for label in indexed
-            if any(topic in label.lower() for topic in topics)
+            if any(label_covers(label, topic) for topic in topics)
         }
     )
     return {

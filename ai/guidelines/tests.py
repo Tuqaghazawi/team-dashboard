@@ -399,3 +399,33 @@ class AgenticRagTests(TestCase):
              mock.patch.object(suggest, "_agentic_rag") as grader:
             suggest.suggest_workup(self.patient)
         grader.assert_not_called()
+
+
+class LabelAliasTests(TestCase):
+    """A guideline label need not contain the disease word verbatim."""
+
+    def test_hepatobiliary_answers_for_both_liver_and_biliary(self):
+        # NCCN publishes one "Hepatobiliary Cancers" guideline covering both.
+        # Without the alias a hepatocellular carcinoma reads as uncovered next
+        # to a shelf that covers it.
+        self.assertTrue(suggest.label_covers("Hepatobiliary (NCCN)", "liver"))
+        self.assertTrue(suggest.label_covers("Hepatobiliary (NCCN)", "biliary"))
+
+    def test_esophagogastric_answers_for_oesophageal_and_gastric(self):
+        label = "Esophageal and Esophagogastric Junction (NCCN)"
+        self.assertTrue(suggest.label_covers(label, "esophageal"))
+        self.assertTrue(suggest.label_covers(label, "gastric"))
+
+    def test_a_label_naming_the_disease_still_works(self):
+        self.assertTrue(suggest.label_covers("Rectal", "rectal"))
+        self.assertTrue(suggest.label_covers("Soft Tissue Sarcoma (NCCN)", "sarcoma"))
+
+    def test_an_alias_does_not_widen_a_label_beyond_its_diseases(self):
+        self.assertFalse(suggest.label_covers("Hepatobiliary (NCCN)", "breast"))
+        self.assertFalse(suggest.label_covers("Colon", "rectal"))
+
+    def test_a_label_naming_no_disease_matches_nothing(self):
+        # add_guideline warns about exactly this, because such a guideline is
+        # indexed and then never consulted.
+        for topic in ["liver", "gastric", "breast", "sarcoma"]:
+            self.assertFalse(suggest.label_covers("Upper GI 2026", topic))

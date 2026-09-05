@@ -679,19 +679,30 @@ None of these exist. Until they do, this tool takes synthetic data only.
 
 ### 14.5 Named owners
 
-| Area | Owner | Status |
-|---|---|---|
-| Clinical content — checklists, pathway rules, MDC categories | Tuqa Al-Ghazawi (author) | Acting |
-| Clinical sign-off — is a suggestion safe to show | Consultant, per team | `[TBD — to be named per team]` |
-| Departmental accountability | Chairman of Surgical Oncology | `[TBD — to be confirmed]` |
-| Technical — code, deployment, secrets | Tuqa Al-Ghazawi | Acting |
-| Guideline index — what is indexed, and when it is refreshed | `[TBD]` | Not assigned |
-| Information governance — any move toward real data | KHCC IG / AIDI | `[TBD — not yet engaged]` |
+**Tuqa Al-Ghazawi owns every area below**, and is the person to contact about
+any of them.
 
-> Most of these are `[TBD]` because the tool is a prototype with one author. They
-> must be filled before it is shown to a clinical committee, and certainly before
-> any real data. Naming an owner is a prerequisite for the incident path below
-> working at all.
+| Area | Owner |
+|---|---|
+| Clinical content — checklists, pathway rules, MDC categories | Tuqa Al-Ghazawi |
+| Clinical sign-off — whether a suggestion is safe to show | Tuqa Al-Ghazawi |
+| Guideline index — what is indexed, and when it is refreshed | Tuqa Al-Ghazawi |
+| Technical — code, deployment, secrets | Tuqa Al-Ghazawi |
+| Incident triage (§14.6) | Tuqa Al-Ghazawi |
+
+> **Single-owner risk, stated plainly.** One person owning all five is correct
+> for a prototype and wrong for anything more. Two areas in particular have to be
+> handed over before this tool is used beyond a demonstration:
+>
+> - **Departmental accountability** — a consultant or the chairman answerable for
+>   the tool being used at all. Today the author both builds it and judges
+>   whether it is safe, which is not a separable review.
+> - **Information governance** — any move toward real patient data needs KHCC IG
+>   involvement, which has not been sought because the tool has never held real
+>   data.
+>
+> Neither is a gap in the prototype. Both are prerequisites for leaving prototype
+> status, and are listed in §17.
 
 ### 14.6 Incident path
 
@@ -874,10 +885,11 @@ than inferred.
 - [ ] **Prep-clinic queue.** Resolved: patients drop off once the MDC has
       discussed them, and her list is grouped by team. Still open — a patient
       who never reaches an MDC at all stays on her queue indefinitely.
-- [ ] **Guideline coverage.** NCCN agreed as the source for hepatobiliary and
-      oesophageal. The ingestion path is built (`manage.py add_guideline`); the
-      PDFs still need to be supplied and indexed. Sarcoma is also uncovered —
-      NCCN too?
+- [ ] **Guideline coverage.** NCCN agreed as the source for hepatobiliary,
+      oesophageal and sarcoma. The ingestion path is built and the label
+      matching handles NCCN's own titles; the three PDFs still need to be
+      downloaded and indexed. Until then those diseases are correctly refused
+      rather than answered from a neighbouring cancer.
 - [ ] **Agent tools.** Should `guideline_lookup` and `drug_interaction_check` call
       `ai/rag` and `ai/pharmacy` for real, or is the direct route enough?
 - [ ] **Confirmed extractions** are stored but not copied into the patient's
@@ -889,6 +901,10 @@ than inferred.
       URL. Azure remains the intended long-term host (§4); Render is the course
       pattern and is what `render.yaml` targets.
 - [ ] **Real EHR access.** Which system, which interface, whose approval?
+- [ ] **A second owner.** The author currently owns clinical content, clinical
+      sign-off, the guideline index, the code and incident triage (§14.5). A
+      consultant or the chairman must take departmental accountability, and KHCC
+      IG must be engaged, before the tool is used beyond a demonstration.
 
 ---
 
