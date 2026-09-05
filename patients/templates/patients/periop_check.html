@@ -15,21 +15,27 @@
 {% if error %}
   <div class="flash error">The medication check could not run: {{ error }}</div>
 
-{% elif not result.linked %}
+{% elif not result.synced %}
   <div class="flash warning">
-    <strong>No medication record is linked for this patient.</strong>
-    {% if patient.pharmacy_mrn %}
-      MRN <code>{{ patient.pharmacy_mrn }}</code> was not found in the pharmacy system.
-    {% else %}
-      No pharmacy MRN has been recorded against this patient.
-    {% endif %}
-    This is <em>not</em> the same as "no medications to hold" &mdash; nothing has
-    been checked. Confirm the patient's medications directly before surgery.
+    <strong>This patient's medications have never been read from the EHR.</strong>
+    Nothing has been checked &mdash; which is <em>not</em> the same as
+    &ldquo;no medications to hold&rdquo;. Pull the record before relying on this page.
   </div>
+  {% if user.can_record_clinical %}
+    <form method="post" action="{% url 'sync_ehr_patient' patient.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn">Fetch this patient from the EHR</button>
+    </form>
+  {% endif %}
 
 {% else %}
   <div class="card">
-    <h2>Alerts</h2>
+    <h2>
+      Alerts
+      <span class="right muted" style="font-size:12px">
+        EHR read {{ result.synced_at|date:"d M Y H:i" }}
+      </span>
+    </h2>
     {% if result.alerts %}
       <table class="grid">
         <tr><th>Drug</th><th>Action</th><th>Timing</th><th>Last dose by</th><th>Refer</th></tr>
@@ -45,25 +51,85 @@
             {% elif alert.action == "HOLD" %}<span class="pill pending">Hold</span>
             {% else %}<span class="pill info">Review</span>{% endif %}
           </td>
-          <td>{{ alert.timing }}</td>
+          <td>{{ alert.timing }}
+            {% if alert.matched_by == "class" %}
+              <div style="color:var(--red);font-size:12px;margin-top:3px;font-weight:600">
+                Not named in the guideline. Matched on its class
+                ({{ alert.drug_class }}), for which the rule is
+                {{ alert.guideline_action }} &mdash; confirm this one yourself.
+              </div>
+            {% endif %}
+            {% if alert.rationale %}
+              <div class="muted" style="font-size:12px;margin-top:3px">{{ alert.rationale }}</div>
+            {% endif %}
+          </td>
           <td>{% if alert.stop_by %}<strong>{{ alert.stop_by }}</strong>{% else %}&mdash;{% endif %}</td>
           <td class="muted">{{ alert.consult|default:"&mdash;" }}</td>
         </tr>
         {% endfor %}
       </table>
+    {% elif result.checked %}
+      <p class="empty">
+        No medication holds flagged across {{ result.checked }} active medication(s).
+      </p>
     {% else %}
       <p class="empty">
-        No medication holds flagged across {{ result.orders_checked }} active
-        medication(s).
+        The EHR returned no active medications for this patient.
       </p>
     {% endif %}
+  </div>
 
-    <p class="help" style="margin-top:16px">
-      {{ result.orders_checked }} active medication(s) checked against
-      {{ result.source }}. This is a deterministic rule check, not a model
-      output &mdash; but it can only see medications recorded in the pharmacy
-      system. The surgical team remains responsible for the final decision.
+  {% if result.continued %}
+  <div class="card">
+    <h2>Continued through surgery</h2>
+    <table class="grid">
+      <tr><th>Drug</th><th></th></tr>
+      {% for item in result.continued %}
+      <tr>
+        <td>{{ item.drug }}<div class="muted" style="font-size:12px">{{ item.drug_class }}</div></td>
+        <td style="text-align:right"><span class="pill done">Continue</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <p class="help" style="margin-top:14px">
+      The guideline names each of these and says to continue it.
     </p>
+  </div>
+  {% endif %}
+
+  {% if result.unmatched %}
+  <div class="card" style="border-left:4px solid var(--red)">
+    <h2 style="color:var(--red)">Not covered by the guideline</h2>
+    <table class="grid">
+      <tr><th>Drug</th><th></th></tr>
+      {% for item in result.unmatched %}
+      <tr>
+        <td>{{ item.drug }}<div class="muted" style="font-size:12px">{{ item.drug_class }}</div></td>
+        <td style="text-align:right"><span class="pill alert">Not checked</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <p class="help" style="margin-top:14px">
+      The guideline says nothing about these &mdash; neither by name nor by class.
+      That is <strong>not</strong> the same as clearing them. Decide on each one
+      yourself.
+    </p>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <p class="help" style="margin:0">
+      {{ result.checked }} active medication(s) checked against {{ result.source }}.
+      This is a deterministic rule check, not a model output &mdash; but it can only
+      see what the EHR holds. The surgical team remains responsible for the final
+      decision.
+    </p>
+    {% if user.can_record_clinical %}
+      <form method="post" action="{% url 'sync_ehr_patient' patient.pk %}" style="margin-top:14px">
+        {% csrf_token %}
+        <button type="submit" class="btn ghost small">Re-read the EHR</button>
+      </form>
+    {% endif %}
   </div>
 {% endif %}
 

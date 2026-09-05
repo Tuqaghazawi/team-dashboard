@@ -62,21 +62,6 @@ RESULTS = {
     "PFT": "FEV1 82% predicted.",
 }
 
-# Links demo patients to records in the separate synthetic pharmacy database
-# (ai/pharmacy/pharmacy.db). Two patients are deliberately left unlinked so the
-# "no medication record found" path is visible in the demo.
-PHARMACY_MRNS = {
-    "310403": "MRN4003",
-    "310404": "MRN4007",
-    "310405": "MRN4004",
-    "310406": "MRN4009",
-    "310407": "MRN4011",
-    "310408": "MRN4013",
-    "310409": "MRN4015",
-    "310410": "MRN4017",
-    "310412": "MRN4019",
-}
-
 CASES = [
     # (name, mrn, dob, diagnosis, specialty, sex, comorbidities, stage, genetics, target_stage)
     ("Layla Haddad", "310401", date(1968, 3, 14), "Right breast cancer", "BREAST", "F",
@@ -210,9 +195,6 @@ class Command(BaseCommand):
                 specialty=specialty, team=self.teams[team_for[specialty]],
                 sex=sex, comorbidities=comorbidities, clinical_stage=stage,
                 genetic_testing=genetics, stage=Patient.Stage.REGISTERED,
-                # Link most (not all) demo patients to a synthetic pharmacy
-                # record, so the "no record linked" case is visible too.
-                pharmacy_mrn=PHARMACY_MRNS.get(mrn, ""),
             )
             self._advance(patient, target)
             made += 1

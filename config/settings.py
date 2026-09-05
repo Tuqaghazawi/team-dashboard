@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'mdc',
     'notifications',
     'reports',
+    'ehr',
     'ai.guidelines',
 ]
 

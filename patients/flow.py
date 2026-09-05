@@ -82,17 +82,24 @@ def on_result_recorded(investigation):
     """
     patient = investigation.patient
     if investigation.purpose == Investigation.Purpose.BASELINE:
-        if patient.workup_ready:
-            return notify(
-                team_recipients(patient.team),
-                patient,
-                Notification.Kind.WORKUP_READY,
-                f"Workup complete — ready for MDC: {patient.name}",
-                f"All requested investigations for {patient.name} (MRN {patient.mrn}) "
-                f"are back. The patient can now be presented at MDC.\n\n"
-                f"{patient_url(patient)}",
-            )
-        return []
+        if not patient.workup_ready:
+            return []
+        # Only once. Otherwise every later edit — and every pass of the EHR sync
+        # job — re-announces a workup that was already complete.
+        already = patient.notifications.filter(
+            kind=Notification.Kind.WORKUP_READY
+        ).exists()
+        if already:
+            return []
+        return notify(
+            team_recipients(patient.team),
+            patient,
+            Notification.Kind.WORKUP_READY,
+            f"Workup complete — ready for MDC: {patient.name}",
+            f"All requested investigations for {patient.name} (MRN {patient.mrn}) "
+            f"are back. The patient can now be presented at MDC.\n\n"
+            f"{patient_url(patient)}",
+        )
 
     # Restaging: tell the team once every restaging report is in, so they can
     # review before the upcoming clinic.

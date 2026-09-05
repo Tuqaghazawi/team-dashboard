@@ -11,6 +11,8 @@ from django.views.decorators.http import require_POST
 
 from ai.extraction import review
 from ai.pharmacy import periop_api
+from ehr import source as ehr_source
+from ehr import sync as ehr_sync
 from teams.models import FellowAssignment, Team
 
 from . import categories, flow
@@ -604,7 +606,7 @@ def periop_check_view(request, pk, booking_pk):
 
     result, error = None, None
     try:
-        result = periop_api.periop_alerts(patient.pharmacy_mrn, booking.planned_date)
+        result = periop_api.periop_alerts(patient, booking.planned_date)
     except periop_api.PeriopUnavailable as exc:
         error = str(exc)
 
@@ -613,3 +615,38 @@ def periop_check_view(request, pk, booking_pk):
         "patients/periop_check.html",
         {"patient": patient, "booking": booking, "result": result, "error": error},
     )
+
+
+@login_required
+@require_POST
+def sync_ehr_patient(request, pk):
+    """Read this patient's results and medications from the EHR now.
+
+    The same sync the scheduled job runs, on one patient, so the team does not
+    have to wait for the next pass.
+    """
+    patient = get_object_or_404(visible_patients(request.user), pk=pk)
+    if not request.user.can_record_clinical:
+        raise PermissionDenied("Only the clinical team may pull from the EHR.")
+
+    try:
+        outcome = ehr_sync.sync_patient(patient)
+    except ehr_source.EHRUnavailable as exc:
+        messages.error(request, f"The EHR could not be reached ({exc}).")
+        return redirect(request.POST.get("next") or "patient_detail", pk=patient.pk)
+
+    if outcome.notified:
+        messages.success(request, f"EHR read: {outcome.summary()}. The team has been emailed.")
+    elif outcome.anything_happened:
+        messages.success(request, f"EHR read: {outcome.summary()}.")
+    else:
+        messages.info(request, f"EHR read: {outcome.summary()}.")
+
+    for code in outcome.unmatched:
+        messages.warning(
+            request,
+            f"The EHR holds a '{code}' report that is not on this patient's "
+            f"checklist. It has not been added — add the investigation first if "
+            f"the team wants it.",
+        )
+    return redirect(request.POST.get("next") or "patient_detail", pk=patient.pk)

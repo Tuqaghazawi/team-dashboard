@@ -7,6 +7,7 @@ urlpatterns = [
     path("register/", views.patient_register, name="patient_register"),
     path("<int:pk>/", views.patient_detail, name="patient_detail"),
     path("<int:pk>/clinical/", views.edit_clinical, name="edit_clinical"),
+    path("<int:pk>/ehr/sync/", views.sync_ehr_patient, name="sync_ehr_patient"),
     # Workup
     path("<int:pk>/workup/start/", views.begin_workup, name="begin_workup"),
     path("<int:pk>/workup/add/", views.add_investigation, name="add_investigation"),

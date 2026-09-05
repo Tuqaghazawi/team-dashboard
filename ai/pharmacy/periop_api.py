@@ -1,28 +1,29 @@
-"""Peri-operative medication check, as a return value rather than printed output.
+"""Peri-operative medication check for a dashboard patient.
 
-This reuses the Session 3 rule logic in ``periop_flag`` — the deterministic join
-between a patient's active orders and the KHCC GDLPT-25 guideline — and returns
-structured alerts the dashboard can render.
+The valuable part of the Session 3 module is its rule table — the deterministic
+join between a patient's active drugs and the KHCC GDLPT-25 guideline, with the
+stop-by date arithmetic. That is reused here unchanged (``load_rules`` and
+``parse_stop_days`` from ``periop_flag``).
 
-The one thing it adds is an explicit ``linked`` flag. The pharmacy database is a
-separate synthetic system keyed by its own MRNs, so a dashboard patient may have
-no record in it at all. "We found no medication record for this patient" and
-"this patient has no medications to hold" look identical if you only count
-alerts, and they are not the same thing — one is a safe result, the other is a
-gap. The caller is told which it is.
+What changed is where the drugs come from. ``periop_flag`` reads a standalone
+pharmacy database keyed by its own MRNs, which meant it could never see the
+patients this dashboard tracks. Medications now live on the patient, synced from
+the EHR, so the check runs on real patients.
+
+The ``synced`` flag is the safety-critical part. "We have never read the EHR for
+this patient" and "the EHR says this patient is on nothing to hold" produce the
+same empty alert list, and they are not the same thing. The caller is told which.
 """
 
-import sqlite3
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
 PHARMACY_DIR = Path(__file__).resolve().parent
-DB_PATH = PHARMACY_DIR / "pharmacy.db"
 
 
 class PeriopUnavailable(RuntimeError):
-    """The pharmacy database or the guideline rules could not be read."""
+    """The guideline rule table could not be read."""
 
 
 def _rules():
@@ -38,76 +39,104 @@ def _rules():
         raise PeriopUnavailable(f"cannot read the guideline rules file: {exc}") from exc
 
 
-def periop_alerts(pharmacy_mrn, surgery_date):
+def periop_alerts(patient, surgery_date):
     """Medication alerts for one patient before one operation.
 
     Returns::
 
         {
-          "linked": bool,        # was this MRN found in the pharmacy database?
-          "orders_checked": int,
+          "synced": bool,          # has the EHR ever been read for this patient?
+          "synced_at": datetime | None,
+          "checked": int,          # active medications considered
           "alerts": [ {drug, action, timing, stop_by, consult, high_alert}, ... ],
+          "continued": [ ... ],    # active drugs the guideline says to continue
           "source": str,
         }
     """
-    if not pharmacy_mrn:
-        return {"linked": False, "orders_checked": 0, "alerts": [], "source": ""}
-    if not DB_PATH.exists():
-        raise PeriopUnavailable(
-            "pharmacy.db has not been built — run ai/pharmacy/db_skeleton.py"
-        )
-
     rules, parse_stop_days = _rules()
     surgery = _as_date(surgery_date)
 
-    connection = sqlite3.connect(DB_PATH)
-    connection.row_factory = sqlite3.Row
-    try:
-        known = connection.execute(
-            "SELECT 1 FROM patients WHERE mrn = ?", (pharmacy_mrn,)
-        ).fetchone()
-        orders = connection.execute(
-            """
-            SELECT m.drug_name, m.drug_class, m.high_alert
-            FROM orders o
-            JOIN patients p    ON p.patient_id = o.patient_id
-            JOIN medications m ON m.medication_id = o.medication_id
-            WHERE p.mrn = ? AND o.order_status = 'active'
-            """,
-            (pharmacy_mrn,),
-        ).fetchall()
-    finally:
-        connection.close()
+    by_class = _rules_by_class(rules)
+    medications = list(patient.medications.filter(active=True))
+    alerts, continued, unmatched = [], [], []
 
-    alerts = []
-    for order in orders:
-        rule = rules.get(order["drug_name"].lower())
-        if not rule or rule["action"] == "CONTINUE":
+    for medication in medications:
+        rule = rules.get(medication.drug_name.lower())
+        matched_by = "name"
+
+        if rule is None:
+            # The guideline matches on drug name alone, so a drug it does not
+            # list by name is invisible to it — naproxen is an NSAID the table
+            # never names, and the NSAID rule says discontinue. Fall back to the
+            # drug's class so a whole class is not silently missed, and say that
+            # is what happened.
+            rule = by_class.get(_normalise(medication.drug_class))
+            matched_by = "class"
+
+        if rule is None:
+            unmatched.append(
+                {"drug": medication.drug_name, "drug_class": medication.drug_class}
+            )
             continue
+
+        if rule["action"] == "CONTINUE":
+            continued.append({"drug": medication.drug_name, "drug_class": medication.drug_class})
+            continue
+
         stop_days = parse_stop_days(rule["timing"])
         alerts.append(
             {
-                "drug": order["drug_name"],
-                "drug_class": order["drug_class"],
-                "high_alert": bool(order["high_alert"]),
-                "action": rule["action"],
+                "drug": medication.drug_name,
+                "drug_class": medication.drug_class or rule["drug_class"],
+                "high_alert": medication.high_alert,
+                "action": "CONDITIONAL" if matched_by == "class" else rule["action"],
+                "guideline_action": rule["action"],
+                "matched_by": matched_by,
                 "timing": rule["timing"],
+                "rationale": rule["rationale"],
                 "stop_by": surgery - timedelta(days=stop_days) if stop_days > 0 else None,
                 "consult": rule["consult"],
             }
         )
 
     # Most urgent first: discontinue, then hold, then review.
-    order_of = {"DISCONTINUE": 0, "HOLD": 1, "CONDITIONAL": 2}
-    alerts.sort(key=lambda a: (order_of.get(a["action"], 9), a["drug"]))
+    rank = {"DISCONTINUE": 0, "HOLD": 1, "CONDITIONAL": 2}
+    alerts.sort(key=lambda a: (rank.get(a["action"], 9), a["drug"]))
 
     source = next(iter(rules.values()))["guideline_source"] if rules else ""
     return {
-        "linked": known is not None,
-        "orders_checked": len(orders),
+        "synced": patient.ehr_synced_at is not None,
+        "synced_at": patient.ehr_synced_at,
+        "checked": len(medications),
         "alerts": alerts,
+        "continued": sorted(continued, key=lambda c: c["drug"]),
+        # Neither named nor class-matched. Listed separately, never as "continue":
+        # the guideline has said nothing about these, which is not the same as
+        # having cleared them.
+        "unmatched": sorted(unmatched, key=lambda c: c["drug"]),
         "source": source,
     }
+
+
+def _rules_by_class(rules):
+    """The strictest non-CONTINUE rule for each drug class."""
+    rank = {"DISCONTINUE": 0, "HOLD": 1, "CONDITIONAL": 2}
+    best = {}
+    for rule in rules.values():
+        if rule["action"] == "CONTINUE":
+            continue
+        key = _normalise(rule["drug_class"])
+        if not key:
+            continue
+        current = best.get(key)
+        if current is None or rank.get(rule["action"], 9) < rank.get(current["action"], 9):
+            best[key] = rule
+    return best
+
+
+def _normalise(text):
+    """Loose class key, so 'NSAID' and 'NSAIDs' match."""
+    return (text or "").strip().lower().rstrip("s")
 
 
 def _as_date(value):

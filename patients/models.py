@@ -80,11 +80,9 @@ class Patient(models.Model):
         max_length=60, blank=True, help_text="Clinical stage, e.g. 'cT4N+', 'T3N2'.",
     )
 
-    pharmacy_mrn = models.CharField(
-        max_length=20, blank=True,
-        help_text="This patient's MRN in the pharmacy system, for the peri-op "
-                  "medication check. Blank means no medication record is linked.",
-    )
+    # When the EHR was last read for this patient. Null means never — which is
+    # not the same as "the EHR returned nothing", and the two must not look alike.
+    ehr_synced_at = models.DateTimeField(null=True, blank=True)
 
     # --- Bookkeeping ---
     registered_at = models.DateTimeField(auto_now_add=True)
@@ -406,3 +404,34 @@ class ReportExtraction(models.Model):
     @property
     def is_confirmed(self):
         return self.status == self.Status.CONFIRMED
+
+
+class Medication(models.Model):
+    """One of a patient's medication orders, pulled from the EHR.
+
+    Held on the patient rather than in a separate pharmacy database, so the
+    peri-operative check runs against the patients this dashboard actually
+    tracks. The KHCC guideline rules that interpret these still come from
+    ``ai/pharmacy``.
+    """
+
+    patient = models.ForeignKey(
+        Patient, on_delete=models.CASCADE, related_name="medications"
+    )
+    drug_name = models.CharField(max_length=120)
+    drug_class = models.CharField(max_length=120, blank=True)
+    high_alert = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
+    started_on = models.DateField(null=True, blank=True)
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["drug_name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["patient", "drug_name"], name="unique_drug_per_patient"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.patient.name} — {self.drug_name}"

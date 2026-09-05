@@ -150,11 +150,21 @@
   {% endif %}
 
   {% if user.can_record_clinical %}
-    <form method="post" action="{% url 'request_suggestion' patient.pk 'WORKUP' %}" style="margin-top:16px">
-      {% csrf_token %}
-      <input type="hidden" name="next" value="patient_detail">
-      <button type="submit" class="btn ghost small">Ask the guideline brain what workup is needed</button>
-    </form>
+    <div style="margin-top:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <form method="post" action="{% url 'sync_ehr_patient' patient.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn small">Fetch results from the EHR</button>
+      </form>
+      <form method="post" action="{% url 'request_suggestion' patient.pk 'WORKUP' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="patient_detail">
+        <button type="submit" class="btn ghost small">Ask the guideline brain what workup is needed</button>
+      </form>
+      <span class="muted" style="font-size:12.5px">
+        {% if patient.ehr_synced_at %}EHR last read {{ patient.ehr_synced_at|date:"d M Y H:i" }}
+        {% else %}EHR not yet read for this patient{% endif %}
+      </span>
+    </div>
   {% endif %}
 
   {% for suggestion in patient.guideline_suggestions.all %}

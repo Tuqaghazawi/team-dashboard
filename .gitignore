@@ -41,3 +41,4 @@ ai/rag/*.pdf
 ai/rag/data/
 ai/pharmacy/pharmacy.db
 ai/agents/mdc_checkpoints.sqlite3
+data/synthetic/ehr.sqlite3

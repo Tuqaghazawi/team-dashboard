@@ -11,6 +11,7 @@ from notifications.models import Notification
 from patients import flow
 from patients.models import (
     Investigation,
+    Medication,
     Patient,
     ReportExtraction,
     SurgeryBooking,
@@ -376,13 +377,81 @@ class PeriopCheckTests(TestCase):
         self.team = Team.objects.create(consultant="Dr. Test", specialty="Colorectal cancer")
         self.patient = make_patient(self.team, mrn="900060")
 
-    def test_a_patient_with_no_pharmacy_mrn_is_reported_as_unlinked(self):
+    def test_a_patient_never_read_from_the_ehr_is_reported_as_unsynced(self):
         from ai.pharmacy import periop_api
 
-        result = periop_api.periop_alerts(self.patient.pharmacy_mrn, "2026-10-01")
-        self.assertFalse(result["linked"])
+        result = periop_api.periop_alerts(self.patient, "2026-10-01")
+        self.assertFalse(result["synced"])
         self.assertEqual(result["alerts"], [])
-        self.assertEqual(result["orders_checked"], 0)
+        self.assertEqual(result["checked"], 0)
+
+    def test_a_synced_patient_on_nothing_is_distinguishable_from_an_unread_one(self):
+        from ai.pharmacy import periop_api
+
+        self.patient.ehr_synced_at = timezone.now()
+        self.patient.save()
+        result = periop_api.periop_alerts(self.patient, "2026-10-01")
+        self.assertTrue(result["synced"])
+        self.assertEqual(result["checked"], 0)
+
+    def test_a_named_drug_is_flagged_with_its_stop_date(self):
+        from ai.pharmacy import periop_api
+
+        self.patient.ehr_synced_at = timezone.now()
+        self.patient.save()
+        Medication.objects.create(
+            patient=self.patient, drug_name="Warfarin",
+            drug_class="Vitamin K antagonists", high_alert=True,
+        )
+        result = periop_api.periop_alerts(self.patient, date(2026, 10, 1))
+        self.assertEqual(len(result["alerts"]), 1)
+        alert = result["alerts"][0]
+        self.assertEqual(alert["drug"], "Warfarin")
+        self.assertEqual(alert["matched_by"], "name")
+        self.assertIsNotNone(alert["stop_by"])
+
+    def test_a_drug_the_guideline_never_names_is_caught_by_its_class(self):
+        from ai.pharmacy import periop_api
+
+        # Naproxen is an NSAID; the rule table names only ibuprofen, celecoxib
+        # and diclofenac, so name-only matching would miss it entirely.
+        self.patient.ehr_synced_at = timezone.now()
+        self.patient.save()
+        Medication.objects.create(
+            patient=self.patient, drug_name="Naproxen", drug_class="NSAID"
+        )
+        result = periop_api.periop_alerts(self.patient, date(2026, 10, 1))
+        self.assertEqual(len(result["alerts"]), 1)
+        alert = result["alerts"][0]
+        self.assertEqual(alert["matched_by"], "class")
+        self.assertEqual(alert["guideline_action"], "DISCONTINUE")
+        self.assertEqual(result["continued"], [])
+
+    def test_an_unknown_drug_is_listed_as_unchecked_not_as_continue(self):
+        from ai.pharmacy import periop_api
+
+        self.patient.ehr_synced_at = timezone.now()
+        self.patient.save()
+        Medication.objects.create(
+            patient=self.patient, drug_name="Investigational XYZ", drug_class="Unknown"
+        )
+        result = periop_api.periop_alerts(self.patient, date(2026, 10, 1))
+        self.assertEqual(result["continued"], [])
+        self.assertEqual(len(result["unmatched"]), 1)
+        self.assertEqual(result["unmatched"][0]["drug"], "Investigational XYZ")
+
+    def test_a_stopped_drug_is_not_checked(self):
+        from ai.pharmacy import periop_api
+
+        self.patient.ehr_synced_at = timezone.now()
+        self.patient.save()
+        Medication.objects.create(
+            patient=self.patient, drug_name="Warfarin",
+            drug_class="Vitamin K antagonists", active=False,
+        )
+        result = periop_api.periop_alerts(self.patient, date(2026, 10, 1))
+        self.assertEqual(result["checked"], 0)
+        self.assertEqual(result["alerts"], [])
 
     def test_the_page_says_no_record_rather_than_no_holds(self):
         booking = SurgeryBooking.objects.create(
@@ -397,7 +466,7 @@ class PeriopCheckTests(TestCase):
             f"/patients/{self.patient.pk}/surgery/{booking.pk}/periop/"
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "No medication record is linked")
+        self.assertContains(response, "never been read from the EHR")
         self.assertNotContains(response, "No medication holds flagged")
 
 

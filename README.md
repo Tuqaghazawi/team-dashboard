@@ -29,6 +29,8 @@ pip install -r requirements.txt
 cp .env.example .env            # then fill in OPENAI_API_KEY if you want the guideline brain
 python manage.py migrate
 python manage.py seed_demo      # synthetic teams, users and patients at every stage
+python manage.py build_ehr      # synthetic EHR: results + medication orders
+python manage.py sync_ehr       # pull those into the dashboard
 python manage.py runserver
 ```
 
@@ -52,18 +54,27 @@ created in a real deployment.
 python manage.py test
 ```
 
-### The daily alert job
+### The scheduled jobs
 
-Two alerts are time-based rather than triggered by a click. Run this once a day
-from Task Scheduler or cron:
+Two jobs run on a schedule (Task Scheduler or cron). Neither needs a click.
+
+```bash
+python manage.py sync_ehr
+```
+
+Reads the EHR and fills in any investigation whose report has been finalised
+since the last pass — baseline or restaging. Completing a patient's workup emails
+the team that they are ready to present; completing their restaging emails the
+team to review before the next clinic. Both go through the same code path a
+manually typed result uses, and each is announced once, not once per pass.
 
 ```bash
 python manage.py send_due_alerts
 ```
 
-It emails teams whose NACT/TNT patients have reached their last cycle (so
-restaging gets ordered), and reminds them about post-operative patients that have
-not been re-listed for MDC.
+Emails teams whose NACT/TNT patients have reached their last cycle (so restaging
+gets ordered), and reminds them about post-operative patients not re-listed for
+MDC.
 
 ### Email
 
@@ -118,11 +129,28 @@ receptors, stage) are marked critical and sorted first, the extractor's own
 `needs_human_review` flag is shown, and the clinician's corrections are stored
 separately from what the model returned. Nothing reaches the record unconfirmed.
 
+**The EHR integration** — `ehr/source.py` is the whole surface the app uses to
+read the hospital: results and medication orders for one MRN. Behind it today is
+a synthetic SQLite database keyed by the patients' own MRNs; replacing it with a
+real connector (HL7/FHIR, a linked-server view) is the entire migration.
+
+Two rules shape the sync. A result is only taken for an investigation the team
+actually asked for — a report the EHR holds that nobody requested is reported
+back, never silently added. And only finalised reports are taken, so "all results
+are back" never becomes true on the strength of a preliminary one.
+
 **Peri-operative medication check** — a patient booked for surgery is checked
-against the KHCC GDLPT-25 rules. The pharmacy system is separate and keyed by its
-own MRNs, so the page distinguishes "no medication record is linked" from "no
-holds flagged" — those look the same if you only count alerts, and only one of
-them is safe.
+against the KHCC GDLPT-25 rules, using the medications synced onto that patient.
+Three distinctions the page keeps separate, because collapsing any of them is
+unsafe:
+
+- *never read from the EHR* vs *read, and this patient is on nothing to hold*;
+- a drug **named** in the guideline vs one matched only by its **class**. The
+  rule table matches on drug name alone, so naproxen — an NSAID it never names —
+  was invisible to it. Class matching catches those, flagged as needing
+  confirmation rather than presented as a firm rule;
+- a drug the guideline covers vs one it says nothing about. The latter is listed
+  under "not covered", never under "continue".
 
 **The multi-agent MDC workflow** — the Session 5 LangGraph workflow runs a
 guideline agent and a peri-op medication agent over a case, drafts a
@@ -187,6 +215,7 @@ team dashboard/
 │   ├── categories.py  <- the buckets the dashboard counts
 │   └── workup.py      <- the standard checklist per specialty
 ├── mdc/               <- MDC listings, decisions, and slide generation
+├── ehr/               <- reading the hospital EHR: results and medication orders
 ├── notifications/     <- one row per alert per person, plus the email that goes with it
 ├── reports/           <- the prep-clinic Excel reports
 ├── templates/         <- the shared base template
