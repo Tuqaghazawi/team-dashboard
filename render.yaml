@@ -14,7 +14,10 @@ services:
     region: frankfurt
     buildCommand: "./build.sh"
     startCommand: "gunicorn config.wsgi:application"
-    healthCheckPath: /accounts/login/
+    # No healthCheckPath on purpose. Render treats only a 200 as healthy, and
+    # with DEBUG off every HTTP request is answered with a 301 to HTTPS — an
+    # internal probe would mark a working service unhealthy. Render still
+    # detects that the port is bound.
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.7"

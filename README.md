@@ -118,6 +118,28 @@ early.
 DEBUG=False DJANGO_SECRET_KEY=... python manage.py check --deploy
 ```
 
+#### What the deployed demo cannot do
+
+**The guideline brain is unavailable on Render**, and this is deliberate rather
+than an oversight. Answering a guideline question needs the ChromaDB index; the
+index is built from the KHCC and NCCN PDFs; those are licensed and git-ignored,
+and the repository is public. So the deployed instance has no index.
+
+What that means in practice: the guideline suggestions, the agentic self-check
+and the slide-note evidence report themselves **unavailable** — not a refusal,
+which would claim the guidelines were consulted and had nothing to say. Every
+other part of the pathway works: registration and notifications, the workup
+checklist, the EHR sync, MDC listings and decisions, NACT/TNT follow-up, surgery
+and the post-op loop, slides, reports, and the peri-operative medication check
+(its rule table is a CSV in the repository).
+
+To demonstrate the guideline brain, run it locally with the PDFs in
+`data/guidelines/` and the index built.
+
+Set `SEED_DEMO=true` on the first deploy to create the synthetic patients, then
+unset it — seeding is opt-in so a redeploy never resets a demo somebody is
+part-way through.
+
 ### Email
 
 With `EMAIL_HOST` unset, notification emails print to the console — useful for a

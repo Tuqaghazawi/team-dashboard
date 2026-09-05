@@ -856,10 +856,26 @@ real `DJANGO_SECRET_KEY` and HSTS set. Eleven tests in `config/tests.py` pin the
 HTTPS settings, the proxy header, the PostgreSQL switch and WhiteNoise's
 position in the middleware, so a settings edit cannot quietly undo them.
 
-**Status: configured and verified, not yet deployed.** Nothing has been
-provisioned on Render, so there is no live URL. The blueprint deliberately does
-not carry `OPENAI_API_KEY` — that is set in the Render dashboard, and without it
-the AI features report "unavailable" while the rest of the pathway works.
+**What the deployed instance cannot do.** It has no guideline index. Building one
+needs the KHCC and NCCN PDFs, which are licensed and git-ignored, and the
+repository is public — so the guideline brain and the agentic self-check report
+themselves **unavailable** there. That is the honest failure: not a refusal,
+which would claim the guidelines were consulted and had nothing to say.
+Everything else runs, including the peri-operative check, whose rule table is a
+CSV in the repository.
+
+Three details the blueprint gets right for reasons worth recording:
+
+- `build.sh` is committed **executable and LF-terminated** (`.gitattributes`
+  pins it). A shell script committed with CRLF fails on Linux with "bad
+  interpreter", and a non-executable one fails Render's `./build.sh` outright.
+- **No `healthCheckPath`.** Render treats only a 200 as healthy, and with
+  `DEBUG` off every HTTP request is answered 301 to HTTPS — an internal probe
+  would mark a working service unhealthy.
+- `OPENAI_API_KEY` is deliberately **not** in the blueprint; it is set in the
+  Render dashboard.
+
+**Status: configured and verified, not yet provisioned.** There is no live URL.
 
 ### 16.2 Secrets
 

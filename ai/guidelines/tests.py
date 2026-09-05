@@ -9,6 +9,7 @@ from datetime import date, timedelta
 from django.test import TestCase
 from django.utils import timezone
 
+from accounts.models import User
 from ai.guidelines import suggest
 from patients.models import Investigation, Patient, SurgeryBooking, TreatmentCourse
 from teams.models import Team
@@ -438,3 +439,51 @@ class LabelAliasTests(TestCase):
         # indexed and then never consulted.
         for topic in ["liver", "gastric", "breast", "sarcoma"]:
             self.assertFalse(suggest.label_covers("Upper GI 2026", topic))
+
+
+class IndexUnavailableTests(TestCase):
+    """With no guideline index — as on the deployed instance — say so.
+
+    The deployed demo has no ChromaDB, because building one needs licensed PDFs
+    that cannot be committed. What matters is *which* failure the user sees: an
+    honest "unavailable", not a refusal. A refusal claims the guidelines were
+    consulted and had nothing, which would be a lie about work never done.
+    """
+
+    def setUp(self):
+        self.team = Team.objects.create(consultant="Dr. Test", specialty="Breast")
+        self.patient = Patient.objects.create(
+            name="Test", mrn="963000", date_of_birth=date(1960, 1, 1),
+            diagnosis="Right breast cancer", specialty="BREAST", team=self.team,
+            clinical_stage="cT2N0",
+        )
+        suggest._indexed_cache = None
+        self.addCleanup(setattr, suggest, "_indexed_cache", None)
+
+    def test_an_unreadable_index_reports_unavailable_not_a_refusal(self):
+        from unittest import mock
+
+        with mock.patch.object(
+            suggest, "_rag", side_effect=suggest.GuidelineUnavailable("no collection")
+        ):
+            with self.assertRaises(suggest.GuidelineUnavailable):
+                suggest.suggest_decision(self.patient)
+
+    def test_the_page_shows_unavailable_rather_than_a_wrong_answer(self):
+        from unittest import mock
+
+        user = User.objects.create_user(
+            "gx", password="x", role=User.Role.CONSULTANT, team=self.team
+        )
+        self.client.force_login(user)
+        with mock.patch.object(
+            suggest, "suggest_decision",
+            side_effect=suggest.GuidelineUnavailable("no collection"),
+        ):
+            response = self.client.post(
+                f"/mdc/suggest/{self.patient.pk}/DECISION/", follow=True
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "guideline brain is unavailable")
+        # Nothing stored, so no answer can later be mistaken for a real one.
+        self.assertEqual(self.patient.guideline_suggestions.count(), 0)
