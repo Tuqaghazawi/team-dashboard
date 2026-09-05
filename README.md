@@ -256,6 +256,17 @@ extractor can silently drop critical findings. That is why every extracted or
 suggested value in this app is shown for a clinician to confirm, and why nothing
 AI-generated is saved to a patient record on its own.
 
+## The PRD
+
+[`docs/PRD.md`](docs/PRD.md) is the source of truth.
+[`docs/Capstone2_PRD_Surgical_Oncology_Dashboard.docx`](docs/Capstone2_PRD_Surgical_Oncology_Dashboard.docx)
+is the Word version for submission, generated from it — so the two cannot drift:
+
+```bash
+npm install docx
+node scripts/build_prd_docx.js docs/PRD.md docs/Capstone2_PRD_Surgical_Oncology_Dashboard.docx
+```
+
 ## Folder map
 
 ```
