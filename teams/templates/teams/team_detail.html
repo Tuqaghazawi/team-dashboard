@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% block title %}{{ team.consultant }} &middot; Team{% endblock %}
+{% block nav_team %}on{% endblock %}
+{% block nav_team_scoped %}on{% endblock %}
+
+{% block extra_head %}
+<style>
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+           gap: 14px; margin-bottom: 24px; }
+  .tile { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+          padding: 16px 18px; text-decoration: none; color: inherit; display: block; }
+  .tile:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.13); }
+  .tile .n { font-size: 30px; font-weight: 700; color: var(--teal); line-height: 1.1; }
+  .tile .l { font-size: 12px; color: var(--muted); text-transform: uppercase;
+             letter-spacing: 0.4px; margin-top: 5px; font-weight: 600; }
+  .tile.flag .n { color: var(--red); }
+
+  .people { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; }
+  .person { display: flex; gap: 11px; align-items: flex-start; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--teal); color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 13px;
+            font-weight: 700; flex: 0 0 36px; }
+  .avatar.fellow { background: var(--gold); color: #4a3208; }
+  .avatar.empty { background: #c9d6d5; }
+  .person .nm { font-size: 14px; font-weight: 600; }
+  .person .rl { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+  .attention { border-left: 4px solid var(--gold); }
+  .attention h2 { color: #9a6b16; }
+</style>
+{% endblock %}
+
+{% block header %}
+<header class="page">
+  <h1>{{ team.consultant }}</h1>
+  <p>
+    {{ team.specialty }} &middot; {{ total }} patient(s) on the team
+    {% if user.can_see_all_patients %}
+      &middot; <a href="{% url 'team_home' %}">all teams</a>
+    {% endif %}
+  </p>
+</header>
+{% endblock %}
+
+{% block content %}
+
+<div class="tiles">
+  <a class="tile" href="{% url 'patient_list' %}?team={{ team.pk }}&amp;new=1">
+    <div class="n">{{ counts.new }}</div><div class="l">New &mdash; no MDC plan</div></a>
+  <a class="tile" href="{% url 'patient_list' %}?team={{ team.pk }}&amp;stage=WORKUP">
+    <div class="n">{{ counts.workup }}</div><div class="l">In workup</div></a>
+  <a class="tile" href="{% url 'mdc_board' %}">
+    <div class="n">{{ counts.mdc_next_week }}</div><div class="l">MDC next week</div></a>
+  <a class="tile" href="{% url 'treatment_list' %}">
+    <div class="n">{{ counts.neoadjuvant }}</div><div class="l">NACT / TNT</div></a>
+  <a class="tile" href="{% url 'surgery_schedule' %}">
+    <div class="n">{{ counts.surgery }}</div><div class="l">For surgery</div></a>
+  <a class="tile {% if counts.postop_flagged %}flag{% endif %}"
+     href="{% url 'patient_list' %}?team={{ team.pk }}&amp;stage=POSTOP">
+    <div class="n">{{ counts.postop_flagged }}</div><div class="l">Post-op &mdash; needs MDC</div></a>
+</div>
+
+<div class="card">
+  <h2>
+    The team
+    {% if user.can_manage_team_schedule %}
+      <a class="btn ghost small right" href="{% url 'rotation_list' %}">Manage rotations</a>
+    {% endif %}
+  </h2>
+  <div class="people">
+    {% for person in members.consultants %}
+      <div class="person">
+        <div class="avatar">{{ person.get_full_name|default:person.username|slice:":2"|upper }}</div>
+        <div><div class="nm">{{ person.get_full_name|default:person.username }}</div>
+             <div class="rl">Consultant</div></div>
+      </div>
+    {% empty %}
+      <div class="person">
+        <div class="avatar empty">&mdash;</div>
+        <div><div class="nm">{{ team.consultant }}</div>
+             <div class="rl">Consultant &mdash; no login yet</div></div>
+      </div>
+    {% endfor %}
+
+    {% for person in members.coordinators %}
+      <div class="person">
+        <div class="avatar">{{ person.get_full_name|default:person.username|slice:":2"|upper }}</div>
+        <div><div class="nm">{{ person.get_full_name|default:person.username }}</div>
+             <div class="rl">Nurse coordinator</div></div>
+      </div>
+    {% empty %}
+      <div class="person">
+        <div class="avatar empty">&mdash;</div>
+        <div><div class="nm">No coordinator</div>
+             <div class="rl">Nurse coordinator</div></div>
+      </div>
+    {% endfor %}
+
+    {% for rotation in members.rotations %}
+      <div class="person">
+        <div class="avatar fellow">{{ rotation.fellow.get_full_name|default:rotation.fellow.username|slice:":2"|upper }}</div>
+        <div><div class="nm">{{ rotation.fellow.get_full_name|default:rotation.fellow.username }}</div>
+             <div class="rl">Fellow &middot; until {{ rotation.end_date }}</div></div>
+      </div>
+    {% empty %}
+      <div class="person">
+        <div class="avatar empty">&mdash;</div>
+        <div><div class="nm">No fellow assigned</div>
+             <div class="rl">Rotation {{ quarter.0 }} to {{ quarter.1 }}</div></div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% if needs_listing or needs_scheduling or postop_flagged %}
+<div class="card attention">
+  <h2>Needs attention</h2>
+
+  {% if needs_listing %}
+    <p style="font-size:13.5px;margin:0 0 10px" class="muted">
+      Workup complete, but not on any MDC list.
+    </p>
+    <table class="grid">
+      <tr><th>Patient</th><th>MRN</th><th>Diagnosis</th><th></th></tr>
+      {% for patient in needs_listing %}
+      <tr>
+        <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+        <td>{{ patient.mrn }}</td>
+        <td>{{ patient.diagnosis }}</td>
+        <td style="text-align:right">
+          {% if user.can_manage_mdc_list %}
+            <a class="btn ghost small" href="{% url 'mdc_add_listing' patient.pk %}">List for MDC</a>
+          {% else %}<span class="pill pending">Awaiting listing</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+
+  {% if needs_scheduling %}
+    <p style="font-size:13.5px;margin:{% if needs_listing %}20px{% else %}0{% endif %} 0 10px" class="muted">
+      Decided for surgery at MDC, but not yet on the theatre schedule.
+    </p>
+    <table class="grid">
+      <tr><th>Patient</th><th>MRN</th><th>Diagnosis</th><th></th></tr>
+      {% for patient in needs_scheduling %}
+      <tr>
+        <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+        <td>{{ patient.mrn }}</td>
+        <td>{{ patient.diagnosis }}</td>
+        <td style="text-align:right">
+          {% if user.can_manage_team_schedule %}
+            <a class="btn ghost small" href="{% url 'list_for_surgery' patient.pk %}">List for surgery</a>
+          {% else %}<span class="pill pending">Not scheduled</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+
+  {% if postop_flagged %}
+    <p style="font-size:13.5px;margin:{% if needs_listing or needs_scheduling %}20px{% else %}0{% endif %} 0 10px" class="muted">
+      Post-operative, not yet re-presented at MDC.
+    </p>
+    <table class="grid">
+      <tr><th>Patient</th><th>MRN</th><th>Diagnosis</th><th></th></tr>
+      {% for patient in postop_flagged %}
+      <tr>
+        <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+        <td>{{ patient.mrn }}</td>
+        <td>{{ patient.diagnosis }}</td>
+        <td style="text-align:right">
+          {% if user.can_manage_mdc_list %}
+            <a class="btn ghost small" href="{% url 'mdc_add_listing' patient.pk %}">Re-list for MDC</a>
+          {% else %}<span class="pill alert">Needs re-listing</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>
+    For MDC next week
+    <span class="right muted" style="font-size:12px">{{ next_week_range.0 }} &ndash; {{ next_week_range.1 }}</span>
+  </h2>
+  {% if next_week_listings %}
+    <table class="grid">
+      <tr><th>Patient</th><th>MRN</th><th>MDC</th><th>Date</th><th>Workup</th></tr>
+      {% for listing in next_week_listings %}
+      <tr>
+        <td><a href="{% url 'patient_detail' listing.patient.pk %}">{{ listing.patient.name }}</a></td>
+        <td>{{ listing.patient.mrn }}</td>
+        <td>{{ listing.mdc.name }}</td>
+        <td>{{ listing.meeting_date }}</td>
+        <td>
+          {% with progress=listing.patient.workup_progress %}
+            {% if listing.patient.workup_ready %}<span class="pill done">Ready</span>
+            {% else %}<span class="pill pending">{{ progress.0 }} of {{ progress.1 }}</span>{% endif %}
+          {% endwith %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty">Nobody from this team is listed for next week.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>In workup</h2>
+  {% if workup %}
+    <table class="grid">
+      <tr><th>Patient</th><th>MRN</th><th>Diagnosis</th><th>Progress</th><th>Still awaiting</th></tr>
+      {% for patient in workup %}
+      <tr>
+        <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+        <td>{{ patient.mrn }}</td>
+        <td>{{ patient.diagnosis }}</td>
+        <td>
+          {% with progress=patient.workup_progress %}
+            {% if patient.workup_ready %}<span class="pill done">Ready for MDC</span>
+            {% else %}<span class="pill pending">{{ progress.0 }} of {{ progress.1 }}</span>{% endif %}
+          {% endwith %}
+        </td>
+        <td class="muted" style="font-size:13px">
+          {% for item in patient.outstanding_investigations %}{{ item.get_kind_display }}{% if not forloop.last %}, {% endif %}{% empty %}&mdash;{% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty">Nobody in workup.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>On NACT / TNT</h2>
+  {% if neoadjuvant %}
+    <table class="grid">
+      <tr><th>Patient</th><th>MRN</th><th>Treatment</th><th>Cycles</th><th></th></tr>
+      {% for patient in neoadjuvant %}
+      {% with course=patient.active_treatment %}
+      <tr>
+        <td><a href="{% url 'patient_detail' patient.pk %}">{{ patient.name }}</a></td>
+        <td>{{ patient.mrn }}</td>
+        <td>{% if course %}{{ course.get_kind_display }} &mdash; {{ course.regimen }}
+            {% else %}<span class="muted">{{ patient.get_stage_display }}</span>{% endif %}</td>
+        <td>{% if course %}{{ course.completed_cycles }} of {{ course.total_cycles }}{% else %}&mdash;{% endif %}</td>
+        <td>{% if course and course.on_last_cycle %}<span class="pill alert">order restaging</span>{% endif %}</td>
+      </tr>
+      {% endwith %}
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty">No patients on neoadjuvant treatment.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>
+    Surgery schedule
+    <a class="btn ghost small right" href="{% url 'download_planning_deck' %}">Planning slides (.pptx)</a>
+  </h2>
+  {% if bookings %}
+    <table class="grid">
+      <tr><th>Date</th><th>Patient</th><th>MRN</th><th>Procedure</th></tr>
+      {% for booking in bookings %}
+      <tr>
+        <td>{{ booking.planned_date }}</td>
+        <td><a href="{% url 'patient_detail' booking.patient.pk %}">{{ booking.patient.name }}</a></td>
+        <td>{{ booking.patient.mrn }}</td>
+        <td>{{ booking.procedure }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="empty">Nobody scheduled for theatre.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

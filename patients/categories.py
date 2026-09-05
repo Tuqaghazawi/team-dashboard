@@ -106,3 +106,56 @@ def summary_counts(visible):
         "postop": post_operative(visible).count(),
         "postop_flagged": post_op_needing_mdc(visible).count(),
     }
+
+
+def ready_but_unlisted(visible):
+    """Workup complete, but nobody has put them on an MDC list yet.
+
+    This is the gap a consultant wants to catch: the patient is waiting and
+    nothing is scheduled. Returns a list, because readiness is worked out in
+    Python rather than in the database.
+    """
+    candidates = visible.filter(
+        stage__in=[Patient.Stage.WORKUP, Patient.Stage.MDC]
+    ).prefetch_related("investigations", "mdc_listings")
+
+    waiting = []
+    for patient in candidates:
+        if not patient.workup_ready:
+            continue
+        # An undiscussed listing means it is already scheduled.
+        if any(not listing.presented for listing in patient.mdc_listings.all()):
+            continue
+        waiting.append(patient)
+    return waiting
+
+
+def team_members(team):
+    """Who is on a team right now: consultant, coordinator, and rotating fellows."""
+    from accounts.models import User
+    from teams.models import FellowAssignment
+
+    today = timezone.localdate()
+    members = team.members.filter(is_active=True)
+    return {
+        "consultants": list(members.filter(role=User.Role.CONSULTANT)),
+        "coordinators": list(members.filter(role=User.Role.TEAM_COORDINATOR)),
+        "rotations": list(
+            FellowAssignment.objects.filter(
+                team=team, start_date__lte=today, end_date__gte=today
+            ).select_related("fellow")
+        ),
+    }
+
+
+def decided_for_surgery_unscheduled(visible):
+    """Decided for surgery at MDC, but never put on the theatre schedule.
+
+    The other gap worth catching: the decision was made and then nothing
+    happened. Returns a list.
+    """
+    candidates = awaiting_surgery(visible).prefetch_related("surgery_bookings")
+    return [
+        patient for patient in candidates
+        if not any(not booking.performed for booking in patient.surgery_bookings.all())
+    ]

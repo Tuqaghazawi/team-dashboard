@@ -111,6 +111,11 @@
   <span class="brand">KHCC Surgical Oncology</span>
   <a href="{% url 'dashboard' %}" class="{% block nav_home %}{% endblock %}">Dashboard</a>
   <a href="{% url 'patient_list' %}" class="{% block nav_patients %}{% endblock %}">Patients</a>
+  {% if user.can_see_all_patients %}
+    <a href="{% url 'team_home' %}" class="{% block nav_team %}{% endblock %}">Teams</a>
+  {% elif user.is_team_scoped %}
+    <a href="{% url 'team_home' %}" class="{% block nav_team_scoped %}{% endblock %}">My team</a>
+  {% endif %}
   <a href="{% url 'mdc_board' %}" class="{% block nav_mdc %}{% endblock %}">MDC</a>
   <a href="{% url 'treatment_list' %}" class="{% block nav_treatment %}{% endblock %}">NACT / TNT</a>
   <a href="{% url 'surgery_schedule' %}" class="{% block nav_surgery %}{% endblock %}">Surgery</a>

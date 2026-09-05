@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Teams{% endblock %}
+{% block nav_team %}on{% endblock %}
+{% block nav_team_scoped %}on{% endblock %}
+
+{% block header %}
+<header class="page">
+  <h1>Teams</h1>
+  <p>Every consultant-led team. Open one to see who is on it and where its patients stand.</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <table class="grid">
+    <tr><th>Consultant</th><th>Specialty</th><th>Patients</th><th>Coordinator</th><th>Fellows this rotation</th></tr>
+    {% for row in rows %}
+    <tr>
+      <td><a href="{% url 'team_detail' row.team.pk %}">{{ row.team.consultant }}</a></td>
+      <td>{{ row.team.specialty }}</td>
+      <td>{{ row.team.patients.count }}</td>
+      <td class="muted">
+        {% for person in row.members.coordinators %}{{ person.get_full_name|default:person.username }}{% if not forloop.last %}, {% endif %}{% empty %}&mdash;{% endfor %}
+      </td>
+      <td class="muted">
+        {% for rotation in row.members.rotations %}{{ rotation.fellow.get_full_name|default:rotation.fellow.username }}{% if not forloop.last %}, {% endif %}{% empty %}&mdash;{% endfor %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
