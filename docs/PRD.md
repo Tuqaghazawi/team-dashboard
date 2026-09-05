@@ -727,19 +727,39 @@ thing to evaluate before this tool goes anywhere near a real patient.
 
 ### 16.1 Hosting
 
-| | v1 (now) | Intended |
-|---|---|---|
-| Runtime | `manage.py runserver`, local | Django on **Render**, over **HTTPS** |
-| Database | SQLite file | PostgreSQL (managed) |
-| Static files | Django dev server | WhiteNoise |
-| `DEBUG` | `True` by default | `False`, enforced by environment |
-| `ALLOWED_HOSTS` | empty (dev) | the deployed hostname, from the environment |
-| Scheduled jobs | run by hand | `sync_ehr` and `send_due_alerts` on a scheduler |
+Deployment is configured for **Render**, over **HTTPS**, with **PostgreSQL**.
+`render.yaml` is a blueprint: point Render at the repository and it provisions
+the web service and the database.
 
-**Status: not deployed.** There is no `render.yaml`, no `Procfile`, no
-`STATIC_ROOT` and no WhiteNoise. The settings are already environment-driven
-(`DEBUG`, `ALLOWED_HOSTS`, `SECRET_KEY`, email, `SITE_URL`), so the gap is
-configuration and a deploy target, not a rewrite.
+| | Local | Deployed |
+|---|---|---|
+| Runtime | `manage.py runserver` | `gunicorn config.wsgi:application` |
+| Database | SQLite file | PostgreSQL, from `DATABASE_URL` |
+| Static files | Django dev server | WhiteNoise, compressed and manifest-hashed |
+| `DEBUG` | `True` | `False`, set in the blueprint |
+| HTTPS | not applicable | forced — `SECURE_SSL_REDIRECT`, secure session and CSRF cookies |
+| Hostname | n/a | `RENDER_EXTERNAL_HOSTNAME`, added to `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` |
+| Scheduled jobs | run by hand | `sync_ehr` and `send_due_alerts` on a Render cron job |
+
+**Every hardening setting is conditional on `DEBUG` being off**, so local
+development is untouched. Two details that matter:
+
+- `SECURE_PROXY_SSL_HEADER` is set. Render terminates TLS at its proxy and
+  forwards the original scheme in a header; without this Django sees `http` on
+  every request and `SECURE_SSL_REDIRECT` redirects to itself forever.
+- **HSTS defaults to 0 seconds.** A browser that has cached an HSTS header
+  cannot be told to forget it early, so it stays off until the deployment is
+  known good, then `SECURE_HSTS_SECONDS` is set deliberately.
+
+`python manage.py check --deploy` reports **no issues** with `DEBUG=False`, a
+real `DJANGO_SECRET_KEY` and HSTS set. Eleven tests in `config/tests.py` pin the
+HTTPS settings, the proxy header, the PostgreSQL switch and WhiteNoise's
+position in the middleware, so a settings edit cannot quietly undo them.
+
+**Status: configured and verified, not yet deployed.** Nothing has been
+provisioned on Render, so there is no live URL. The blueprint deliberately does
+not carry `OPENAI_API_KEY` — that is set in the Render dashboard, and without it
+the AI features report "unavailable" while the rest of the pathway works.
 
 ### 16.2 Secrets
 
@@ -824,8 +844,10 @@ than inferred.
       structured fields. Which fields should populate automatically?
 - [ ] **Per-MDC Excel export** for MDC coordinators — still open from v0.9.
 - [ ] **Pre-operative consult checklist** — needed for v2?
-- [ ] **Deployment.** Azure App Service + PostgreSQL is assumed
-      `[assumed — change if you want]`. Nothing has been provisioned.
+- [ ] **Deployment.** Configured for Render + PostgreSQL and verified with
+      `check --deploy`, but nothing has been provisioned, so there is no live
+      URL. Azure remains the intended long-term host (§4); Render is the course
+      pattern and is what `render.yaml` targets.
 - [ ] **Real EHR access.** Which system, which interface, whose approval?
 
 ---

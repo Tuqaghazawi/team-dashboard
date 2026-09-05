@@ -1,0 +1,42 @@
+# Render blueprint for the Surgical Oncology Patient Flow Dashboard.
+#
+# NOT FOR CLINICAL USE. This deploys a prototype running on synthetic data.
+# Do not point it at a real hospital system, and do not load real patient data.
+#
+# Deploy: push this file, then in Render choose New > Blueprint and pick the repo.
+# Set OPENAI_API_KEY yourself in the dashboard — it is deliberately not here.
+
+services:
+  - type: web
+    name: khcc-surgical-oncology-dashboard
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application"
+    healthCheckPath: /accounts/login/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true          # Render generates one; never in git
+      - key: WEB_CONCURRENCY
+        value: "2"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: khcc-dashboard-db
+          property: connectionString
+      # Set in the Render dashboard, not here:
+      #   OPENAI_API_KEY   - the guideline brain and extractor need it; without
+      #                      it those features report "unavailable" and the rest
+      #                      of the pathway still works.
+      #   EMAIL_HOST etc.  - unset means notification emails print to the log.
+      #   SITE_URL         - the public URL, used in email bodies.
+      #   SECURE_HSTS_SECONDS - leave 0 until the deployment is known good.
+
+databases:
+  - name: khcc-dashboard-db
+    plan: free
+    region: frankfurt

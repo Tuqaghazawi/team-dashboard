@@ -79,6 +79,8 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Serves static files in production without a separate web server.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -154,6 +156,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+}
 
 
 # --- Email -------------------------------------------------------------------
@@ -175,3 +182,43 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 
 # Used to build patient links inside notification emails.
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+
+
+# --- Database ----------------------------------------------------------------
+# SQLite locally; DATABASE_URL (PostgreSQL on Render) overrides it when set.
+_database_url = os.environ.get('DATABASE_URL', '')
+if _database_url:
+    import dj_database_url
+
+    DATABASES['default'] = dj_database_url.parse(
+        _database_url, conn_max_age=600, conn_health_checks=True
+    )
+
+
+# --- Production hardening ----------------------------------------------------
+# All of this is conditional on DEBUG being off, so local development is
+# unaffected. Render terminates TLS at its proxy and forwards the original
+# scheme in this header; without the next line Django sees http and the redirect
+# below would loop.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # One year, and only once the deployment is known good — an HSTS header a
+    # browser has cached cannot be withdrawn early.
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Render supplies the external hostname; add it without having to hardcode one.
+_render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if _render_host:
+    ALLOWED_HOSTS.append(_render_host)
+    CSRF_TRUSTED_ORIGINS = [f'https://{_render_host}']
