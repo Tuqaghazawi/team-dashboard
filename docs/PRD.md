@@ -1,74 +1,145 @@
-# PRD — Surgical Oncology Patient Flow Dashboard
+# Surgical Oncology Patient Flow Dashboard — PRD
 
-**Document owner:** Department lead (you)
-**Author of draft:** Claude Code (with you)
-**Date:** 2026-06-16
-**Status:** Draft v0.1 — for your review
-**Decisions locked in:** Phased build · English interface · Synthetic-data prototype first · AI guidelines brain in a later phase
+**Author:** Tuqa Al-Ghazawi
+**Course:** CCI — Clinical AI / Prompt Engineering (Capstone 2)
+**Status:** v1 built and working on synthetic data
+**Version:** 1.0
+**Last updated:** 5 September 2026
+**Repository:** https://github.com/Tuqaghazawi/team-dashboard
 
-> **How to read this document:** This is the plan in plain English. Nothing here is code.
-> Read it, then tell me what to change. The sections marked **[OPEN QUESTION]** are things
-> I need you to confirm. We will only start building after you approve this.
-
----
-
-## 1. The problem (why we are building this)
-
-Today, the new-patient journey in the surgical oncology department runs on WhatsApp
-messages, phone calls, and individual memory. This causes:
-
-- Patients "falling through the cracks" between steps.
-- No single place to see where a patient is in the journey.
-- No automatic reminders — coordinators must chase people manually.
-- Reports (counts by specialty, diagnosis, age, consultant) are assembled by hand.
-- MDC and planning-round slides are built manually from scratch each week.
-
-## 2. The goal (what success looks like)
-
-One shared dashboard where:
-
-- Every patient is registered once and then **automatically visible** to the right team.
-- Each role is **notified automatically** when a patient reaches a step they own.
-- Anyone on a team can see, at a glance, **where each patient is** in the journey (a timeline).
-- The **workup checklist** updates as results become available.
-- **Reports and Excel sheets generate themselves**.
-- **MDC and planning-round slides generate themselves** from the patient's data.
-
-## 3. Scope
-
-### In scope (the full vision, built in phases)
-Registration, team assignment, automatic notifications + email, MDC list management,
-workup checklist with live result reflection, patient timeline, MDC decision tracking,
-surgery scheduling, post-op follow-up, role-based dashboards, reports + Excel export,
-auto-generated slides, and (later) an NCCN guidelines suggestion engine.
-
-### Out of scope (for now)
-- Real patient data and live hospital-system integration (we use synthetic data first).
-- Replacing the hospital EMR — this sits *alongside* it.
-- Billing, pharmacy, OR booking systems integration.
-- Mobile native apps (the dashboard will work in a phone browser, but no App Store app).
-
-### Non-goals
-- This is **not** a diagnostic device. The AI brain *suggests*; clinicians decide.
+> **What changed in 1.0.** The previous version described a system to be built.
+> This version describes the one that exists. Every requirement below is marked
+> **Built**, **Partial** or **Not built**, and the "Done means" section reports
+> what actually passes. Requirements that were planned and then deliberately
+> dropped are recorded in §4 rather than deleted, so the reasoning survives.
 
 ---
 
-## 4. Users and roles
+## 1. Summary
 
-| Role | Sees | Can do |
-|---|---|---|
-| **Prep-clinic coordinator** | All patients | Register patients, assign to a team, follow all patients, generate weekly/monthly reports + Excel |
-| **Chairman of department** | All patients | View everything (read-only), view all reports |
-| **Team clinic nurse coordinator** | Only their team's patients | Assign that rotation's fellows to the team, add patients to the weekly MDC list, list patients for surgery |
-| **Fellow** | Only their assigned team's patients | Follow the workup flow, build weekly MDC slides + biweekly planning-round slides |
-| **Consultant** | Only their own team's patients | View and follow their team's patients |
-| **MDC coordinator** | Only patients **added to their MDC's list** by team coordinators (Breast / GI / Sarcoma / Thyroid) | Manage that MDC's discussion list, record decisions, and **export her MDC's cases to Excel (weekly & monthly, separately)** |
+A Django web application that follows a cancer patient through the surgical
+oncology pathway at KHCC — registration at the preparatory clinic, workup, MDC
+discussion, treatment, surgery, and post-operative re-discussion — and tells the
+right people when something needs attention.
 
-**Rotation rule:** Fellows rotate every 3 months (e.g. Jul–Sep, Oct–Dec). At the start of
-each rotation, the team nurse coordinator assigns that rotation's fellows so they gain
-access to their team's dashboard. When the rotation ends, that access is removed.
+Today that coordination happens over WhatsApp, phone calls and memory. Patients
+fall through the gaps: a workup finishes and nobody lists the patient for MDC; a
+decision is made for surgery and nobody books theatre; a patient finishes
+neoadjuvant chemotherapy and nobody orders restaging in time for the clinic.
 
-### The teams (consultants)
+The app makes each of those gaps visible and emails the team automatically. Five
+AI modules assist at specific points — extracting structured fields from
+pathology reports, answering guideline questions with citations, checking
+peri-operative medications, and drafting an MDC recommendation for a physician to
+approve or reject. **The governing rule is human-in-the-loop: AI drafts and
+flags, the clinician decides. Nothing is auto-decided or auto-recorded.**
+
+Synthetic data only. No real patient record has been near this repository, which
+is public.
+
+---
+
+## 2. Problem
+
+**What hurts today.** Coordination is informal and undocumented. Specifically:
+
+- The prep clinic registers a patient and tells the team by phone or WhatsApp.
+  There is no record that the handover happened.
+- Nobody can see, in one place, which patients have all their investigations back
+  and are therefore ready to present at MDC.
+- After an MDC decision, the next step depends on somebody remembering it.
+  Patients decided for surgery are not always booked; patients on neoadjuvant
+  treatment are not always restaged before their next clinic.
+- Post-operative patients must come back to MDC for their adjuvant plan. There is
+  no list of who is waiting.
+- Fellows rebuild MDC and planning slides by hand every week, retyping
+  investigation results that already exist in the EHR.
+- The prep-clinic coordinator and the chairman compile activity reports manually.
+
+**Who has this problem.** Six roles across eleven consultant-led teams: the
+prep-clinic coordinator, the chairman, each team's nurse coordinator, the fellows
+rotating through each team, the consultants, and the four MDC coordinators.
+
+**Why an app.** Most of this is bookkeeping a database does better than a person:
+who is on which list, what is outstanding, who to email. That part needs no AI.
+
+**Why an LLM, for the parts that need one.** Three tasks resist plain code:
+
+1. Pathology and radiology reports are free text. Turning "moderately
+   differentiated adenocarcinoma, 3 of 14 nodes positive, LVI present" into
+   structured fields is a language task.
+2. Guideline questions require reading several hundred pages of KHCC guidance and
+   answering *for this patient's presentation*, with the passage cited.
+3. Drafting an MDC recommendation from a case summary plus guideline findings.
+
+---
+
+## 3. Goals
+
+**Primary goal.** No patient stalls silently. Every point where the pathway can
+stop — workup complete but unlisted, decision made but unscheduled, treatment
+finishing without restaging ordered, surgery done without an adjuvant plan —
+raises a visible flag and an email to the team.
+
+**Secondary goals.**
+
+- Cut slide preparation from manual retyping to one click, using investigation
+  results the system already holds.
+- Give the prep-clinic coordinator and chairman weekly and monthly activity
+  reports without manual counting.
+- Make every AI output verifiable by a clinician before it affects anything.
+
+---
+
+## 4. Non-goals
+
+**Out of scope for v1, deliberately:**
+
+| Not doing | Why |
+|---|---|
+| Real patient data | Needs institutional approval, an in-hospital model, and an information-governance review. Synthetic only. |
+| Deployment to a hospital server | Azure App Service + Azure DB for PostgreSQL is the intended target, but v1 runs locally. |
+| A real EHR connector | `ehr/source.py` is the seam; behind it is a synthetic database. Swapping in HL7/FHIR is the whole migration. |
+| Mobile app | The web pages are responsive enough for a course project. |
+| Arabic interface | English only. Arabic can follow. |
+| Fine-tuning any model | Prompting plus retrieval is sufficient and far cheaper. |
+| WhatsApp notifications | In-app plus email only — decided early, and unchanged. |
+
+**Planned earlier, then dropped from v1 (recorded so the reasoning survives):**
+
+- **Pre-operative consult checklist** (anaesthesia / cardiology / internal
+  medicine) gating a "ready for surgery" status. The peri-operative medication
+  check covers the highest-risk part of this; the full consult tracker is
+  deferred.
+- **Statistics, KPI, M&M and Events modules.** These were always Modules 2–5 of
+  the wider platform vision (§16). Module 1 had to work first.
+
+---
+
+## 5. Users
+
+| Role | Sees | Can do | Status |
+|---|---|---|---|
+| **Prep-clinic coordinator** | The **handover queue** — patients not yet placed on an MDC list. Reports cover everyone. | Register a patient and assign them to a team; generate weekly/monthly reports and Excel | Built |
+| **Chairman** | All patients, all teams | View everything; view and download all reports | Built |
+| **Team nurse coordinator** | Their own team's patients | Assign that rotation's fellows; add patients to the MDC list; list patients for surgery; register a walk-in onto their own team | Built |
+| **Fellow** | The team(s) they are **currently rotating through** | Run the workup, record results, pull from the EHR, build MDC and planning slides, record MDC decisions | Built |
+| **Consultant** | Their own team's patients | View and follow their team; a dedicated team page | Built |
+| **MDC coordinator** | Patients listed on their own MDC | See their MDC's list | Partial — no separate per-MDC Excel export |
+
+**Rotation rule (built).** Fellows rotate in three-month blocks (Jan–Mar, Apr–Jun,
+Jul–Sep, Oct–Dec). The nurse coordinator assigns fellows at the start of each
+block. An assignment is what grants dashboard access, and **access ends
+automatically when the rotation ends** — verified by test.
+
+**Prep-clinic scoping (built, and worth understanding).** The prep coordinator's
+working list holds only patients no coordinator has picked up yet; a patient
+leaves her list once they are on an MDC list. Her *reports* deliberately use a
+wider query so weekly and monthly returns still count every patient she
+registered. See Open Questions — a patient who is never MDC-listed stays on her
+queue indefinitely.
+
+### The teams (all built and seeded)
 
 | Consultant | Specialty |
 |---|---|
@@ -86,297 +157,366 @@ access to their team's dashboard. When the rotation ends, that access is removed
 
 > All general surgical oncology teams also handle **sarcoma** cases.
 
-### The MDCs (tumor boards)
-- **Breast MDC**
-- **GI MDC** — hepatobiliary, pancreatic, colon, rectum, gastric, esophageal, small bowel, appendix, and all GI cases
-- **Sarcoma MDC**
-- **Thyroid MDC**
+### The MDCs
+
+**Breast** · **GI** (hepatobiliary, pancreatic, colon, rectum, gastric,
+oesophageal, small bowel, appendix) · **Sarcoma** · **Thyroid**.
+
+Each MDC has a meeting weekday, so listing a patient pre-fills the next meeting
+date. A patient's specialty suggests their MDC; "General surgical oncology" is
+deliberately unmapped, because those cases vary and the coordinator chooses.
 
 ---
 
-## 5. The patient journey (the heart of the system)
+## 6. User stories
 
-This is the process the dashboard automates, step by step. Each step lists **who acts**,
-**what they enter**, and **what the system does automatically**.
-
-### Step 1 — Registration at the preparatory clinic (first encounter)
-- **Who:** Prep-clinic coordinator (nurse).
-- **Enters:** Name, MRN, Date of birth, Diagnosis, Specialty, Assigned consultant.
-- **Also:** Assigns the patient to a **team**.
-- **System does automatically:** Sends an **in-app notification + email** to the team's
-  **nurse coordinator, consultant, and current fellows**: *"You have a new patient
-  scheduled for the upcoming clinic."* (This replaces today's manual WhatsApp + phone call.)
-
-### Step 2 — Team coordinator prepares for MDC
-- **Who:** Team nurse coordinator.
-- **Does:** Adds the patient to the **proposed MDC list for next week**.
-
-### Step 3 — Consultant clinic assessment
-- **Who:** Consultant (with fellow).
-- **Does:** Assesses the patient, **confirms which investigations** are needed → workup begins.
-
-### Step 4 — Workup
-- **Who:** Fellow follows; whole team can see.
-- **System shows:** A **workup checklist** visible to the entire team. As each result
-  becomes available, the system **reflects it automatically** (pulled from the database).
-  *(In the prototype, results come from a synthetic database we will build.)*
-
-### Step 5 — MDC discussion + categorization
-- **Who:** MDC coordinator + team; category assigned by the team nurse coordinator.
-- **Does:** Patient is discussed and a **decision** is recorded. The coordinator then files
-  the patient into **one category** based on the result:
-
-  | Category | What it means | Extra data captured |
-  |---|---|---|
-  | **Surgery** | Listed for an operation | (goes to the fellows' "Planned for surgery" list — see Step 6) |
-  | **NACT** | Neoadjuvant chemotherapy first | **Month started**; patient appears on the dedicated **"NACT patients"** list |
-  | **TNT (rectal)** | Total neoadjuvant therapy for rectal cancer | **Month started**; patient appears on the dedicated **"TNT" list** |
-  | **Referred to medical team** | Managed medically (e.g. palliative/definitive systemic therapy) | Referral recorded |
-  | **Watch & wait (rectal)** | Non-operative management after complete clinical response to TNT | **W&W start date** + **next investigations date** |
-  | **Surveillance / other** | Routine follow-up or other plan | Plan note |
-
-- **"Stay on the list" rule:** Patients in **NACT** or **TNT** remain on the team's active
-  list until the **definitive decision** is made. When neoadjuvant treatment finishes, they
-  move to a **Restaging** state (awaiting restaging imaging/results), which the team follows
-  **before the upcoming clinic**. The system **auto-flags when re-discussion is due** (so they
-  are not lost), and after re-discussion they are **re-categorized** (commonly → Surgery).
-- **Who moves these follow-up states:** the **team nurse coordinator** is responsible for moving
-  patients into **Restaging**, **Watch & wait**, or **Surveillance**, and for setting the
-  **next investigations date**. (Enforced once role-based screens are built; today done in admin.)
-
-### Step 6 — Surgery scheduling + pre-operative workup
-- **Who:** Fellows (with the team nurse coordinator).
-- **Does:** Patients in the **Surgery** category appear on the fellows' **"Planned for
-  surgery"** list. For each, the fellow:
-  - **Sets the proposed surgery date.**
-  - **Completes the pre-operative workup checklist** — a *fitness-for-surgery* gate,
-    separate from the diagnostic workup, with consults such as **Anesthesia, Cardiology,
-    Internal Medicine** (and any others needed).
-- The patient is marked **"Ready for surgery"** only once the required pre-op consults clear.
-
-### Step 7 — Post-operative follow-up loop
-- **Who:** The whole team (coordinator, consultant, fellows) — **fully visible to all of them.**
-- **The loop** (MDC is re-entered *after* surgery, not just before):
-  1. Patient is marked **operated** → capture **surgery date, procedure, surgeon**; status
-     becomes **"Post-op — pathology pending."**
-  2. **Final pathology** is tracked like a result item. When it arrives, the system
-     **auto-flags the patient for post-op MDC re-discussion** (no operated patient is forgotten).
-  3. **Post-op MDC** sets the next **category**:
-     - **Adjuvant therapy** (chemo/radiation) → patient **stays on the active list** with a
-       periodic re-review flag (same pattern as NACT).
-     - **Surveillance** → moves to a quiet **surveillance/follow-up** list.
-     - **Referred to medical team** → managed elsewhere.
-  4. The loop **closes** only when the patient enters surveillance or is referred out.
-- **Visibility rule:** Every stage of this loop — and the patient's position in it — is
-  visible to the **entire team**, not only the fellow who updates it.
-
-### The timeline
-For every patient, the dashboard shows a **visual timeline** of all steps above, including the
-post-op loop (done / current / upcoming), **visible to the whole team** — so anyone can
-instantly see where the patient is.
+- As a **prep-clinic nurse**, when a new patient is booked, I want to record their
+  six details and assign a consultant, so the team is told automatically instead
+  of by phone.
+- As a **team coordinator**, when a patient comes straight to our clinic rather
+  than through prep, I want to register them onto my own team myself.
+- As a **fellow**, when I open a patient, I want to see exactly which
+  investigations are still outstanding, so I know what to chase.
+- As a **consultant**, when I open my team page, I want to see the patients who
+  are stuck — ready for MDC but unlisted, or decided for surgery but unbooked.
+- As a **team**, when a patient reaches the last cycle of neoadjuvant treatment,
+  we want an email telling us to order restaging, and another when the reports
+  land, so we are ready for the clinic.
+- As a **fellow**, when the MDC list is set, I want the slide deck generated from
+  the results already in the system, rather than retyping them.
 
 ---
 
-## 5A. Role dashboards (task-first design)
+## 7. Functional requirements
 
-**Principle: tasks first, lists second.** Each role logs in and immediately sees *what they
-need to do today*, not just a list of patients to hunt through. The same "task inbox" pattern
-is reused across roles for a consistent feel (fellow defined now; coordinator and consultant
-follow the same shape later).
+### 7.1 Registration and handover
 
-### The fellow's daily dashboard (the engine of the process)
-
-1. **🔔 Needs my attention (task inbox)** — top of the page, the most important panel.
-   Auto-built actionable items: new patient registered to my team → review · workup result
-   arrived → check · pre-op consult cleared/pending · **MDC slides due (weekly)** ·
-   **planning-round slides due (biweekly)** · re-discussion flags (NACT/TNT due, post-op
-   pathology ready).
-2. **📅 This week's MDC** — patients I'm presenting, each with a *"slides ready?"* indicator
-   and a **Generate slides** button.
-3. **📊 My patients by stage** — compact columns with live counts (click to expand):
-   `New · In workup · Awaiting MDC · NACT · TNT · Planned for surgery · Post-op · Surveillance`.
-4. **🔎 Quick search** by name/MRN; clicking any patient opens their **timeline + full detail**.
-
-> Whole-team visibility (incl. the post-op loop) means consultants and coordinators see the
-> same patient states; only the *actionable tasks* in panel 1 differ by role.
-
-### The prep-clinic coordinator's dashboard (oversight + registration)
-
-This coordinator sees **all patients across all teams**, registers them, and produces reports.
-
-1. **➕ Register new patient** — prominent button opening the registration form (Name, MRN,
-   DOB, diagnosis, specialty, consultant, team).
-2. **🔔 Oversight flags (task inbox)** — patients **stuck too long at a stage**, e.g.
-   registered >3 days but not yet added to an MDC list, or workup not started. This is her
-   "nothing falls through the cracks" panel.
-3. **📊 All patients by team & stage** — full pipeline view with live counts; filter by team,
-   specialty, consultant, or stage.
-4. **📈 Reports & exports** — generate the weekly/monthly report and **download the Excel
-   sheet** in one click (see Section 7).
-5. **🔎 Quick search** by name/MRN.
-
-> The **chairman's dashboard** is the same all-patients view in **read-only** mode, plus
-> access to all generated reports.
-
-## 6. Notifications
-
-| Trigger | Who is notified | Channel |
+| ID | Requirement | Status |
 |---|---|---|
-| Patient registered & assigned to a team | Team nurse coordinator, consultant, current fellows | In-app + email |
-| **Start of each week (Monday)** — patients due this week for **restaging** or **watch & wait** results | Consultant, fellow, team nurse coordinator | In-app + email |
-| (Later phases) Workup result ready, MDC scheduled, decision recorded, surgery listed | The relevant role(s) | In-app + email |
+| FR-1.1 | Prep coordinator registers a patient with name, MRN, date of birth, diagnosis, specialty and consultant's team. MRN is unique. | Built |
+| FR-1.2 | On registration, the team's coordinator, consultant and currently rotating fellows receive an in-app notification and an email. | Built |
+| FR-1.3 | A team coordinator may register a patient directly, restricted to their own team. | Built |
+| FR-1.4 | A patient leaves the prep coordinator's working list once placed on an MDC list. | Built |
 
-> **[RESOLVED]** v1 uses **in-app + email only**. No WhatsApp automation. (WhatsApp could
-> be added later if needed.)
+### 7.2 Workup
 
----
-
-## 7. Reports (prep-clinic coordinator & chairman)
-
-**Who:** Prep-clinic coordinator generates them; chairman can view all of them.
-**When:** **Weekly** (this week's registrations) and **monthly**. Both also pickable for a
-custom date range.
-
-### What the report counts
-Total number of patients, broken down by: **specialty · diagnosis · age · assigned consultant**.
-
-### The auto-generated Excel file (one click to download)
-The file has **two sheets**:
-
-1. **Summary** — the counts (for management at a glance):
-   - Patients per **specialty**
-   - Patients per **diagnosis**
-   - Patients per **consultant**
-   - Patients per **age band** *(proposed bands: <40 · 40–49 · 50–59 · 60–69 · 70+)*
-   - Grand total for the period
-2. **Patient list (detail)** — one row per patient with columns:
-   `MRN · Age · DOB · Diagnosis · Specialty · Consultant · Team · Registration date ·
-   Current stage · MDC category`.
-
-### MDC coordinator exports
-The **MDC coordinator** can export **her MDC's cases to Excel**, generated **separately** as:
-- **Weekly** — the cases listed for a given meeting/week.
-- **Monthly** — all cases listed/discussed on her board that month.
-
-(Built on each MDC listing's **meeting date**, so grouping by week or month is just a date filter.)
-
-> **[OPEN QUESTION]** Age bands above are a proposal — adjust if your institute reports
-> differently. Also: should the detail sheet include the **patient name**, or **MRN only**
-> (more privacy-friendly for management reports)?
-
----
-
-## 8. Slides (built by fellows)
-
-- **MDC slides** — weekly.
-- **Planning-round slides** — biweekly.
-- Generated **from the patient's data** with a **professional design**.
-- **Name, MRN, and genetic testing** must appear at the **top** of each slide.
-- **Investigation results pulled from the database** (synthetic database in the prototype).
-- (Later, with the AI brain) the **evidence supporting an MDC decision appears in the
-  slide's notes field.**
-
-> **[NEEDED LATER]** Please upload example slides (current MDC slides and planning-round
-> slides) when we reach the slides step, so the generated design matches your format.
-
----
-
-## 9. The NCCN guidelines brain (later phase)
-
-A suggestion engine that, per patient/case, **suggests the workup** and **suggests an MDC
-decision**, citing the **NCCN evidence** that supports it (shown in the slide notes field).
-
-> This is the most advanced piece. Per your decision, we build it **after** the core
-> dashboard is working and trusted. It will always be **advisory** — clinicians decide.
-
----
-
-## 10. Data we store (in plain language)
-
-- **Patient:** name, MRN, date of birth, diagnosis, specialty, assigned consultant, team,
-  current step in the journey, dates of each step.
-- **Team:** name, consultant(s), specialty, MDC it belongs to, current fellows.
-- **User:** name, role, team (if any), login credentials.
-- **Workup item:** which investigation, status (pending / ready), result, date.
-- **MDC entry:** which MDC, date, decision, **category** (Surgery / NACT / TNT / Referred /
-  Surveillance), notes/evidence, **re-discussion-due flag**.
-- **NACT/TNT tracking:** category, **month started**, cycles/interval, next-review date.
-- **Pre-op workup item:** which consult (Anesthesia / Cardiology / Internal Medicine / other),
-  status (pending / cleared), date.
-- **Surgery entry:** proposed date, **ready-for-surgery** status, scheduled date, status.
-- **Notification:** who, what, when, read/unread.
-
-*(This becomes the precise database design at the build step — shown here so you can sanity-check it.)*
-
----
-
-## 11. Proposed technology (explained simply)
-
-You don't need to memorize these — here is what I recommend and why, in plain terms.
-
-| Part | Recommendation | Why (plain language) |
+| ID | Requirement | Status |
 |---|---|---|
-| The app itself | A **web app** (opens in any browser — Chrome, Edge, phone) | Nothing to install for users; just a link and a login |
-| Building blocks | **Python (Django)** | One language for the whole app, plus it natively makes the **Excel sheets, slides, and the future AI brain** — fewer moving parts for a beginner |
-| Database | **PostgreSQL** | Reliable, standard, free |
-| Login & roles | Built into Django | Handles who-can-see-what securely |
-| Excel files | `openpyxl` | Standard Python tool for spreadsheets |
-| Slides | `python-pptx` | Standard Python tool for PowerPoint |
-| AI brain (later) | **LangChain / LangGraph** | The standard for guideline-style reasoning |
-| Where it runs (later) | **Microsoft Azure** (App Service + Azure Database for PostgreSQL) | Hospital already trusts Azure — eases future real-data approval |
+| FR-2.1 | Starting a workup creates the standard checklist for that specialty. | Built |
+| FR-2.2 | The checklist is visible to the whole team, showing what is outstanding. | Built |
+| FR-2.3 | A patient is "ready for MDC" only when every **required baseline** item has a result. Restaging is tracked separately and does not affect this. | Built |
+| FR-2.4 | Completing the last required result emails the team — **once**, not on every later edit or sync pass. | Built |
+| FR-2.5 | A fellow can add or remove checklist items by hand. | Built |
 
-> **[RESOLVED]** No hospital IT constraints initially. Deployment target is **Azure**, which
-> is compatible with the hospital environment.
+### 7.3 EHR integration
+
+| ID | Requirement | Status |
+|---|---|---|
+| FR-3.1 | Investigation results (baseline and restaging) are read from the EHR by the patient's own MRN. | Built |
+| FR-3.2 | Only **finalised** reports are taken, so "all results are back" cannot become true on a preliminary one. | Built |
+| FR-3.3 | A result is only taken for an investigation the team **requested**. A report nobody asked for is reported back, never silently added. | Built |
+| FR-3.4 | An existing recorded result is never overwritten by the EHR. | Built |
+| FR-3.5 | Medication orders are read from the EHR onto the patient. | Built |
+| FR-3.6 | Runs on a schedule (`sync_ehr`) and on demand per patient. | Built |
+| FR-3.7 | An unreachable EHR degrades to a message; no clinical page breaks. | Built |
+| FR-3.8 | Real hospital connector (HL7 / FHIR) behind the same interface. | Not built |
+
+### 7.4 MDC
+
+| ID | Requirement | Status |
+|---|---|---|
+| FR-4.1 | A coordinator lists a patient for a specific MDC and meeting date, pre-filled from the specialty and that MDC's weekday. | Built |
+| FR-4.2 | The MDC board groups listings by week and shows, per patient, whether their workup is complete. | Built |
+| FR-4.3 | A decision is recorded as a **category**, which moves the patient: Surgery, NACT, TNT, Refer to medical oncology, Further workup, Surveillance, Watch & wait, Palliative. | Built |
+| FR-4.4 | Recording a decision emails the team. | Built |
+| FR-4.5 | Post-MDC, NACT and TNT patients remain on the team's list until the definitive decision. | Built |
+| FR-4.6 | Per-MDC weekly/monthly Excel export for MDC coordinators. | Not built |
+
+### 7.5 Treatment, surgery and the post-op loop
+
+| ID | Requirement | Status |
+|---|---|---|
+| FR-5.1 | A NACT/TNT course records regimen, planned cycles and cycles completed. | Built |
+| FR-5.2 | At the penultimate cycle, the team is emailed to order restaging, and the restaging checklist is created. Sent once per course. | Built |
+| FR-5.3 | When every restaging report is back, the team is emailed to review before the next clinic. | Built |
+| FR-5.4 | A coordinator lists a patient for surgery with a date and procedure. | Built |
+| FR-5.5 | Recording the operation and its final pathology moves the patient to post-op and **flags them for MDC re-discussion**, which clears only when a post-op listing exists. | Built |
+| FR-5.6 | Pre-operative consult checklist (anaesthesia / cardiology / IM) gating "ready for surgery". | Not built — see §4 |
+
+### 7.6 Documents
+
+| ID | Requirement | Status |
+|---|---|---|
+| FR-6.1 | MDC slide deck (`.pptx`) for one meeting, one slide per patient: name and MRN and genetic testing at the top, history line, `Case of …`, each investigation with its report, treatment given, restaging, and the decision line. | Built |
+| FR-6.2 | Planning-round deck for a team's operative patients, ending `For: <procedure>`. | Built |
+| FR-6.3 | Guideline evidence goes into the slide's **notes** field, never onto the slide. | Built |
+| FR-6.4 | Weekly and monthly prep-clinic reports as `.xlsx`, broken down by specialty, consultant, age band and diagnosis, plus a full patient sheet. | Built |
+
+### 7.7 Visibility
+
+| ID | Requirement | Status |
+|---|---|---|
+| FR-7.1 | Every page is scoped to what the user may see; opening another team's patient returns 404, another team's page returns 403. | Built |
+| FR-7.2 | A patient's progress is shown as a timeline visible to the whole team. | Built |
+| FR-7.3 | A team page shows the consultant, coordinator, rotating fellows, and the patients who are stuck. | Built |
 
 ---
 
-## 12. Build roadmap (phases)
+## 8. The AI layer
 
-Each phase ends with something you can click and test.
+Five modules, each built and evaluated as its own course assignment, plus four
+thin wrappers that connect them to the app. **The wrappers exist because the
+original modules print their results and return `None`** — they were written as
+scripts. No module was rewritten.
 
-- **Phase 0 — Foundations:** project setup, login, the 6 roles, the teams, synthetic-data setup.
-- **Phase 1 — Registration + notifications:** prep-clinic registration form, team assignment,
-  automatic in-app + email alerts to the team. *(Your "first step".)*
-- **Phase 2 — Team dashboard + timeline:** each role sees the right patients; patient timeline.
-- **Phase 3 — MDC list + workup checklist:** weekly MDC list, live-reflecting workup checklist.
-- **Phase 4 — MDC decision + categories + surgery + post-op:** record decision; assign
-  category (Surgery / NACT / TNT / Referred / Surveillance); NACT & TNT lists with start
-  month and re-discussion flags; "Planned for surgery" list with pre-op consult checklist
-  (Anesthesia / Cardiology / Internal Medicine) and "ready for surgery" gate; post-op follow-up.
-- **Phase 5 — Reports + Excel export.**
-- **Phase 6 — Slides generation** (you upload example slides here).
-- **Phase 7 — NCCN guidelines brain.**
-- **Phase 8 — Deployment** (make it live for your colleagues).
+| Module | What it does | Wired in? |
+|---|---|---|
+| `ai/extraction/` (Capstone 1) | free-text pathology report → structured Pydantic fields + `needs_human_review` | **Yes** — as a reviewable draft |
+| `ai/rag/` (Session 6) | RAG over six KHCC guidelines, 780 chunks in ChromaDB; grounded, cited answers | **Yes** — the guideline brain |
+| `ai/pharmacy/` (Session 3) | peri-operative medication rules (KHCC GDLPT-25) | **Yes** — on the patient's own meds |
+| `ai/agents/` (Session 5) | LangGraph workflow with an `interrupt()` physician gate | **Yes** — with durable pauses |
+| `ai/eval/` (Session 7) | functional + LLM-judge evaluation, judge validation, safety metrics | Offline only, by design |
+
+### 8.1 The guideline brain — `ai/guidelines/suggest.py`
+
+- **Model:** `gpt-4o-mini`, temperature 0, over passages retrieved from ChromaDB.
+- **Key:** `OPENAI_API_KEY` from `.env`, read with `python-dotenv`. `.env` is
+  git-ignored. Never hardcoded.
+- **Input → output:** the patient's case → a workup suggestion or a decision
+  suggestion, plus the source labels of the passages used.
+- **What the case contains — this is the important part.** It carries the
+  diagnosis *and everything already done*: treatment given with cycle counts and
+  whether it finished, any operation performed and its final pathology, and
+  baseline findings labelled separately from restaging. The question also names
+  which decision is being asked — primary plan, next step after neoadjuvant
+  treatment, or post-operative adjuvant plan.
+
+  > **Why this matters.** Version 0.9 sent only the diagnosis, so every patient
+  > looked newly diagnosed. It offered TME as a primary plan to a patient five of
+  > six cycles into TNT, and an oesophagectomy to a patient who had already had a
+  > total gastrectomy. Both now answer correctly.
+
+- **Coverage honesty.** The index holds **Breast, Colon, Rectal, Thyroid, Gastric
+  and Pancreatic** only. A vector search always returns its nearest neighbours,
+  so a disease that is not indexed still retrieves passages — from a different
+  cancer. A patient whose specialty is not covered gets an explicit warning
+  naming what *is* indexed. **Sarcoma, hepatobiliary other than pancreatic, and
+  oesophageal have no guideline at all.**
+- **On refusal.** When the model replies "Not found in the provided guidelines",
+  no citations are shown and no slide note is written — listing the passages a
+  search happened to return would make a refusal look researched.
+- **On failure.** Missing key or missing index degrades to "unavailable" with a
+  message. The clinical page still loads.
+
+### 8.2 Clinical extraction
+
+A report on the workup checklist can be run through the Capstone 1 extractor. The
+result is stored as a **pending** extraction and shown as a review table. Fields
+whose loss changes management — grade, margins, nodes, LVI, receptors, stage —
+are marked **critical** and sorted to the top. The extractor's own
+`needs_human_review` flag is shown. The clinician's corrections are stored
+separately from what the model returned, so the audit trail survives.
+
+Nothing reaches the patient record unconfirmed.
+
+### 8.3 Peri-operative medication check
+
+Deterministic rules, not a model. Reads the medications synced onto the patient
+and applies the KHCC GDLPT-25 table. Three distinctions the page keeps separate,
+because collapsing any of them is unsafe:
+
+1. **Never read from the EHR** vs **read, and this patient is on nothing to
+   hold.** Both produce an empty alert list; only one is safe.
+2. A drug **named** in the guideline vs one matched only by its **class.** The
+   rule table matches on drug name alone — naproxen, an NSAID it never names
+   against an NSAID rule of DISCONTINUE, produced no alert at all. Class matching
+   catches those, flagged as needing confirmation rather than stated as fact.
+3. A drug the guideline covers vs one it says **nothing** about. The latter is
+   listed under "not covered — not checked", never beside the ones it cleared.
+
+### 8.4 The multi-agent MDC workflow
+
+The Session 5 LangGraph workflow runs a guideline agent and a peri-op agent over
+a case built from the patient record, drafts a recommendation, then stops at
+`interrupt()` for physician sign-off. **Approve** records who signed it off;
+**reject** sends their feedback back into the graph, which revises and pauses
+again.
+
+Compiled with `SqliteSaver` rather than `InMemorySaver`, so a case waiting for a
+physician survives a server restart — verified by reading the checkpoint back
+from a separate process.
+
+**Approving a draft does not write an MDC decision.** The clinician still enters
+that. A test asserts the listing's decision fields stay empty through both
+approval and rejection.
+
+> **Known limitation.** The two *tools* inside `mdc_workflow.py`
+> (`guideline_lookup`, `drug_interaction_check`) are still the Session 5 stubs
+> returning placeholder text. The workflow and its human gate are real; the
+> dashboard reaches `ai/rag` and `ai/pharmacy` directly instead.
+
+### 8.5 Cost
+
+`gpt-4o-mini` at temperature 0, one call per suggestion, a handful of calls per
+patient. Pennies for a course project. Suggestions are cached on the patient so a
+page load never re-calls the API.
 
 ---
 
-## 13. Security & privacy (important even with fake data)
+## 9. Data and storage
 
-- Prototype uses **synthetic data only** — no real patient information.
-- Role-based access: users only see what their role allows.
-- Before any real-patient use, we add: encryption, audit logs, and hospital IT/security
-  approval. **We will not put real patient data in until that approval exists.**
+**Database:** SQLite (`db.sqlite3`) locally. PostgreSQL on Azure is the intended
+production target and is not part of v1.
+
+**14 models across six apps:**
+
+| App | Models |
+|---|---|
+| `accounts` | `User` (custom, with role, team and MDC) |
+| `teams` | `Team`, `MDC`, `FellowAssignment` |
+| `patients` | `Patient`, `Investigation`, `TreatmentCourse`, `SurgeryBooking`, `Medication`, `ReportExtraction` |
+| `mdc` | `MDCListing`, `GuidelineSuggestion`, `MDCAgentReview` |
+| `notifications` | `Notification` |
+
+Two further SQLite files are **external systems**, not application data:
+`data/synthetic/ehr.sqlite3` (the synthetic EHR) and
+`ai/agents/mdc_checkpoints.sqlite3` (LangGraph checkpoints). Both git-ignored and
+rebuildable.
+
+**Privacy.** Synthetic data only. The repository is public. Real PHI would require
+an in-institution model and an information-governance review, and is out of scope.
+`.env` is git-ignored; `.env.example` carries empty placeholders.
+
+---
+
+## 10. Tech stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| Language | Python 3.14 | course standard |
+| Framework | **Django 6.0** | needs auth, roles, admin and 14 related models — Flask would mean rebuilding all of that |
+| Database | SQLite | zero setup; PostgreSQL on Azure later |
+| LLM | OpenAI API, `gpt-4o-mini` | direct calls, cheap, temperature 0 |
+| Retrieval | ChromaDB, `text-embedding-3-small` | 780 guideline chunks, persisted to disk |
+| Agents | LangChain 1.4 / LangGraph 1.2 + `SqliteSaver` | the `interrupt()` human gate, with durable pauses |
+| Documents | `python-pptx`, `openpyxl` | slide decks and Excel reports |
+| Frontend | Django templates, one shared `base.html`, hand-written CSS | no build step |
+| Email | Django email framework — console backend in dev, SMTP via `.env` | nothing else changes to go live |
+| Secrets | `.env` + `python-dotenv` | never in code or git |
+
+---
+
+## 11. App flow
+
+1. Prep nurse (or a team coordinator) registers the patient → the team is emailed.
+2. The coordinator lists the patient for next week's MDC → the team is emailed.
+3. A fellow starts the workup → the specialty checklist is created.
+4. `sync_ehr` runs on a schedule, filling in finalised results.
+5. The last required result lands → the team is emailed that the patient is ready.
+6. The fellow generates the MDC deck for that meeting.
+7. The MDC decision is recorded as a category → the patient moves accordingly.
+8. **Surgery** → the coordinator books theatre; the peri-op medication check runs.
+   **NACT/TNT** → a course is opened and cycles recorded.
+9. At the penultimate cycle → the team is emailed to order restaging.
+10. Restaging reports land → the team is emailed to review before clinic.
+11. Surgery is performed and final pathology recorded → the patient is flagged for
+    post-operative MDC re-discussion.
+12. A post-op listing clears the flag, and the loop closes.
+
+---
+
+## 12. Testing and "done means"
+
+**Automated: 121 tests, all passing.** `python manage.py test`
+
+| Area | Tests | What they hold to |
+|---|---|---|
+| `patients` | 47 | workup gating, each notification firing exactly once, decision routing, the post-op flag, rotation-scoped visibility, prep-clinic handover queue, coordinator registration, peri-op distinctions |
+| `mdc` | 22 | MDC meeting dates, listings, slide contents, the agent sign-off gate |
+| `teams` | 18 | team page routing and scoping, rotation expiry, both "stuck patient" gaps |
+| `ehr` | 16 | finalised-only sync, unrequested reports refused, no overwriting, no duplicate emails on repeated passes |
+| `ai/guidelines` | 12 | the case carries treatment history; the right decision is asked; coverage warnings |
+| `reports` | 6 | counts, access control, real `.xlsx` output |
+
+**Demo scenario (runs end to end).** Register a patient → team emailed → start
+workup → `sync_ehr` fills results → "ready for MDC" email → list for MDC →
+generate the deck → record TNT → record cycles → restaging alert at cycle 5 →
+restaging results → "review before clinic" email → book surgery → peri-op check →
+record operation → post-op flag raised → re-list → flag clears.
+
+**Verified by hand, beyond the tests.**
+
+- Every page loads for five roles with no 500s; cross-team access correctly 403s
+  and 404s.
+- The generated GI MDC deck matches the structure of the team's real decks.
+- A LangGraph pause survives a process restart.
+- The guideline brain returns clinically sensible answers for a mid-TNT patient
+  and a post-gastrectomy patient (both wrong in v0.9).
+
+**Evaluation of the AI layer** (`ai/eval`, 39 synthetic cases): functional
+accuracy 85%, judge-semantic agreement 89%, hallucination rate 3.9%, judge
+validated at κ 0.779 → 1.000. **Contradiction recall 62%** — the extractor can
+silently drop grade, positive nodes and LVI. Refusal recall 100%, but it
+over-flags (12 of 36 false alarms).
+
+> That 62% is the single most important number in this document, and it is why
+> every extracted field is shown for confirmation with the critical ones marked,
+> and why nothing AI-generated is saved without a person.
+
+**Edge cases handled:** missing API key, missing guideline index, unreachable EHR,
+a report the team never requested, a preliminary result, a patient with no
+checklist, a fellow with no current rotation, a coordinator with no team, a drug
+absent from the guideline table.
+
+---
+
+## 13. Risks
+
+| Risk | Mitigation | Status |
+|---|---|---|
+| The extractor drops a critical finding (62% contradiction recall) | Critical fields marked and sorted first; nothing saved unconfirmed; `needs_human_review` surfaced | Built |
+| The guideline brain answers from the wrong cancer's guideline | Explicit coverage check; refusals carry no citations and write no slide note | Built |
+| A clinician mistakes an AI suggestion for a recorded decision | Suggestions rendered in a visually distinct block; approving an agent draft does not write a decision | Built |
+| "No medication record" read as "no medications to hold" | The two are separated in the API and on the page | Built |
+| A polling job emails the team repeatedly | Each alert sent once; asserted by test | Built |
+| Guidelines missing for sarcoma, HPB and oesophageal | Warning names what is indexed; the PDFs still need indexing | **Open** |
+| API key leaked in a public repo | `.env` git-ignored, `.env.example` has placeholders only | Built |
+| Scope outgrows the course | Modules 2–5 held in §16 until Module 1 was finished | Held |
 
 ---
 
 ## 14. Open questions
 
-**Resolved (2026-06-16):**
-- ✅ **Notifications:** in-app + email only for v1 (no WhatsApp).
-- ✅ **Hospital IT:** no constraints initially; deploy on **Azure**.
-- ✅ **Specialty list:** confirmed correct.
-
-**Still open:**
-1. **Login accounts:** roughly how many total users? Will you provide the list of names/emails
-   per role, or should the prototype use invented logins?
-2. **Anything in Section 5 (the journey)** that doesn't match reality — keep refining as needed.
+- [ ] **Prep-clinic queue.** A patient who is never MDC-listed stays on her queue
+      indefinitely — visible in the demo data, where post-op and surveillance
+      patients sit there. Should patients past the clinic stage also drop off?
+- [ ] **Guideline coverage.** Sarcoma, hepatobiliary (other than pancreatic) and
+      oesophageal have no indexed guideline. Which PDFs, and are they licensed to
+      index?
+- [ ] **Agent tools.** Should `guideline_lookup` and `drug_interaction_check` call
+      `ai/rag` and `ai/pharmacy` for real, or is the direct route enough?
+- [ ] **Confirmed extractions** are stored but not copied into the patient's
+      structured fields. Which fields should populate automatically?
+- [ ] **Per-MDC Excel export** for MDC coordinators — still open from v0.9.
+- [ ] **Pre-operative consult checklist** — needed for v2?
+- [ ] **Thyroid, gastric, oesophageal, HPB, liver and sarcoma workup checklists**
+      in Appendix A are still marked draft and need clinical sign-off.
+- [ ] **Deployment.** Azure App Service + PostgreSQL is assumed
+      `[assumed — change if you want]`. Nothing has been provisioned.
+- [ ] **Real EHR access.** Which system, which interface, whose approval?
 
 ---
 
 ## 15. Appendix A — Workup checklists per diagnosis (clinical draft)
 
-Checklists are organized **per diagnosis**. The system shows the matching checklist for each
-patient; items auto-reflect as results arrive. (Later, the NCCN brain will *suggest* from these.)
+The system shows the matching checklist per patient; items fill in as results
+arrive from the EHR. The guideline brain *suggests* additions; it never edits the
+checklist itself.
+
+> **Implementation note.** `patients/workup.py` currently implements a simpler
+> checklist keyed by **specialty**, not by diagnosis. The per-diagnosis detail
+> below is the clinical target and is not yet fully encoded — in particular the
+> conditional breast staging rule and the age/family-history genetics trigger.
 
 ### Baseline — applies to every patient
 - Pathology/biopsy confirmation
@@ -384,7 +524,7 @@ patient; items auto-reflect as results arrive. (Later, the NCCN brain will *sugg
 - CBC · CMP (LFTs + renal)
 - Performance status
 - Review of prior/outside imaging
-- **Fertility counseling for all females < 40**
+- **Fertility counselling for all females < 40**
 
 ### Breast ✅ *(confirmed)*
 - Diagnostic mammogram + breast US
@@ -392,33 +532,22 @@ patient; items auto-reflect as results arrive. (Later, the NCCN brain will *sugg
 - Breast MRI (selected)
 - **Staging imaging (conditional — overrides baseline CT):**
   - **Early breast cancer →** Abdomen US + CXR
-  - **Locally advanced / node+ / symptomatic →** CAP CT (chest/abdomen/pelvis)
+  - **Locally advanced / node+ / symptomatic →** CAP CT
 - **Genetic testing if age < 65 OR positive family history**
 
 ### Colon ✅ *(confirmed)*
-- Colonoscopy + biopsy
-- **CAP CT for staging**
-- CEA
-- MMR/MSI
-- RAS/BRAF (if metastatic)
+- Colonoscopy + biopsy · **CAP CT for staging** · CEA · MMR/MSI · RAS/BRAF (if metastatic)
 
 ### Rectum ✅ *(confirmed)*
-- **Pelvic MRI** (key)
-- Colonoscopy + biopsy
-- **DRE for tumor distance**
-- **CAP CT for staging**
-- CEA
-- MMR/MSI
+- **Pelvic MRI** (key) · Colonoscopy + biopsy · **DRE for tumour distance** · **CAP CT** · CEA · MMR/MSI
 
-### Thyroid 🟡 *(draft — awaiting your review)*
-- Neck US · FNA (Bethesda) · TSH/thyroid function
-- Calcitonin if medullary suspected · Laryngoscopy (vocal cords)
-- Genetic (RET) for medullary
+### Thyroid 🟡 *(draft)*
+- Neck US · FNA (Bethesda) · TSH/thyroid function · Calcitonin if medullary suspected · Laryngoscopy · Genetic (RET) for medullary
 
 ### Gastric 🟡 *(draft)*
 - EGD + biopsy · HER2 · EUS · Staging laparoscopy (selected) · CEA · CAP CT
 
-### Esophageal 🟡 *(draft)*
+### Oesophageal 🟡 *(draft)*
 - EGD + biopsy · EUS · PET-CT · HER2 / PD-L1 · CAP CT
 
 ### Pancreas / HPB (biliary) 🟡 *(draft)*
@@ -428,67 +557,55 @@ patient; items auto-reflect as results arrive. (Later, the NCCN brain will *sugg
 - Triphasic CT or MRI · AFP · Hepatitis serology · Child-Pugh score
 
 ### Sarcoma 🟡 *(draft)*
-- MRI of primary site · Core biopsy (ideally at sarcoma center) · CT chest (mets screen)
+- MRI of primary site · Core biopsy (ideally at a sarcoma centre) · CT chest
 
-> ✅ = confirmed by you · 🟡 = draft, awaiting your review.
-
----
-
-## 16. Platform vision — Surgical Department Dashboard
-
-The system grows from a single patient-flow app into a **Surgical Department Dashboard**: one
-login with a **navigation menu** across several modules. What is built today (the patient
-journey) becomes **Module 1**. Build order: **finish and test Module 1 first**, then add the
-rest. Every module respects the existing role/access rules.
-
-### Module 1 — Team / Patient-flow dashboard  *(in progress — finish first)*
-The per-role patient journey already described in this PRD. Remaining work to "finish": MDC
-add-to-list + triage, MDC decision + post-MDC categories, workup checklist, registration page,
-notifications (email), surgery scheduling + pre-op consults, post-op loop, reports/Excel,
-slides, and the role-specific home/task views.
-
-### Foundation for stats & KPIs — dated events  *(enabler)*
-Statistics and KPIs need **when** things happened, not just the current stage. So we record
-**key milestone dates** per patient: registered ✅, consultant-clinic date, workup start, MDC
-date ✅ (listing meeting date), decision date, **surgery date**, post-op re-discussion date.
-Implemented pragmatically as key date fields and/or a small journey-event log. Without this,
-counts like "surgeries in June" and durations like "days to surgery" cannot be computed.
-
-### Module 2 — Statistics dashboard
-Departmental activity on a **monthly** and **yearly** basis:
-- **Number of new patients** (from registration date) — total and by specialty / team / diagnosis / age band.
-- **Number of surgeries** (from surgery date) — total and by team / specialty / procedure.
-- Trends over time (month-by-month, year-over-year).
-- Exportable to Excel (reuses the reports engine).
-
-### Module 3 — KPIs
-Performance indicators computed from the dated events, e.g.:
-- Median days: registration → consultant clinic → MDC → surgery.
-- % of patients discussed at MDC within a target interval.
-- Neoadjuvant → restaging interval; time to definitive decision.
-- Throughput per team / per specialty.
-Shown as KPI tiles with targets and trend arrows.
-
-### Module 4 — M&M (Morbidity & Mortality)
-A register for departmental M&M meetings (new data model):
-- Case (optionally linked to a patient), date, procedure.
-- Complication + severity (e.g. Clavien–Dindo grade), **morbidity vs mortality**.
-- Root cause / lessons learned; presented status; meeting date.
-- Export for M&M sessions; feeds relevant stats/KPIs (e.g. complication rate).
-
-### Module 5 — Events
-A department calendar: MDC meetings, M&M sessions, planning rounds, etc. — date/time, type,
-notes/attendees. Later can drive reminders.
-
-### Access (per module, high level)
-- **Module 1** — as already defined per role.
-- **Statistics / KPIs** — chairman, prep-clinic coordinator, consultants, team coordinators
-  (department-level views); scope by team where appropriate.
-- **M&M / Events** — department-wide (exact edit rights TBD when built).
-
-> More modules may be added later. This section is the running vision; each module gets its
-> own detailed spec when we reach it.
+> ✅ = clinically confirmed · 🟡 = draft, awaiting review.
 
 ---
 
-*End of draft. Tell me your edits, then we lock it and start Phase 0.*
+## 16. Appendix B — Platform vision (Modules 2–5)
+
+Module 1 — the team and patient-flow dashboard — is the subject of this PRD and
+is built. The wider Surgical Department Dashboard remains the direction of travel.
+
+**The enabler, now in place:** the system records **dated events** — registration,
+each result, each MDC decision, each cycle, the date of surgery. Statistics and
+KPIs need exactly that, and it exists.
+
+| Module | Scope | Status |
+|---|---|---|
+| **1 — Team / patient flow** | this PRD | **Built** |
+| **2 — Statistics** | monthly and yearly new-patient and surgery counts by specialty, consultant, diagnosis | Not started |
+| **3 — KPIs** | time from registration to MDC, MDC to surgery, surgery to post-op discussion | Not started |
+| **4 — M&M** | morbidity and mortality review records | Not started |
+| **5 — Events** | departmental calendar | Not started |
+
+---
+
+## 17. How to run it
+
+```bash
+python -m venv .venv
+.venv/Scripts/activate            # source .venv/bin/activate on macOS/Linux
+pip install -r requirements.txt
+cp .env.example .env              # add OPENAI_API_KEY for the AI features
+python manage.py migrate
+python manage.py seed_demo        # teams, users, patients at every stage
+python manage.py build_ehr        # synthetic EHR: results + medications
+python manage.py sync_ehr         # pull them into the dashboard
+python manage.py runserver
+```
+
+Demo logins, password `demo1234`: `prep1` (prep coordinator), `chair1`
+(chairman), `coord2` (team coordinator), `cons2` (consultant), `fellow1`
+(fellow), `mdc1` (MDC coordinator).
+
+**Scheduled jobs** (Task Scheduler or cron):
+
+```bash
+python manage.py sync_ehr          # pull finalised results; email when complete
+python manage.py send_due_alerts   # restaging due; post-op patients not re-listed
+```
+
+> These demo logins exist for the synthetic prototype only and must never be
+> created in a real deployment.
