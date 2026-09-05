@@ -44,9 +44,17 @@
 
 {% if user.can_register_patients %}
 <div class="card">
-  <h2>Prep clinic <a class="btn" href="{% url 'patient_register' %}">Register a patient</a></h2>
-  <p class="empty">Registering assigns the patient to a consultant's team and emails
-     that team's coordinator, consultant and rotating fellows.</p>
+  <h2>Register <a class="btn" href="{% url 'patient_register' %}">Register a patient</a></h2>
+  <p class="empty">
+    {% if user.can_see_all_patients %}
+      Registering assigns the patient to a consultant's team and emails that team's
+      coordinator, consultant and rotating fellows. Patients leave this list once a
+      coordinator puts them on an MDC list.
+    {% else %}
+      For a patient who comes straight to your clinic rather than through prep.
+      They are registered onto your own team.
+    {% endif %}
+  </p>
 </div>
 {% endif %}
 

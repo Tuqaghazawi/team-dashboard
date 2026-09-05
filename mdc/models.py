@@ -103,6 +103,14 @@ class GuidelineSuggestion(models.Model):
     question = models.TextField()
     answer = models.TextField()
     citations = models.TextField(blank=True, help_text="One source label per line.")
+    refused = models.BooleanField(
+        default=False,
+        help_text="The brain declined because no indexed guideline covers this disease.",
+    )
+    coverage_note = models.CharField(
+        max_length=300, blank=True,
+        help_text="Warning shown when no guideline for this patient's disease is indexed.",
+    )
     requested_by = models.ForeignKey(
         "accounts.User", on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -119,7 +127,13 @@ class GuidelineSuggestion(models.Model):
         return [c for c in self.citations.splitlines() if c.strip()]
 
     def as_slide_note(self):
-        """The evidence block written into a slide's notes field."""
+        """The evidence block written into a slide's notes field.
+
+        A refusal carries no evidence, so nothing goes onto the slide at all —
+        an empty note is better than one implying the guideline was consulted.
+        """
+        if self.refused:
+            return ""
         lines = [f"{self.get_kind_display()} (guideline brain — for discussion only)", ""]
         lines.append(self.answer)
         if self.citation_list:

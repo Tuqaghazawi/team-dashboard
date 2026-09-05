@@ -6,7 +6,7 @@
 <header class="page">
   <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
   <h1>{{ investigation.get_kind_display }}</h1>
-  <p>SUB{{ investigation.get_kind_display }} &middot; {{ patient.name }}</p>
+  <p>MRN {{ patient.mrn }} &middot; {{ investigation.get_purpose_display }}</p>
 </header>
 {% endblock %}
 

@@ -153,19 +153,36 @@ def request_suggestion(request, patient_pk, kind):
             f"({exc}). Check OPENAI_API_KEY and that the guideline index is built.",
         )
     else:
+        coverage = result.get("coverage", {})
+        note = ""
+        if not coverage.get("covered", True):
+            note = (
+                f"No KHCC guideline for {patient.get_specialty_display()} is indexed. "
+                f"The index covers: {', '.join(coverage.get('indexed', []))}."
+            )
+
         GuidelineSuggestion.objects.create(
             patient=patient,
             kind=kind,
             question=result["question"],
             answer=result["answer"],
             citations="\n".join(result["citations"]),
+            refused=result.get("refused", False),
+            coverage_note=note,
             requested_by=request.user,
         )
-        messages.success(
-            request,
-            "Guideline suggestion ready — review it before acting on it. "
-            "Nothing has been changed on the patient record.",
-        )
+        if result.get("refused"):
+            messages.warning(
+                request,
+                "The guideline brain found nothing covering this case and declined "
+                "to answer." + (f" {note}" if note else ""),
+            )
+        else:
+            messages.success(
+                request,
+                "Guideline suggestion ready — review it before acting on it. "
+                "Nothing has been changed on the patient record.",
+            )
     return redirect(request.POST.get("next") or "patient_detail", pk=patient.pk)
 
 

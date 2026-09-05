@@ -1,16 +1,25 @@
 """The guideline brain behind the dashboard's workup and decision suggestions.
 
 This does not re-implement retrieval. It reuses the Session 6 RAG module
-(``ai/rag``) — the same ChromaDB index over the KHCC guidelines — and adds two
-things the dashboard needs and the original script does not provide:
+(``ai/rag``) — the same ChromaDB index over the KHCC guidelines — and adds what
+the dashboard needs and the original script does not provide:
 
-  * a return value instead of printed output, with the citations kept separate
-    so they can be shown under the suggestion and written into the slide notes;
-  * graceful failure, so a missing API key or index degrades to "unavailable"
-    rather than breaking a clinical page.
+* a return value instead of printed output, with the citations kept separate;
+* **the patient's history**, not just their diagnosis. Asking "what treatment
+  does the guideline support for a T3N2 rectal cancer" about a patient who is
+  already five cycles into TNT gets you a plan for a treatment-naive patient.
+  Everything already done — treatment given, surgery performed, final
+  pathology, restaging — goes into the question, and the question names which
+  decision is actually being asked for;
+* an honest coverage check. The index holds six guidelines. A patient whose
+  disease is not one of them still retrieves *something*, because a vector
+  search always returns its nearest neighbours, so the caller is told when no
+  guideline for this disease exists;
+* graceful failure, so a missing API key or index degrades to "unavailable"
+  rather than breaking a clinical page.
 
 Everything here is a *suggestion*. It is rendered as a suggestion, it never
-writes to the patient record on its own, and a clinician decides.
+writes to the patient record, and a clinician decides.
 """
 
 import sys
@@ -20,26 +29,52 @@ RAG_DIR = Path(__file__).resolve().parents[1] / "rag"
 
 CHAT_MODEL = "gpt-4o-mini"
 
+# The exact sentence the RAG prompt uses to decline. Detected so that a refusal
+# is not decorated with citations that make it look researched.
+REFUSAL = "Not found in the provided guidelines"
+
+# What the ChromaDB index actually contains.
+INDEXED_GUIDELINES = {"Breast", "Colon", "Rectal", "Thyroid", "Gastric", "Pancreatic"}
+
+# Which of those a patient's specialty should be answered from. A specialty
+# absent here has no guideline in the index at all.
+SPECIALTY_GUIDELINES = {
+    "BREAST": {"Breast"},
+    "COLORECTAL": {"Colon", "Rectal"},
+    "THYROID": {"Thyroid"},
+    "UPPER_GI": {"Gastric"},
+    "HPB": {"Pancreatic"},   # pancreatic only — liver and biliary are not indexed
+    "SARCOMA": set(),
+    "GENERAL": set(),
+}
+
 WORKUP_SYSTEM = (
     "You are a clinical guideline assistant for a surgical oncology MDC at KHCC.\n"
     "1. Answer ONLY from the numbered context passages. Use no outside knowledge.\n"
     "2. List the staging and workup investigations the guideline requires for this "
     "presentation, as short bullet lines.\n"
-    "3. If the guideline does not cover it, reply exactly: "
-    "'Not found in the provided guidelines.'\n"
-    "4. Cite the passages you used with their exact labels as shown."
+    "3. Take account of what has already been done. Do not re-request an "
+    "investigation whose result is already given, and do not propose baseline "
+    "staging for a patient who has already been treated.\n"
+    f"4. If the guideline does not cover this disease, reply exactly: '{REFUSAL}.'\n"
+    "5. Cite the passages you used with their exact labels as shown."
 )
 
 DECISION_SYSTEM = (
     "You are a clinical guideline assistant for a surgical oncology MDC at KHCC.\n"
     "1. Answer ONLY from the numbered context passages. Use no outside knowledge.\n"
-    "2. State the treatment option the guideline supports for this presentation, "
-    "in one or two sentences, then give the supporting evidence as short bullets.\n"
-    "3. This is a suggestion for the MDC to consider, not a decision. Do not use "
+    "2. Answer the specific decision the question asks about, at the point in "
+    "treatment the patient has actually reached. Never propose a treatment the "
+    "patient has already completed, and never propose an operation on an organ "
+    "that has already been resected.\n"
+    "3. State the option the guideline supports in one or two sentences, then "
+    "give the supporting evidence as short bullets.\n"
+    "4. This is a suggestion for the MDC to consider, not a decision. Do not use "
     "commanding language.\n"
-    "4. If the guideline does not cover it, reply exactly: "
-    "'Not found in the provided guidelines.'\n"
-    "5. Cite the passages you used with their exact labels as shown."
+    "5. Check that the evidence you cite applies to this patient's stage. Do not "
+    "cite guidance for a different stage than the one given.\n"
+    f"6. If the guideline does not cover this disease, reply exactly: '{REFUSAL}.'\n"
+    "7. Cite the passages you used with their exact labels as shown."
 )
 
 
@@ -58,8 +93,10 @@ def _rag():
     return rag_answer
 
 
+# --- describing the patient ---------------------------------------------------
+
 def patient_summary(patient):
-    """The one-line presentation the guideline is asked about."""
+    """The presentation line: who the patient is and what they have."""
     bits = [f"{patient.age}-year-old"]
     if patient.sex:
         bits.append(patient.get_sex_display().lower())
@@ -71,39 +108,133 @@ def patient_summary(patient):
     return ", ".join(bits)
 
 
+def treatment_history(patient):
+    """What has already been done to this patient, as lines. Empty if nothing."""
+    lines = []
+    for course in patient.treatment_courses.all():
+        state = "completed" if course.completed_cycles >= course.total_cycles else "in progress"
+        lines.append(
+            f"- Has already received {course.get_kind_display()} ({course.regimen}): "
+            f"{course.completed_cycles} of {course.total_cycles} cycles, {state}."
+        )
+    for booking in patient.surgery_bookings.all():
+        if booking.performed:
+            lines.append(
+                f"- Has already undergone {booking.procedure} on {booking.performed_on}."
+            )
+            if booking.final_pathology:
+                lines.append(f"  Final pathology: {booking.final_pathology}")
+    return lines
+
+
+def _findings(patient, purpose):
+    from patients.models import Investigation
+
+    return [
+        f"- {i.get_kind_display()}: {i.result_text}"
+        for i in patient.investigations.all()
+        if i.purpose == purpose
+        and i.status == Investigation.Status.READY
+        and i.result_text
+    ]
+
+
+def decision_asked(patient):
+    """Which decision the MDC is actually being asked for.
+
+    A post-operative patient needs an adjuvant plan, not a primary plan; a
+    patient who has finished neoadjuvant treatment needs a decision on what
+    follows it. Getting this wrong is what produced plans for treatments the
+    patient had already had.
+    """
+    from patients.models import Patient
+
+    stage = patient.stage
+    if stage == Patient.Stage.POSTOP:
+        return (
+            "This is a POST-OPERATIVE re-discussion. The primary operation is done. "
+            "What does the guideline support as the post-operative / adjuvant plan?"
+        )
+    if stage in (Patient.Stage.NACT, Patient.Stage.TNT, Patient.Stage.RESTAGING):
+        return (
+            "This patient is PART-WAY THROUGH neoadjuvant treatment. What does the "
+            "guideline support as the next step after this neoadjuvant course "
+            "completes and restaging is done?"
+        )
+    if stage == Patient.Stage.SURGERY:
+        return (
+            "Surgery has been decided but not yet performed. What does the guideline "
+            "support around the operative plan for this patient?"
+        )
+    return "What primary treatment does the guideline support for this patient?"
+
+
+def _case_block(patient, include_restaging=True):
+    """The full case as the guideline brain should see it."""
+    parts = [patient_summary(patient) + "."]
+
+    history = treatment_history(patient)
+    if history:
+        parts.append("\nAlready done:\n" + "\n".join(history))
+
+    baseline = _findings(patient, _purpose().BASELINE)
+    if baseline:
+        parts.append("\nBaseline investigations:\n" + "\n".join(baseline))
+
+    if include_restaging:
+        restaging = _findings(patient, _purpose().RESTAGING)
+        if restaging:
+            parts.append("\nRestaging after treatment:\n" + "\n".join(restaging))
+
+    return "\n".join(parts)
+
+
+def _purpose():
+    from patients.models import Investigation
+
+    return Investigation.Purpose
+
+
+# --- coverage -----------------------------------------------------------------
+
+def coverage_for(patient):
+    """Whether a guideline for this patient's disease is in the index.
+
+    Returns {"covered", "expected", "indexed"}. A vector search always returns
+    its nearest neighbours, so an uncovered disease still gets passages back —
+    from a different cancer entirely. The caller must say so.
+    """
+    expected = SPECIALTY_GUIDELINES.get(patient.specialty, set())
+    return {
+        "covered": bool(expected),
+        "expected": sorted(expected),
+        "indexed": sorted(INDEXED_GUIDELINES),
+    }
+
+
+# --- the two questions --------------------------------------------------------
+
 def suggest_workup(patient, k=5):
-    """Investigations the guideline expects before this patient is discussed."""
+    """Investigations the guideline expects for this patient, as they stand now."""
     question = (
-        f"What staging and workup investigations are required for a "
-        f"{patient_summary(patient)}?"
+        "What staging and workup investigations does the guideline require for "
+        "this patient?\n\n"
+        f"Patient:\n{_case_block(patient)}"
     )
-    return _ask(question, WORKUP_SYSTEM, k)
+    return _ask(question, WORKUP_SYSTEM, k, patient)
 
 
 def suggest_decision(patient, k=5):
     """Treatment options the guideline supports, for the MDC to consider."""
-    summary = patient_summary(patient)
-    findings = _findings(patient)
     question = (
-        f"What treatment does the guideline support for a {summary}?"
-        + (f"\n\nInvestigation findings:\n{findings}" if findings else "")
+        f"{decision_asked(patient)}\n\n"
+        f"Patient:\n{_case_block(patient)}"
     )
-    return _ask(question, DECISION_SYSTEM, k)
+    return _ask(question, DECISION_SYSTEM, k, patient)
 
 
-def _findings(patient):
-    from patients.models import Investigation
-
-    lines = [
-        f"- {i.get_kind_display()}: {i.result_text}"
-        for i in patient.investigations.all()
-        if i.status == Investigation.Status.READY and i.result_text
-    ]
-    return "\n".join(lines)
-
-
-def _ask(question, system, k):
-    """Retrieve, answer, and return {'answer', 'citations', 'question'}."""
+def _ask(question, system, k, patient=None):
+    """Retrieve, answer, and return the answer with its citations."""
     rag = _rag()
     try:
         chunks = rag.retrieve(question, k=k)
@@ -119,9 +250,23 @@ def _ask(question, system, k):
     except Exception as exc:
         raise GuidelineUnavailable(str(exc)) from exc
 
-    citations = sorted({f"{c['cancer']}, pages {c['pages']}" for c in chunks})
-    return {
+    answer = response.choices[0].message.content.strip()
+    refused = answer.startswith(REFUSAL)
+
+    # A refusal must not carry citations: listing the passages a vector search
+    # happened to return makes "no guideline covers this" look researched.
+    citations = (
+        [] if refused
+        else sorted({f"{c['cancer']}, pages {c['pages']}" for c in chunks})
+    )
+
+    result = {
         "question": question,
-        "answer": response.choices[0].message.content.strip(),
+        "answer": answer,
         "citations": citations,
+        "refused": refused,
+        "retrieved_from": sorted({c["cancer"] for c in chunks}),
     }
+    if patient is not None:
+        result["coverage"] = coverage_for(patient)
+    return result

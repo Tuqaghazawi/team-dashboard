@@ -6,7 +6,7 @@
 <header class="page">
   <a class="back" href="{% url 'dashboard' %}">&larr; Dashboard</a>
   <h1>Register a patient</h1>
-  <p>SUBRegister a patient</p>
+  <p>{% if user.can_see_all_patients %}Prep clinic &mdash; assign the patient to a consultant's team.{% else %}Registering onto your own team, for a patient who comes straight to your clinic.{% endif %} Once saved, that team's coordinator, consultant and rotating fellows are emailed.</p>
 </header>
 {% endblock %}
 

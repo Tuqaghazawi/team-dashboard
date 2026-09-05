@@ -46,10 +46,21 @@ def visible_teams(user):
 
 
 def visible_patients(user):
-    """The set of patients a given user is allowed to see.
+    """The set of patients a given user works with day to day.
 
     Public because other apps (e.g. ``mdc``) must apply the same rule.
+
+    The prep clinic is the exception: her job is the handover queue, so her list
+    holds only patients no coordinator has picked up yet. Once a patient is on
+    an MDC list the team owns them and they leave her page. Her *reports* still
+    count everybody — see :func:`reportable_patients`.
     """
+    if user.role == user.Role.PREP_COORDINATOR and not user.is_superuser:
+        return (
+            Patient.objects.select_related("team")
+            .filter(mdc_listings__isnull=True)
+            .distinct()
+        )
     if user.can_see_all_patients:
         return Patient.objects.select_related("team").all()
 
@@ -65,6 +76,18 @@ def visible_patients(user):
         )
     # a user with no team / no rotation / no MDC
     return Patient.objects.none()
+
+
+def reportable_patients(user):
+    """Everyone a user may count in a report.
+
+    Wider than :func:`visible_patients` for the prep coordinator, whose working
+    list is only the handover queue but whose weekly and monthly returns cover
+    every patient she registered.
+    """
+    if user.can_see_all_patients:
+        return Patient.objects.select_related("team").all()
+    return visible_patients(user)
 
 
 def _mdc_period_range(period):
@@ -173,10 +196,19 @@ def dashboard(request):
 def patient_register(request):
     """Prep-clinic registration — step 1 of the pathway."""
     if not request.user.can_register_patients:
-        raise PermissionDenied("Only the prep-clinic coordinator registers patients.")
+        raise PermissionDenied(
+            "Only the prep clinic and team coordinators register patients."
+        )
+    if not request.user.can_see_all_patients and not request.user.team_id:
+        messages.error(
+            request,
+            "You are not attached to a team, so there is no team to register a "
+            "patient onto.",
+        )
+        return redirect("dashboard")
 
     if request.method == "POST":
-        form = PatientRegistrationForm(request.POST)
+        form = PatientRegistrationForm(request.POST, registrar=request.user)
         if form.is_valid():
             patient = form.save()
             notes = flow.on_patient_registered(patient, registered_by=request.user)
@@ -187,7 +219,7 @@ def patient_register(request):
             )
             return redirect("patient_detail", pk=patient.pk)
     else:
-        form = PatientRegistrationForm()
+        form = PatientRegistrationForm(registrar=request.user)
     return render(request, "patients/patient_register.html", {"form": form})
 
 

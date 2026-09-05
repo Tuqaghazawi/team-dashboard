@@ -6,7 +6,7 @@
 <header class="page">
   <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
   <h1>Record the operation</h1>
-  <p>SUBRecord surgery &middot; {{ patient.name }}</p>
+  <p>MRN {{ patient.mrn }} &middot; {{ booking.procedure }}, planned {{ booking.planned_date }}</p>
 </header>
 {% endblock %}
 

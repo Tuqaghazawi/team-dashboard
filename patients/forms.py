@@ -1,13 +1,16 @@
 from django import forms
 
+from teams.models import Team
+
 from .models import Investigation, Patient, SurgeryBooking, TreatmentCourse
 
 
 class PatientRegistrationForm(forms.ModelForm):
-    """What the prep-clinic nurse fills in when a patient first arrives.
+    """The details captured when a patient first arrives.
 
-    Exactly the six details the prep clinic collects. Choosing the team is how
-    the consultant is chosen — a team *is* its consultant.
+    Filled by the prep-clinic nurse for patients coming through prep, or by a
+    team coordinator for one arriving straight at their own clinic. Choosing the
+    team is how the consultant is chosen — a team *is* its consultant.
     """
 
     class Meta:
@@ -25,6 +28,16 @@ class PatientRegistrationForm(forms.ModelForm):
         help_texts = {
             "team": "The consultant this patient is booked under.",
         }
+
+    def __init__(self, *args, registrar=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # A team coordinator registers onto her own team only; the prep clinic
+        # chooses freely because assigning the team is the whole point of prep.
+        if registrar is not None and not registrar.can_see_all_patients:
+            if registrar.team_id:
+                self.fields["team"].queryset = Team.objects.filter(pk=registrar.team_id)
+                self.fields["team"].initial = registrar.team_id
+                self.fields["team"].help_text = "Your own team."
 
 
 class ClinicalDetailForm(forms.ModelForm):

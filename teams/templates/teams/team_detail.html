@@ -66,6 +66,10 @@
     {% if user.can_manage_team_schedule %}
       <a class="btn ghost small right" href="{% url 'rotation_list' %}">Manage rotations</a>
     {% endif %}
+    {% if user.can_register_patients %}
+      <a class="btn small right" style="margin-right:8px"
+         href="{% url 'patient_register' %}">Register a patient</a>
+    {% endif %}
   </h2>
   <div class="people">
     {% for person in members.consultants %}

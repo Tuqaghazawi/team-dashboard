@@ -57,8 +57,17 @@ class User(AbstractUser):
 
     @property
     def can_register_patients(self):
-        """Only the prep clinic registers a new patient onto a team."""
-        return self.is_superuser or self.role == self.Role.PREP_COORDINATOR
+        """Who may register a new patient.
+
+        The prep clinic registers patients arriving through the preparatory
+        clinic and assigns them to a team. A team coordinator can also register
+        one directly, because some patients come straight to their own clinic
+        and never pass through prep — but only onto their own team.
+        """
+        return self.is_superuser or self.role in {
+            self.Role.PREP_COORDINATOR,
+            self.Role.TEAM_COORDINATOR,
+        }
 
     @property
     def can_manage_team_schedule(self):

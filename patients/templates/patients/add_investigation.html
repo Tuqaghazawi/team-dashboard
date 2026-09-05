@@ -6,7 +6,7 @@
 <header class="page">
   <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
   <h1>Add an investigation</h1>
-  <p>SUBAdd investigation &middot; {{ patient.name }}</p>
+  <p>MRN {{ patient.mrn }} &middot; add an extra item to the checklist.</p>
 </header>
 {% endblock %}
 

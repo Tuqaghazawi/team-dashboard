@@ -99,13 +99,21 @@
   {% if suggestion %}
     <div class="ai-note">
       <h4>Suggested decision &mdash; for discussion, nothing has been recorded</h4>
+      {% if suggestion.coverage_note %}
+        <p style="color:var(--red);font-weight:600;margin:0 0 8px">{{ suggestion.coverage_note }}</p>
+      {% endif %}
       <div style="white-space:pre-wrap">{{ suggestion.answer }}</div>
       {% if suggestion.citation_list %}
         <cite>Sources: {% for c in suggestion.citation_list %}{{ c }}{% if not forloop.last %} &middot; {% endif %}{% endfor %}</cite>
       {% endif %}
     </div>
-    <p class="help" style="margin-top:10px">This evidence is written into the notes
-       field of the patient's slide.</p>
+    {% if suggestion.refused %}
+      <p class="help" style="margin-top:10px">Nothing is written to the slide notes
+         when the brain declines &mdash; there is no evidence to carry.</p>
+    {% else %}
+      <p class="help" style="margin-top:10px">This evidence is written into the notes
+         field of the patient's slide.</p>
+    {% endif %}
   {% else %}
     <p class="empty">No suggestion requested for this patient yet.</p>
   {% endif %}

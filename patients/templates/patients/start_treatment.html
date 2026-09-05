@@ -6,7 +6,7 @@
 <header class="page">
   <a class="back" href="{% url 'patient_detail' patient.pk %}">&larr; {{ patient.name }}</a>
   <h1>Open a treatment course</h1>
-  <p>SUBStart treatment &middot; {{ patient.name }}</p>
+  <p>MRN {{ patient.mrn }} &middot; the team follows this patient until the definitive decision.</p>
 </header>
 {% endblock %}
 

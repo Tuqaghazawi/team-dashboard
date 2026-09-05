@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'mdc',
     'notifications',
     'reports',
+    'ai.guidelines',
 ]
 
 # Tell Django to use our custom User model (with the "role" field) instead of

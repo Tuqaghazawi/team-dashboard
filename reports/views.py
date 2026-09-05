@@ -3,7 +3,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from patients.views import visible_patients
+from patients.views import reportable_patients
 
 from .build import build_workbook, collect, period_range
 
@@ -17,7 +17,7 @@ def _check(user):
 @login_required
 def reports_home(request):
     _check(request.user)
-    patients = visible_patients(request.user)
+    patients = reportable_patients(request.user)
     periods = []
     for period in ("week", "month"):
         start, end, label = period_range(period)
@@ -41,7 +41,7 @@ def download_report(request, period):
         raise PermissionDenied("Unknown report period.")
 
     start, end, label = period_range(period)
-    data = collect(visible_patients(request.user), start, end)
+    data = collect(reportable_patients(request.user), start, end)
     stream = build_workbook(data, label)
 
     filename = f"prep-clinic-{period}ly-{start:%Y-%m-%d}.xlsx"

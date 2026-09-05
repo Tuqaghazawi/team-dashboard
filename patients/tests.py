@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 from django.core import mail
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import User
@@ -491,3 +492,120 @@ class ExtractionReviewTests(TestCase):
         self.assertEqual(extraction.status, ReportExtraction.Status.REJECTED)
         self.investigation.refresh_from_db()
         self.assertIn("grade 3", self.investigation.result_text)
+
+
+class PrepClinicHandoverTests(TestCase):
+    """The prep nurse works a handover queue, not the whole hospital."""
+
+    def setUp(self):
+        self.team = Team.objects.create(consultant="Dr. Test", specialty="Colorectal cancer")
+        self.mdc = MDC.objects.create(name="Gastrointestinal (GI)", meeting_weekday=1)
+        self.prep = User.objects.create_user(
+            "p1", password="x", role=User.Role.PREP_COORDINATOR
+        )
+        self.handed_over = make_patient(self.team, mrn="950001", name="Handed Over")
+        self.waiting = make_patient(self.team, mrn="950002", name="Still Waiting")
+        MDCListing.objects.create(
+            patient=self.handed_over, mdc=self.mdc,
+            meeting_date=timezone.localdate() + timedelta(days=7),
+        )
+
+    def _visible(self):
+        from patients.views import visible_patients
+
+        return set(visible_patients(self.prep))
+
+    def test_a_listed_patient_leaves_her_list(self):
+        self.assertEqual(self._visible(), {self.waiting})
+
+    def test_she_cannot_open_a_patient_she_has_handed_over(self):
+        self.client.force_login(self.prep)
+        self.assertEqual(
+            self.client.get(f"/patients/{self.handed_over.pk}/").status_code, 404
+        )
+        self.assertEqual(
+            self.client.get(f"/patients/{self.waiting.pk}/").status_code, 200
+        )
+
+    def test_her_reports_still_count_every_patient(self):
+        from patients.views import reportable_patients
+
+        # The working list shrinks; the monthly return must not.
+        self.assertEqual(len(self._visible()), 1)
+        self.assertEqual(reportable_patients(self.prep).count(), 2)
+
+    def test_the_report_page_counts_handed_over_patients(self):
+        self.client.force_login(self.prep)
+        response = self.client.get(reverse("reports_home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["periods"][1]["data"]["total"], 2)
+
+    def test_the_chairman_still_sees_everybody(self):
+        from patients.views import visible_patients
+
+        chair = User.objects.create_user("ch", password="x", role=User.Role.CHAIRMAN)
+        self.assertEqual(visible_patients(chair).count(), 2)
+
+
+class CoordinatorRegistrationTests(TestCase):
+    """A coordinator registers a walk-in onto her own team, and only hers."""
+
+    def setUp(self):
+        self.mine = Team.objects.create(consultant="Dr. Mine", specialty="Colorectal cancer")
+        self.other = Team.objects.create(consultant="Dr. Other", specialty="Thyroid and breast")
+        self.coordinator = User.objects.create_user(
+            "co", password="x", role=User.Role.TEAM_COORDINATOR, team=self.mine
+        )
+        self.client.force_login(self.coordinator)
+
+    def _payload(self, team, mrn="950010"):
+        return {
+            "name": "Walk In", "mrn": mrn, "date_of_birth": "1965-03-03",
+            "diagnosis": "Rectal cancer", "specialty": "COLORECTAL", "team": team.pk,
+        }
+
+    def test_a_coordinator_may_open_the_registration_page(self):
+        self.assertEqual(self.client.get(reverse("patient_register")).status_code, 200)
+
+    def test_she_registers_onto_her_own_team(self):
+        response = self.client.post(reverse("patient_register"), self._payload(self.mine))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Patient.objects.get(mrn="950010").team, self.mine)
+
+    def test_she_cannot_register_onto_another_team(self):
+        response = self.client.post(
+            reverse("patient_register"), self._payload(self.other, mrn="950011")
+        )
+        self.assertEqual(response.status_code, 200)  # redisplayed with an error
+        self.assertFalse(Patient.objects.filter(mrn="950011").exists())
+
+    def test_only_her_own_team_is_offered(self):
+        response = self.client.get(reverse("patient_register"))
+        choices = list(response.context["form"].fields["team"].queryset)
+        self.assertEqual(choices, [self.mine])
+
+    def test_registering_notifies_her_team(self):
+        User.objects.create_user(
+            "cons", email="cons@example.test", password="x",
+            role=User.Role.CONSULTANT, team=self.mine,
+        )
+        self.client.post(reverse("patient_register"), self._payload(self.mine, "950012"))
+        self.assertTrue(
+            Notification.objects.filter(
+                kind=Notification.Kind.NEW_PATIENT, patient__mrn="950012"
+            ).exists()
+        )
+
+    def test_a_fellow_still_may_not_register(self):
+        fellow = User.objects.create_user("fe", password="x", role=User.Role.FELLOW)
+        self.client.force_login(fellow)
+        self.assertEqual(self.client.get(reverse("patient_register")).status_code, 403)
+
+    def test_a_coordinator_with_no_team_is_told_rather_than_shown_a_broken_form(self):
+        stray = User.objects.create_user(
+            "st", password="x", role=User.Role.TEAM_COORDINATOR
+        )
+        self.client.force_login(stray)
+        self.assertRedirects(
+            self.client.get(reverse("patient_register")), reverse("dashboard")
+        )

@@ -161,6 +161,9 @@
     {% if suggestion.kind == "WORKUP" %}
       <div class="ai-note">
         <h4>Guideline suggestion &mdash; for the team to consider, not applied</h4>
+        {% if suggestion.coverage_note %}
+          <p style="color:var(--red);font-weight:600;margin:0 0 8px">{{ suggestion.coverage_note }}</p>
+        {% endif %}
         <div style="white-space:pre-wrap">{{ suggestion.answer }}</div>
         {% if suggestion.citation_list %}
           <cite>Sources: {% for c in suggestion.citation_list %}{{ c }}{% if not forloop.last %} &middot; {% endif %}{% endfor %}</cite>
