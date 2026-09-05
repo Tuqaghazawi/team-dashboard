@@ -468,11 +468,70 @@ record operation → post-op flag raised → re-list → flag clears.
 - The guideline brain returns clinically sensible answers for a mid-TNT patient
   and a post-gastrectomy patient (both wrong in v0.9).
 
-**Evaluation of the AI layer** (`ai/eval`, 39 synthetic cases): functional
-accuracy 85%, judge-semantic agreement 89%, hallucination rate 3.9%, judge
-validated at κ 0.779 → 1.000. **Contradiction recall 62%** — the extractor can
-silently drop grade, positive nodes and LVI. Refusal recall 100%, but it
-over-flags (12 of 36 false alarms).
+### Evaluating the extractor (Capstone 1)
+
+`python -m ai.eval.run`, 39 synthetic cases: functional accuracy 85%,
+judge-semantic agreement 89%, hallucination rate 3.9%, judge validated at
+κ 0.779 → 1.000. **Contradiction recall 62%** — the extractor can silently drop
+grade, positive nodes and LVI. Refusal recall 100%, but it over-flags
+(12 of 36 false alarms).
+
+### Evaluating the guideline brain (Capstone 2)
+
+That suite evaluates the *extractor*. It says nothing about what this dashboard
+actually puts in front of a clinician, so there is a second one:
+`python manage.py eval_guidelines --judge`, over 12 cases in
+`ai/eval/guideline_cases.py`. The cases are not sampled — each probes a failure
+this system has shown or the design predicts: history blindness, answers drawn
+from the wrong cancer's guideline, and the near-miss where oesophageal cancer
+sits beside gastric in embedding space.
+
+**Three of the four metrics are deterministic** — no judge, no variance. Whether
+a disease is covered by the index is a fact, so refusal correctness is checkable
+exactly; so is whether every cited passage came from a guideline for that
+disease.
+
+| Metric | Before the fix | After |
+|---|---|---|
+| Refusal calibration — answers iff a guideline covers the disease | 11/12 (91%) | **12/12 (100%)** |
+| Source correctness — every cited passage is from a covering guideline | 11/12 (91%) | **12/12 (100%)** |
+| History safety — never proposes what was already done | 8/9 (88%) | **8/8 (100%)** |
+| Judge: appropriate for the point this patient reached | 7/9 (77%) | 6/8 (75%) |
+
+**What the first run found, and what changed.** The oesophageal case was
+answered out of the *colon and gastric* guidelines instead of being refused, and
+the metastatic colon case cited the pancreatic guideline alongside the colon one.
+Both had the same cause: coverage was computed but used only for a warning, so
+an unfiltered vector search returned its nearest neighbours whatever they were.
+Retrieval is now restricted by the chunk's disease label, and a disease with no
+covering guideline is refused before any model is called. Both metrics went to
+100%, and the refusal now costs nothing.
+
+The third failure was in the evaluator, not the system: "mastectomy" matched
+inside "postmastectomy radiation therapy", which is the correct recommendation
+after a mastectomy. The check now matches on word boundaries.
+
+**The judge metric did not improve, and that is the honest result.** Two cases
+remain marked inappropriate, and at least one is a real weakness rather than
+judge pedantry: for an ER 95% / PR 80% / HER2-negative early breast cancer the
+suggestion led with adjuvant chemotherapy where endocrine therapy is standard.
+The retrieval fix addressed *grounding*, not *clinical judgement within a
+correctly retrieved guideline*. That remains open.
+
+**What this does and does not tell you.** It shows the brain no longer answers
+from the wrong disease, and no longer proposes an operation on an organ already
+removed. It does not show the suggestions are clinically good — 12 synthetic
+cases judged by another model is not a clinical evaluation. No clinician has
+reviewed these outputs. That review, and the automation-bias question in §15.3,
+are the two things standing between this and any real use.
+
+### The deterministic parts need no LLM evaluation
+
+The peri-operative check and the workup rules are rule engines, not models. Their
+validation is the test suite — 47 patient tests and 32 workup tests, including
+the case where naproxen produced no alert because the guideline table names only
+ibuprofen. That is the appropriate evaluation for deterministic code, and it runs
+on every commit.
 
 > That 62% is the single most important number in this document, and it is why
 > every extracted field is shown for confirmation with the critical ones marked,

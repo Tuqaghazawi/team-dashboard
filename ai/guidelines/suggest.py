@@ -260,11 +260,53 @@ def suggest_decision(patient, k=5):
     return _ask(question, DECISION_SYSTEM, k, patient)
 
 
+def _retrieve_scoped(rag, question, k, guidelines):
+    """Retrieve only from guidelines that cover this patient's disease.
+
+    An unfiltered vector search returns its nearest neighbours whatever they
+    are, which produced two failures on the evaluation set: an oesophageal
+    question answered out of the colon and gastric guidelines, and a colon
+    answer citing the pancreatic one. Restricting the search by the chunk's
+    disease label fixes both at the source, rather than asking the model to
+    notice afterwards.
+    """
+    collection = rag.chroma.get_collection("guidelines")
+    vector = rag.embed([question])[0]
+    found = collection.query(
+        query_embeddings=[vector],
+        n_results=k,
+        where={"cancer": {"$in": list(guidelines)}},
+    )
+    return [
+        {"text": document, "cancer": meta["cancer"], "pages": meta["pages"]}
+        for document, meta in zip(found["documents"][0], found["metadatas"][0])
+    ]
+
+
 def _ask(question, system, k, patient=None):
     """Retrieve, answer, and return the answer with its citations."""
+    # No indexed guideline covers this disease, so there is nothing to ground an
+    # answer in. Refuse before spending anything — rather than retrieving a
+    # neighbouring cancer's passages and hoping the model declines to use them.
+    # On the evaluation set it did not: an oesophageal question came back
+    # answered out of the colon and gastric guidelines.
+    coverage = coverage_for(patient) if patient is not None else None
+    if coverage is not None and not coverage["covered"]:
+        return {
+            "question": question,
+            "answer": f"{REFUSAL}.",
+            "citations": [],
+            "refused": True,
+            "retrieved_from": [],
+            "coverage": coverage,
+        }
+
     rag = _rag()
     try:
-        chunks = rag.retrieve(question, k=k)
+        if coverage is not None:
+            chunks = _retrieve_scoped(rag, question, k, coverage["matched"])
+        else:
+            chunks = rag.retrieve(question, k=k)
         context = rag.build_context(chunks)
         response = rag.client.chat.completions.create(
             model=CHAT_MODEL,

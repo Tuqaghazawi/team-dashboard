@@ -53,11 +53,21 @@ Then open http://127.0.0.1:8000 and sign in. Demo logins (password `demo1234`):
 These demo logins exist for the synthetic prototype only and must never be
 created in a real deployment.
 
-### Tests
+### Tests and evaluation
 
 ```bash
-python manage.py test
+python manage.py test                          # 170 tests
+python manage.py eval_guidelines --judge       # the guideline brain, 12 cases
+python -m ai.eval.run                          # the extractor, 39 gold cases
 ```
+
+The test suite is the validation for the deterministic parts — the workup rules
+and the peri-operative check are rule engines, and a passing test is the right
+evidence for those. The two evaluation runs cover the parts where a model writes
+the answer. `eval_guidelines` scores refusal calibration, source correctness and
+history safety **deterministically** — whether a disease is covered by the index
+is a fact, not a judgement — with an optional LLM judge for clinical
+appropriateness. Results and baselines are in PRD §12.
 
 ### The scheduled jobs
 

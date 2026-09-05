@@ -186,3 +186,83 @@ class CoverageTests(TestCase):
         )
         self.assertIn("Breast", coverage["indexed"])
         self.assertNotIn("Sarcoma", coverage["indexed"])
+
+
+class ScopedRetrievalTests(TestCase):
+    """Coverage gates retrieval, rather than being a warning after the fact."""
+
+    KHCC = ["Breast", "Colon", "Gastric", "Pancreatic", "Rectal", "Thyroid"]
+
+    def setUp(self):
+        self.team = Team.objects.create(consultant="Dr. Test", specialty="General")
+        suggest._indexed_cache = list(self.KHCC)
+        self.addCleanup(setattr, suggest, "_indexed_cache", None)
+
+    def _patient(self, diagnosis, specialty, mrn):
+        return Patient.objects.create(
+            name="Test", mrn=mrn, date_of_birth=date(1960, 1, 1),
+            diagnosis=diagnosis, specialty=specialty, team=self.team,
+            clinical_stage="T2N0",
+        )
+
+    def test_an_uncovered_disease_refuses_without_calling_the_model(self):
+        """No guideline covers it, so there is nothing to ground an answer in."""
+        from unittest import mock
+
+        patient = self._patient("Soft tissue sarcoma, thigh", "SARCOMA", "961000")
+        with mock.patch.object(suggest, "_rag") as rag:
+            result = suggest.suggest_decision(patient)
+
+        self.assertTrue(result["refused"])
+        self.assertEqual(result["citations"], [])
+        rag.assert_not_called()
+
+    def test_the_near_miss_case_refuses_too(self):
+        """Oesophageal shares a specialty with gastric and sits next to it in
+        embedding space. Answering it from the gastric guideline is the failure
+        this gate exists to stop."""
+        from unittest import mock
+
+        patient = self._patient("Distal oesophageal cancer", "UPPER_GI", "961001")
+        with mock.patch.object(suggest, "_rag") as rag:
+            result = suggest.suggest_decision(patient)
+
+        self.assertTrue(result["refused"])
+        rag.assert_not_called()
+
+    def test_a_covered_disease_retrieves_only_from_its_own_guidelines(self):
+        from unittest import mock
+
+        patient = self._patient("Ascending colon cancer", "COLORECTAL", "961002")
+        fake = mock.MagicMock()
+        fake.embed.return_value = [[0.0]]
+        collection = fake.chroma.get_collection.return_value
+        collection.query.return_value = {
+            "documents": [["Colon guidance."]],
+            "metadatas": [[{"cancer": "Colon", "pages": "113-176"}]],
+        }
+        fake.build_context.return_value = "context"
+        fake.client.chat.completions.create.return_value.choices = [
+            mock.MagicMock(message=mock.MagicMock(content="Resect it."))
+        ]
+
+        with mock.patch.object(suggest, "_rag", return_value=fake):
+            result = suggest.suggest_decision(patient)
+
+        # The search was restricted to the guidelines that cover colon cancer.
+        where = collection.query.call_args.kwargs["where"]
+        self.assertEqual(where, {"cancer": {"$in": ["Colon"]}})
+        self.assertFalse(result["refused"])
+        self.assertEqual(result["citations"], ["Colon, pages 113-176"])
+
+    def test_a_refusal_carries_no_citations_and_no_slide_note(self):
+        from mdc.models import GuidelineSuggestion
+
+        suggestion = GuidelineSuggestion(
+            patient=self._patient("Hepatocellular carcinoma", "HPB", "961003"),
+            kind=GuidelineSuggestion.Kind.DECISION,
+            question="q", answer="Not found in the provided guidelines.",
+            citations="", refused=True,
+        )
+        self.assertEqual(suggestion.citation_list, [])
+        self.assertEqual(suggestion.as_slide_note(), "")
