@@ -23,6 +23,28 @@ def suggested_mdc_for(specialty):
 class MDCListing(models.Model):
     """A patient placed on a specific MDC's meeting list for discussion."""
 
+    class Decision(models.TextChoices):
+        SURGERY = "SURGERY", "Surgery"
+        NACT = "NACT", "Neoadjuvant chemotherapy"
+        TNT = "TNT", "Total neoadjuvant therapy (rectal)"
+        REFER_MEDICAL = "REFER_MEDICAL", "Refer to medical oncology"
+        MORE_WORKUP = "MORE_WORKUP", "Further workup needed"
+        SURVEILLANCE = "SURVEILLANCE", "Surveillance"
+        WATCH_WAIT = "WATCH_WAIT", "Watch & wait"
+        PALLIATIVE = "PALLIATIVE", "Best supportive / palliative care"
+
+    # Where a patient goes once each decision is recorded.
+    DECISION_TO_STAGE = {
+        Decision.SURGERY: "SURGERY",
+        Decision.NACT: "NACT",
+        Decision.TNT: "TNT",
+        Decision.REFER_MEDICAL: "REFERRED",
+        Decision.MORE_WORKUP: "WORKUP",
+        Decision.SURVEILLANCE: "SURVEILLANCE",
+        Decision.WATCH_WAIT: "WATCH_WAIT",
+        Decision.PALLIATIVE: "REFERRED",
+    }
+
     patient = models.ForeignKey(
         "patients.Patient",
         on_delete=models.CASCADE,
@@ -36,6 +58,17 @@ class MDCListing(models.Model):
     meeting_date = models.DateField(help_text="The MDC meeting this patient is listed for.")
     presented = models.BooleanField(default=False, help_text="Has this patient been discussed yet?")
     decision = models.TextField(blank=True, help_text="MDC decision / notes (filled after discussion).")
+    decision_category = models.CharField(
+        max_length=16,
+        choices=Decision.choices,
+        blank=True,
+        help_text="The structured outcome — this is what moves the patient on.",
+    )
+    decided_on = models.DateField(null=True, blank=True)
+    is_postop = models.BooleanField(
+        default=False,
+        help_text="This listing is the post-operative re-discussion, not the initial one.",
+    )
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

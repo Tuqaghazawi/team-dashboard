@@ -32,9 +32,11 @@ else:
 # SECURITY WARNING: keep the secret key used in production secret!
 # Set DJANGO_SECRET_KEY in .env for any real deployment; the literal below is a
 # development-only fallback.
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-kyg9v0mzxox=2mus)wc0om5lh&4*jnu4na(f2m3_qvyfe5*y0i',
+# ``or`` (not a get() default) so that an empty DJANGO_SECRET_KEY= line in .env
+# still falls back instead of leaving the key blank.
+SECRET_KEY = (
+    os.environ.get('DJANGO_SECRET_KEY')
+    or 'django-insecure-kyg9v0mzxox=2mus)wc0om5lh&4*jnu4na(f2m3_qvyfe5*y0i'
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -58,6 +60,7 @@ INSTALLED_APPS = [
     'teams',
     'patients',
     'mdc',
+    'notifications',
 ]
 
 # Tell Django to use our custom User model (with the "role" field) instead of
@@ -144,3 +147,24 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+
+# --- Email -------------------------------------------------------------------
+# Development prints emails to the console. Set EMAIL_HOST (and the rest) in
+# .env to send real mail; nothing else in the app changes.
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+if EMAIL_HOST:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').strip().lower() in ('true', '1', 'yes', 'on')
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL', 'surgical-oncology-dashboard@khcc.jo'
+)
+
+# Used to build patient links inside notification emails.
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
