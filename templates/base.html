@@ -11,6 +11,12 @@
     body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
     a { color: var(--teal); }
 
+    /* Required label. Every page carries it, including the sign-in page, so it
+       cannot be missed and cannot be scrolled past. */
+    .not-clinical { background: #7a1c12; color: #ffe9e4; font-size: 12.5px;
+                    padding: 7px 28px; text-align: center; letter-spacing: 0.2px; }
+    .not-clinical strong { color: #fff; text-transform: uppercase; letter-spacing: 0.6px; }
+
     /* Top navigation */
     .nav { background: var(--teal); color: #fff; padding: 0 28px; display: flex;
            align-items: center; gap: 4px; flex-wrap: wrap; }
@@ -106,6 +112,10 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body>
+<div class="not-clinical">
+  <strong>Not for clinical use</strong> &middot; prototype on synthetic data only &middot;
+  every AI output must be checked by a clinician before it is acted on
+</div>
 {% if user.is_authenticated %}
 <nav class="nav">
   <span class="brand">KHCC Surgical Oncology</span>

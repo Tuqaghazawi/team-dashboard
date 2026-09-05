@@ -32,6 +32,11 @@ LINE = RGBColor(0xE2, 0xEB, 0xEA)
 SLIDE_W = Inches(13.333)
 SLIDE_H = Inches(7.5)
 
+# A deck leaves the system and gets emailed around, so it carries the label on
+# every slide — the screen banner does not travel with it.
+NOT_CLINICAL = "NOT FOR CLINICAL USE — prototype on synthetic data"
+RED = RGBColor(0x9A, 0x28, 0x1B)
+
 # The order investigations read on a slide — endoscopy, tissue, then imaging.
 KIND_ORDER = [
     # Endoscopy and tissue first, then labs, then imaging — the order the teams
@@ -165,6 +170,11 @@ def _title_slide(prs, title, presenter, meeting_date):
     p3.alignment = PP_ALIGN.CENTER
     p3.space_before = Pt(10)
 
+    p4 = frame.add_paragraph()
+    _run(p4, NOT_CLINICAL, size=14, bold=True, color=RGBColor(0xFF, 0xD9, 0xD2))
+    p4.alignment = PP_ALIGN.CENTER
+    p4.space_before = Pt(26)
+
 
 def _case_slide(prs, patient, decision_label, decision_text, footer, notes=""):
     slide = _blank(prs)
@@ -213,7 +223,8 @@ def _case_slide(prs, patient, decision_label, decision_text, footer, notes=""):
     _rect(slide, 0, Inches(7.18), SLIDE_W, Inches(0.32), RGBColor(0xF4, 0xF8, 0xF7))
     foot = _textbox(slide, Inches(0.45), Inches(7.16), Inches(12.4), Inches(0.3))
     fp = foot.text_frame.paragraphs[0]
-    _run(fp, footer, size=10, color=MUTED)
+    _run(fp, footer + "   ", size=10, color=MUTED)
+    _run(fp, NOT_CLINICAL, size=10, bold=True, color=RED)
 
     if notes:
         slide.notes_slide.notes_text_frame.text = notes

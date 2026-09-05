@@ -17,6 +17,9 @@ from openpyxl.utils import get_column_letter
 
 AGE_BANDS = [(0, 39, "under 40"), (40, 54, "40-54"), (55, 69, "55-69"), (70, 200, "70+")]
 
+# The workbook gets downloaded and passed around, so it carries the label too.
+NOT_CLINICAL = "NOT FOR CLINICAL USE - prototype on synthetic data"
+
 HEADER_FILL = PatternFill("solid", fgColor="028090")
 HEADER_FONT = Font(color="FFFFFF", bold=True, size=11)
 TITLE_FONT = Font(bold=True, size=14, color="13343B")
@@ -82,12 +85,14 @@ def build_workbook(data, label):
     _autofit(summary)
 
     detail = wb.create_sheet("Patients")
+    detail["A1"] = NOT_CLINICAL
+    detail["A1"].font = Font(bold=True, color="9A281B", size=11)
     headers = [
         "MRN", "Name", "Date of birth", "Age", "Specialty",
         "Diagnosis", "Consultant", "Stage", "Registered",
     ]
-    _header_row(detail, headers)
-    for i, p in enumerate(data["patients"], start=2):
+    _header_row(detail, headers, row=2)
+    for i, p in enumerate(data["patients"], start=3):
         detail.cell(i, 1, p.mrn)
         detail.cell(i, 2, p.name)
         detail.cell(i, 3, p.date_of_birth.isoformat())
@@ -97,7 +102,7 @@ def build_workbook(data, label):
         detail.cell(i, 7, p.team.consultant)
         detail.cell(i, 8, p.get_stage_display())
         detail.cell(i, 9, timezone.localtime(p.registered_at).date().isoformat())
-    detail.freeze_panes = "A2"
+    detail.freeze_panes = "A3"
     _autofit(detail)
 
     stream = BytesIO()
@@ -109,6 +114,8 @@ def build_workbook(data, label):
 def _title(sheet, text):
     sheet["A1"] = text
     sheet["A1"].font = TITLE_FONT
+    sheet["A2"] = NOT_CLINICAL
+    sheet["A2"].font = Font(bold=True, color="9A281B", size=11)
 
 
 def _counter_block(sheet, row, heading, counts):
@@ -126,9 +133,9 @@ def _counter_block(sheet, row, heading, counts):
     return row + 1
 
 
-def _header_row(sheet, headers):
+def _header_row(sheet, headers, row=1):
     for col, text in enumerate(headers, start=1):
-        cell = sheet.cell(1, col, text)
+        cell = sheet.cell(row, col, text)
         cell.font = HEADER_FONT
         cell.fill = HEADER_FILL
         cell.alignment = Alignment(vertical="center")

@@ -22,9 +22,23 @@
     button:hover { background: #026b78; }
     .error { background: #fdecea; color: #b3261e; padding: 10px 12px; border-radius: 6px;
              font-size: 13px; margin-bottom: 6px; }
+  
+    /* Required label. Every page carries it, including the sign-in page, so it
+       cannot be missed and cannot be scrolled past. */
+    .not-clinical { background: #7a1c12; color: #ffe9e4; font-size: 12.5px;
+                    padding: 7px 28px; text-align: center; letter-spacing: 0.2px; }
+    .not-clinical strong { color: #fff; text-transform: uppercase; letter-spacing: 0.6px; }
+    /* This page centres its body with flexbox, so the banner would otherwise be
+       laid out as a centred flex child beside the card. Pin it to the top. */
+    .not-clinical { position: fixed; top: 0; left: 0; right: 0; }
   </style>
 </head>
 <body>
+<div class="not-clinical">
+  <strong>Not for clinical use</strong> &middot; prototype on synthetic data only &middot;
+  every AI output must be checked by a clinician before it is acted on
+</div>
+
   <div class="card">
     <h1>Team Dashboard</h1>
     <p class="sub">Sign in to continue</p>

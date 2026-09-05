@@ -3,10 +3,18 @@
 **Author:** Tuqa Al-Ghazawi
 **Course:** CCI — Clinical AI / Prompt Engineering (Capstone 2)
 **Status:** v1 built and working on synthetic data
-**Version:** 1.0
+**Version:** 1.1
 **Last updated:** 5 September 2026
 **Repository:** https://github.com/Tuqaghazawi/team-dashboard
 
+> **What changed in 1.1.** Adds the safety, ethics and operations sections a
+> clinical-facing tool needs: scope limits, human oversight, the override
+> path, PHI handling, named owners and an incident path (§14); the ethics
+> pillars and where they were load-bearing (§15); and hosting, secrets,
+> versioning, rollback triggers and drift monitoring (§16). The tool is now
+> labelled *not for clinical use* on every page and on every document it
+> generates.
+>
 > **What changed in 1.0.** The previous version described a system to be built.
 > This version describes the one that exists. Every requirement below is marked
 > **Built**, **Partial** or **Not built**, and the "Done means" section reports
@@ -112,7 +120,7 @@ raises a visible flag and an email to the team.
   check covers the highest-risk part of this; the full consult tracker is
   deferred.
 - **Statistics, KPI, M&M and Events modules.** These were always Modules 2–5 of
-  the wider platform vision (§16). Module 1 had to work first.
+  the wider platform vision (§19). Module 1 had to work first.
 
 ---
 
@@ -492,7 +500,257 @@ absent from the guideline table.
 
 ---
 
-## 14. Open questions
+## 14. Safety and governance
+
+> **This tool is labelled NOT FOR CLINICAL USE.** The label appears on every
+> page of the application, on the sign-in page, on every slide of every
+> generated deck, and on both sheets of every exported workbook. It is removed
+> only if and when the tool is formally validated and approved, which has not
+> happened.
+
+### 14.1 Scope limits — what this tool is allowed to do
+
+| The tool may | The tool may not |
+|---|---|
+| Show which investigations are outstanding | Order an investigation |
+| Say a patient's workup is complete | Decide a patient is ready for MDC |
+| Draft a guideline suggestion with citations | Record an MDC decision |
+| Draft an MDC recommendation for sign-off | Approve its own recommendation |
+| Extract structured fields from a report | Save those fields to the record |
+| Flag a medication against the guideline table | Stop, hold or change a medication |
+| Email the team that something is due | Act on that alert itself |
+
+Every row on the right is a clinician's action. The application has no code path
+that performs any of them without a person.
+
+**Out-of-scope uses.** This tool must not be used to: triage patients by
+urgency; decide who is or is not offered surgery; replace the MDC discussion;
+substitute for reading the primary report; or answer a guideline question about
+a disease the index does not cover (§8.1).
+
+### 14.2 Human oversight — where the person sits
+
+| AI output | The gate | What happens without the person |
+|---|---|---|
+| Extracted report fields | `ReportExtraction` is created `PENDING`; a clinician confirms or rejects | Nothing. Unconfirmed extractions are read by nothing else in the app |
+| Guideline suggestion | Rendered in a distinct block, marked "for the team to consider, not applied" | Nothing. It never writes to the patient record |
+| Agent recommendation | LangGraph `interrupt()` — approve, or reject with feedback | The graph stays paused indefinitely |
+| Peri-op medication alert | Displayed to the surgical team | Nothing. The tool cannot change a prescription |
+| MDC decision | Typed by a clinician. **Approving an agent draft does not write a decision** | The patient does not move |
+
+This is asserted by test, not just by design: `test_approval_records_the_physician_but_writes_no_decision` checks that the listing's decision fields stay empty through both approval and rejection.
+
+### 14.3 The override path
+
+Every automated output is editable by the clinical team, and overriding never
+requires an administrator:
+
+- **A checklist item** — a fellow adds or removes any investigation, including
+  ones the conditional rules added. The rule's reason is shown so the fellow can
+  see what it assumed (e.g. "clinical stage not recorded — fuller staging
+  listed; remove if early").
+- **An extracted field** — corrected in the review table before confirming. The
+  correction is stored separately from what the model returned, so the record
+  shows both.
+- **A guideline suggestion** — ignored, or contradicted in the decision the
+  clinician types. Nothing forces consistency between them.
+- **An agent recommendation** — rejected with feedback, which is fed back into
+  the workflow for a revision.
+- **A stage or diagnosis the rules read wrongly** — edited on the clinical
+  details page, which re-runs the conditional rules.
+
+**No output is final until a person makes it so, and no override is logged as an
+exception.** Disagreeing with the tool is the expected case, not an incident.
+
+### 14.4 PHI handling
+
+| Control | Status |
+|---|---|
+| Real patient data | **Never.** Synthetic only, generated by `seed_demo` and `build_ehr` |
+| Repository visibility | Public — which is precisely why no real data may enter it |
+| Secrets | `.env`, git-ignored. `.env.example` carries empty placeholders. No key is hardcoded |
+| Licensed guideline PDFs (NCCN) | `data/guidelines/`, git-ignored. Only extracted chunks enter the index, and the index is git-ignored too |
+| Built databases | `db.sqlite3`, `ehr.sqlite3`, `pharmacy.db`, `mdc_checkpoints.sqlite3` — all git-ignored and rebuildable |
+| Identifiers sent to the LLM | The extractor is deliberately built to pull **clinical content, not identity**; its schema has no name, MRN or date of birth |
+
+**What would have to change for real data.** An in-institution model (no data
+leaving the hospital), an information-governance review, a private repository,
+an audit log of every read, and role-based access reviewed by the department.
+None of these exist. Until they do, this tool takes synthetic data only.
+
+### 14.5 Named owners
+
+| Area | Owner | Status |
+|---|---|---|
+| Clinical content — checklists, pathway rules, MDC categories | Tuqa Al-Ghazawi (author) | Acting |
+| Clinical sign-off — is a suggestion safe to show | Consultant, per team | `[TBD — to be named per team]` |
+| Departmental accountability | Chairman of Surgical Oncology | `[TBD — to be confirmed]` |
+| Technical — code, deployment, secrets | Tuqa Al-Ghazawi | Acting |
+| Guideline index — what is indexed, and when it is refreshed | `[TBD]` | Not assigned |
+| Information governance — any move toward real data | KHCC IG / AIDI | `[TBD — not yet engaged]` |
+
+> Most of these are `[TBD]` because the tool is a prototype with one author. They
+> must be filled before it is shown to a clinical committee, and certainly before
+> any real data. Naming an owner is a prerequisite for the incident path below
+> working at all.
+
+### 14.6 Incident path
+
+An "incident" is any occasion where the tool showed something wrong, misleading,
+or in a way that could have changed a decision.
+
+1. **Stop relying on the affected feature.** No feature is load-bearing — the
+   pathway works with every AI output ignored — so this costs nothing clinically.
+2. **Record it.** Patient MRN (synthetic), what was shown, what was expected, and
+   the page. While the tool is a prototype this is a GitHub issue on the
+   repository; a real deployment needs a route that does not require a GitHub
+   account.
+3. **Reproduce it as a test.** Every clinical bug found so far became a test
+   before it was fixed — the guideline brain offering an oesophagectomy to a
+   post-gastrectomy patient, naproxen producing no peri-op alert, the workup
+   "complete" email repeating. This is the mechanism that stops a fix regressing.
+4. **Fix, or disable the feature.** Each AI feature degrades independently: the
+   guideline brain, the extractor and the agent workflow all fail to
+   "unavailable" without breaking a clinical page, so one can be switched off by
+   removing `OPENAI_API_KEY` while the pathway keeps working.
+5. **Tell the teams affected** if a wrong output reached a slide or an email.
+6. **Roll back** if the fix is not immediate — see §16.3.
+
+**Known open incidents:** none. **Closed:** the four in §12, each with a
+regression test.
+
+---
+
+## 15. Ethics
+
+### 15.1 The pillars, and what each one cost
+
+| Pillar | What it required here |
+|---|---|
+| **Autonomy** | The clinician decides. Every AI output is a draft with a person between it and the record; the override path (§14.3) is always open and never logged as an exception |
+| **Beneficence** | The tool exists to stop patients stalling silently between steps — the gap that motivated it (§2) |
+| **Non-maleficence** | The safest failure is doing nothing. Every degradation path leaves the pathway working: an unavailable API, an unreachable EHR, an unindexed guideline |
+| **Justice** | Every patient in a team's list gets the same checklist for their diagnosis. The rules are explicit and inspectable, not learned from historical practice — so they cannot reproduce a bias in who was previously investigated thoroughly |
+| **Explicability** | Guideline answers carry citations; conditional checklist items carry their reason; extracted fields carry the model's own evidence spans; a refusal carries no citations, so it cannot look researched |
+
+### 15.2 Where the ethics were actually load-bearing
+
+Three decisions in this build came from these pillars rather than from
+convenience, and each cost something:
+
+1. **A refusal shows no citations.** The vector search always returns passages,
+   so it would have been easy — and would have looked more thorough — to list
+   them under "Not found in the provided guidelines". Explicability says a
+   refusal must not look researched.
+2. **"No medication record" is separated from "no medications to hold."** These
+   produce an identical empty alert list. Collapsing them is simpler code and
+   a cleaner page. Non-maleficence says a gap must not look like a clearance.
+3. **An unrecorded stage gets the fuller staging.** The rule could have defaulted
+   to "early" and shown a shorter checklist. Under-staging is the worse error,
+   so it defaults the other way and says why.
+
+### 15.3 Automation bias — the risk this design does not fully solve
+
+The clearest residual risk is that a clinician, under time pressure, confirms an
+extraction or accepts a suggestion without checking it. The controls are: the
+critical fields are marked and sorted first; the AI blocks are visually distinct
+from recorded fact; approving an agent draft deliberately does not write a
+decision, so a second act of typing is required.
+
+**None of this has been measured.** Whether clinicians actually catch the 38% of
+critical findings the extractor drops (§12) is an open question that needs a
+clinician-in-the-loop study, not a code change. It is the single most important
+thing to evaluate before this tool goes anywhere near a real patient.
+
+---
+
+## 16. Deployment and operations
+
+### 16.1 Hosting
+
+| | v1 (now) | Intended |
+|---|---|---|
+| Runtime | `manage.py runserver`, local | Django on **Render**, over **HTTPS** |
+| Database | SQLite file | PostgreSQL (managed) |
+| Static files | Django dev server | WhiteNoise |
+| `DEBUG` | `True` by default | `False`, enforced by environment |
+| `ALLOWED_HOSTS` | empty (dev) | the deployed hostname, from the environment |
+| Scheduled jobs | run by hand | `sync_ehr` and `send_due_alerts` on a scheduler |
+
+**Status: not deployed.** There is no `render.yaml`, no `Procfile`, no
+`STATIC_ROOT` and no WhiteNoise. The settings are already environment-driven
+(`DEBUG`, `ALLOWED_HOSTS`, `SECRET_KEY`, email, `SITE_URL`), so the gap is
+configuration and a deploy target, not a rewrite.
+
+### 16.2 Secrets
+
+All configuration comes from the environment, read from `.env` locally via
+`python-dotenv`. Nothing is hardcoded, `.env` is git-ignored, and
+`.env.example` documents every variable with empty values:
+`OPENAI_API_KEY`, `DJANGO_SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `SITE_URL`,
+and the six `EMAIL_*` variables. On Render these become dashboard environment
+variables; `.env` is never deployed.
+
+`SECRET_KEY` falls back to a development literal **only** when the environment
+does not set it — and that fallback is why it is called
+`django-insecure-…`. A real deployment must set it.
+
+### 16.3 Versioning and rollback
+
+**Versioning.** Git, on `master`, with one commit per coherent change and a
+message explaining why. The deployed version is a commit SHA. The PRD carries
+its own version number (this is 1.1), and the LangGraph runtime contract is
+pinned (`langgraph-checkpoint-sqlite==3.1.1`) because a 2.x release silently
+downgrades a dependency Django's agent workflow needs.
+
+**Rollback triggers.** Roll back immediately, without discussion, if any of
+these is observed:
+
+| Trigger | Why immediate |
+|---|---|
+| An AI output is written to a patient record without a person confirming it | The core guarantee of the design has failed |
+| A notification fires repeatedly for the same event | Teams stop reading the alerts, which is worse than no alerts |
+| A user sees a patient outside their team | The access model has failed |
+| The "not for clinical use" label is missing from any page or generated document | The tool can be mistaken for an approved one |
+| A guideline answer cites a passage from the wrong disease | The grounding claim is false |
+| The peri-op check reports "no holds" for a patient whose record was never read | A gap is being shown as a clearance |
+
+**How.** `git revert` the offending commit and redeploy; the schema is
+additive, so a revert does not strand data. A feature can also be disabled
+without a deploy by removing `OPENAI_API_KEY` from the environment, which turns
+every AI feature off and leaves the pathway intact.
+
+### 16.4 Monitoring and drift
+
+**What to watch.**
+
+| Signal | Where it comes from | What it means |
+|---|---|---|
+| Guideline refusal rate | `GuidelineSuggestion.refused` | A rise means the index no longer covers what teams are asking about |
+| Coverage warnings raised | `GuidelineSuggestion.coverage_note` | Which diseases are being asked about with no guideline indexed |
+| Extraction rejection rate | `ReportExtraction.status` | A rise means the extractor is degrading, or report formats have changed |
+| Extraction correction rate | `confirmed_fields` vs `raw_fields` | **The most useful drift signal there is** — which fields clinicians keep having to fix |
+| Agent revision count | `MDCAgentReview.revisions` | How often physicians send a draft back |
+| Alerts sent vs acted on | `Notification.read_at` | Alert fatigue |
+| EHR sync failures | `sync_ehr` output | The interface has changed |
+
+Every one of these is already recorded in the database. **None is yet surfaced
+on a dashboard or alerted on** — that is the operational gap.
+
+**Drift is expected from four directions:** the OpenAI model changes underneath
+a pinned name; the KHCC guidelines are revised and the index goes stale; report
+formats change and the extractor degrades; the EHR schema changes.
+
+**The plan.** Re-run `python -m ai.eval.run` against the gold set on every
+dependency bump and quarterly, and compare against the recorded baseline (§12).
+A drop in contradiction recall or a rise in hallucination rate blocks the
+release. The guideline index carries no version stamp today — it should record
+which guideline edition each chunk came from, so a stale index is visible rather
+than inferred.
+
+---
+
+## 17. Open questions
 
 - [ ] **Prep-clinic queue.** Resolved: patients drop off once the MDC has
       discussed them, and her list is grouped by team. Still open — a patient
@@ -513,7 +771,7 @@ absent from the guideline table.
 
 ---
 
-## 15. Appendix A — Workup checklists per diagnosis (clinical draft)
+## 18. Appendix A — Workup checklists per diagnosis
 
 The system shows the matching checklist per patient; items fill in as results
 arrive from the EHR. The guideline brain *suggests* additions; it never edits the
@@ -584,7 +842,7 @@ checklist itself.
 
 ---
 
-## 16. Appendix B — Platform vision (Modules 2–5)
+## 19. Appendix B — Platform vision (Modules 2–5)
 
 Module 1 — the team and patient-flow dashboard — is the subject of this PRD and
 is built. The wider Surgical Department Dashboard remains the direction of travel.
@@ -603,7 +861,7 @@ KPIs need exactly that, and it exists.
 
 ---
 
-## 17. How to run it
+## 20. How to run it
 
 ```bash
 python -m venv .venv

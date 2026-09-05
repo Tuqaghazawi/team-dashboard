@@ -1,5 +1,10 @@
 # Surgical Oncology Patient Flow Dashboard
 
+> ## ⚠️ NOT FOR CLINICAL USE
+> A prototype running on **synthetic data only**. It has not been validated,
+> reviewed or approved for clinical use, and no real patient record has been
+> near it. Every AI output must be checked by a clinician before it is acted on.
+
 A dashboard that follows a patient through the surgical oncology pathway — from
 registration at the preparatory clinic, through workup and MDC discussion, to
 surgery and post-operative re-discussion — and tells the right people when
