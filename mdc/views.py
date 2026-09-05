@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from ai import reasons
 from ai.agents import dashboard_workflow
 from ai.guidelines import suggest
 from patients import categories, flow
@@ -147,11 +148,7 @@ def request_suggestion(request, patient_pk, kind):
     try:
         result = ask(patient)
     except suggest.GuidelineUnavailable as exc:
-        messages.error(
-            request,
-            "The guideline brain is unavailable "
-            f"({exc}). Check OPENAI_API_KEY and that the guideline index is built.",
-        )
+        messages.error(request, reasons.explain(exc, "The guideline brain"))
     else:
         coverage = result.get("coverage", {})
         grading = result.get("grading", {})
@@ -304,7 +301,7 @@ def start_agent_review(request, pk):
     try:
         draft = dashboard_workflow.start_review(listing)
     except dashboard_workflow.WorkflowUnavailable as exc:
-        messages.error(request, f"The MDC workflow is unavailable ({exc}).")
+        messages.error(request, reasons.explain(exc, "The MDC workflow"))
         return redirect("record_decision", pk=listing.pk)
 
     MDCAgentReview.objects.update_or_create(
@@ -349,7 +346,7 @@ def sign_off_agent_review(request, pk):
             listing, "approved" if approved else "rejected", feedback
         )
     except dashboard_workflow.WorkflowUnavailable as exc:
-        messages.error(request, f"The MDC workflow is unavailable ({exc}).")
+        messages.error(request, reasons.explain(exc, "The MDC workflow"))
         return redirect("record_decision", pk=listing.pk)
 
     review.recommendation = recommendation or review.recommendation

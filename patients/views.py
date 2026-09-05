@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from ai import reasons
 from ai.extraction import review
 from ai.pharmacy import periop_api
 from ehr import source as ehr_source
@@ -529,7 +530,7 @@ def run_extraction(request, pk, investigation_pk):
     try:
         extraction = review.extract(investigation.result_text)
     except review.ExtractionUnavailable as exc:
-        messages.error(request, f"The extractor is unavailable ({exc}).")
+        messages.error(request, reasons.explain(exc, "The extractor"))
         return redirect("patient_detail", pk=patient.pk)
 
     rows, meta = review.flatten(extraction)
